@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd.exe:*)",
+      "Bash(powershell:*)",
+      "Bash(curl -s http://localhost:9222/json/version)",
+      "Bash(tasklist)",
+      "Bash(xargs -I{} cmd.exe /c \"taskkill /PID {} /F\")",
+      "Bash(node -e ':*)",
+      "Bash(node ~/tradingview-mcp/src/cli/index.js health)",
+      "Bash(node ~/tradingview-mcp/src/cli/index.js --help)",
+      "Bash(node:*)"
+    ]
+  }
+}
