@@ -1,17 +1,18 @@
 // src/Root.jsx
-// Router simple sin react-router-dom — maneja 3 rutas:
-// /              → App (si hay sesión) o Login
-// /auth/callback → AuthCallback
-// cualquier otra → App o Login
-
+import { useEffect } from 'react'
 import { useAuth } from './lib/AuthContext'
 import Login        from './pages/Login'
 import AuthCallback from './pages/AuthCallback'
+import Home         from './pages/Home'
 import App          from './App'
 
 export default function Root() {
   const { session, loading } = useAuth()
   const path = window.location.pathname
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [path])
 
   // Loading spinner
   if (loading) {
@@ -36,11 +37,12 @@ export default function Root() {
     return <AuthCallback />
   }
 
-  // Si no hay sesión → Login
-  if (!session) {
-    return <Login />
+  // /app → requiere sesión
+  if (path === '/app') {
+    if (!session) return <Login />
+    return <App />
   }
 
-  // Si hay sesión → App principal
-  return <App />
+  // / → Landing page siempre
+  return <Home />
 }

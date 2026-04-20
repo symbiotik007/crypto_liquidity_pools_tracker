@@ -4,9 +4,10 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ['@msgpack/msgpack', '@noble/hashes/sha3.js'],
+    include: ['@msgpack/msgpack'],
   },
   server: {
+    port: 5174,
     proxy: {
       '/graph-api': {
         target: 'https://gateway.thegraph.com',

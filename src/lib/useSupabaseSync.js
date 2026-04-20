@@ -202,7 +202,7 @@ export function useWalletsSync(userId) {
 
   useEffect(() => { loadWallets() }, [loadWallets])
 
-  // Keep hl_wallets localStorage in sync (used by HedgeTab, TradingTab, etc.)
+  // Keep hl_wallets localStorage in sync (used by CoberturaTab, TradingTab, etc.)
   const syncToLocalStorage = (wList) => {
     localStorage.setItem('hl_wallets', JSON.stringify(wList))
   }

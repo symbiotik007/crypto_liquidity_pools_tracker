@@ -1108,7 +1108,7 @@ async function hlDeriveAddress(privateKey) {
 }
 
 const WALLET_TYPES = [
-  { id: "proteccion", icon: "🛡", name: "Protección", sub: "Hedge",         disabled: false },
+  { id: "proteccion", icon: "🛡", name: "Protección", sub: "Cobertura",         disabled: false },
   { id: "trading",    icon: "📊", name: "Trading",    sub: "Rango",         disabled: false },
   { id: "insider",    icon: "🤖", name: "Insider",    sub: "Mean-rev",      disabled: false },
   { id: "copy",       icon: "📋", name: "Copy",       sub: "No disponible", disabled: true  },
@@ -1457,7 +1457,7 @@ function WalletsTab() {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// HEDGE TAB
+// Cobertura TAB
 // ════════════════════════════════════════════════════════════════════
 // ════════════════════════════════════════════════════════════════════
 // POOL CARD COMPONENT
@@ -2188,7 +2188,7 @@ function ProtectionModal({ pos, s, onClose }) {
   );
 }
 
-function PoolCard({ pos, onRemove, mode = "hedge" }) {
+function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
   const [expanded, setExpanded]             = useState(false);
   const [showProtection, setShowProtection] = useState(false);
   const [showTrading, setShowTrading]       = useState(false);
@@ -2416,8 +2416,8 @@ function PoolCard({ pos, onRemove, mode = "hedge" }) {
             </div>
           </div>
 
-          {/* ── ACTION BANNER — Hedge o Trading según mode ── */}
-          {!inRange && mode === "hedge" && (
+          {/* ── ACTION BANNER — Cobertura o Trading según mode ── */}
+          {!inRange && mode === "Cobertura" && (
             <div style={{ marginBottom: 16 }}>
               {savedProtection ? (
                 <div style={{ background:"#001a0e",border:"1px solid #003a22",padding:"10px 14px",fontSize:12,color:"#00ff88",display:"flex",justifyContent:"space-between",alignItems:"center" }}>
@@ -2427,7 +2427,7 @@ function PoolCard({ pos, onRemove, mode = "hedge" }) {
               ) : (
                 <>
                   <div style={{ background:"#1a0e00",border:"1px solid #5a3a00",padding:"10px 14px",fontSize:12,color:"#ffb347",marginBottom:8 }}>
-                    ⚠ Tu posición es 100% {sym0} — máxima exposición al precio. Recomendado configurar hedge SHORT.
+                    ⚠ Tu posición es 100% {sym0} — máxima exposición al precio. Recomendado configurar Cobertura SHORT.
                   </div>
                   <button onClick={() => setShowProtection(true)} style={{
                     width:"100%",padding:"12px 0",background:"transparent",border:"1px solid #ffb347",color:"#ffb347",
@@ -2669,7 +2669,7 @@ async function fetchPricesFallback() {
 }
 
 
-function HedgeTab() {
+function CoberturaTab() {
   const { user } = useAuth()
   const { pools, setPools, loading: poolsLoading, addPool, removePool } = usePoolsSync(user?.id)
 
@@ -2855,7 +2855,7 @@ function HedgeTab() {
             key={pos.tokenId}
             pos={pos}
             onRemove={handleRemove}
-            mode="hedge"
+            mode="Cobertura"
           />
         ))
       )}
@@ -3333,9 +3333,530 @@ function ComingSoonTab({ name }) {
 }
 
 // ════════════════════════════════════════════════════════════════════
+// PROGRAMA CRYPTO EDUCATION
+// ════════════════════════════════════════════════════════════════════
+const CURSO = [
+  {
+    id: 1,
+    titulo: "Módulo 1 — Mentalidad del Especulador",
+    color: "#00e5ff",
+    lecciones: [
+      {
+        id: "1-1",
+        titulo: "¿Qué es especular y en qué se diferencia de invertir?",
+        duracion: "18 min",
+        descripcion: "Definimos con precisión qué significa especular: tomar posiciones calculadas sobre movimientos de precio en el corto y mediano plazo. Vemos la diferencia fundamental con la inversión pasiva y por qué el especulador debe tener un edge claro antes de operar.",
+        puntosClave: [
+          "El especulador trabaja con probabilidades, no con certezas",
+          "La diferencia entre especular e invertir está en el horizonte temporal y el análisis",
+          "Sin ventaja (edge) definida, no hay especulación — hay juego",
+        ],
+        ejercicio: "Escribe en tu diario de trading qué ventaja concreta posees hoy. Si no puedes describirla en 2 oraciones, aún no tienes un edge.",
+      },
+      {
+        id: "1-2",
+        titulo: "El perfil psicológico del especulador exitoso",
+        duracion: "22 min",
+        descripcion: "El mercado no te paga por tener razón — te paga por gestionar bien el riesgo. Estudiamos las características mentales que separan a los especuladores consistentes de los que quiebran su cuenta en los primeros 6 meses.",
+        puntosClave: [
+          "Disciplina sobre las reglas propias, incluso cuando el mercado tienta a romperlas",
+          "Desapego emocional del resultado de cada operación individual",
+          "Pensar en series de operaciones, no en cada trade como si fuera el último",
+        ],
+        ejercicio: "Identifica tu mayor sesgo emocional al operar (miedo, soberbia, FOMO). Diseña una regla de proceso que lo contrarreste.",
+      },
+      {
+        id: "1-3",
+        titulo: "Los errores más comunes y cómo blindarse contra ellos",
+        duracion: "20 min",
+        descripcion: "Catalogamos los errores que destruyen cuentas de forma recurrente: el sobretrading, mover el stop, promediar perdedoras y operar sin plan. Cada uno tiene una causa raíz y una solución de proceso.",
+        puntosClave: [
+          "El sobretrading es el mayor asesino silencioso de capital",
+          "Mover el stop de pérdida equivale a operar sin plan",
+          "Promediar en perdedoras es aceptable solo si estaba en el plan original",
+        ],
+        ejercicio: "Revisa tus últimas 20 operaciones. Clasifica cada pérdida: ¿fue error de análisis, error de gestión o error psicológico?",
+      },
+    ],
+  },
+  {
+    id: 2,
+    titulo: "Módulo 2 — Lectura Profesional del Mercado",
+    color: "#00ff88",
+    lecciones: [
+      {
+        id: "2-1",
+        titulo: "Estructura del mercado: tendencia, rango y transición",
+        duracion: "26 min",
+        descripcion: "El precio no se mueve de forma aleatoria — sigue estructuras. Aprendemos a identificar si el mercado está en tendencia, en rango o en fase de transición, y qué estrategia aplica a cada contexto. Operar la estrategia correcta en el contexto equivocado es la causa principal de pérdidas.",
+        puntosClave: [
+          "En tendencia: busca retrocesos para unirte al movimiento dominante",
+          "En rango: vende resistencia, compra soporte — con stops ajustados",
+          "En transición: reduce el tamaño o espera confirmación antes de entrar",
+        ],
+        ejercicio: "Analiza el gráfico diario de BTC, ETH y SOL. Clasifica cada uno: ¿tendencia, rango o transición? Justifica con estructura de máximos y mínimos.",
+      },
+      {
+        id: "2-2",
+        titulo: "Zonas de oferta y demanda de alta probabilidad",
+        duracion: "24 min",
+        descripcion: "Las zonas de oferta y demanda son las huellas que dejan los grandes operadores. Aprendemos a identificarlas en el gráfico, a validar su relevancia y a construir operaciones alrededor de ellas con una lógica de riesgo/beneficio asimétrica.",
+        puntosClave: [
+          "Una zona de demanda válida es la base de un movimiento alcista fuerte previo",
+          "Cuantas menos veces ha sido tocada la zona, más potente es",
+          "Siempre entra en la zona con stop por debajo/encima de ella — nunca antes",
+        ],
+        ejercicio: "Marca en el gráfico de 4H de BTC las 3 zonas de demanda más relevantes. Establece un precio de entrada, stop y objetivo para cada una.",
+      },
+      {
+        id: "2-3",
+        titulo: "El volumen como confirmador de intención del precio",
+        duracion: "19 min",
+        descripcion: "El volumen es la huella real del dinero institucional. Un movimiento de precio sin volumen es sospechoso. Volumen alto en zonas clave confirma la intención. Aprendemos a leer el delta de volumen y las velas de absorción.",
+        puntosClave: [
+          "Volumen creciente en tendencia = tendencia sana y continúa",
+          "Volumen decreciente en rango = acumulación o distribución silenciosa",
+          "Velas de alta volatilidad y volumen bajo = mercado manipulado — cuidado",
+        ],
+        ejercicio: "Compara 5 breakouts recientes en tus activos favoritos. ¿Cuántos tuvieron volumen por encima del promedio de 20 sesiones? ¿Qué pasó después?",
+      },
+    ],
+  },
+  {
+    id: 3,
+    titulo: "Módulo 3 — Estrategias de Entrada y Salida",
+    color: "#c9a227",
+    lecciones: [
+      {
+        id: "3-1",
+        titulo: "Señales de entrada de alta probabilidad",
+        duracion: "28 min",
+        descripcion: "No todas las setups valen lo mismo. Definimos una taxonomía de señales según su probabilidad y su ratio riesgo/beneficio esperado. Solo operamos cuando confluyen al menos tres factores: estructura, zona y señal de precio.",
+        puntosClave: [
+          "La confluencia de factores multiplica la probabilidad de éxito",
+          "Una señal sin contexto de estructura es ruido — no la operes",
+          "Paciencia: esperar el setup correcto es tan importante como ejecutarlo bien",
+        ],
+        ejercicio: "Define tu setup de entrada ideal en 5 condiciones concretas. Ponlo por escrito. Solo operarás cuando las 5 se cumplan simultáneamente.",
+      },
+      {
+        id: "3-2",
+        titulo: "Gestión del stop loss y take profit como proceso",
+        duracion: "21 min",
+        descripcion: "El stop no es opcional — es la definición de cuándo estás equivocado. Aprendemos a colocarlo en lugares lógicos (detrás de estructura) y a gestionar el take profit de forma dinámica según el comportamiento del precio.",
+        puntosClave: [
+          "El stop va donde el análisis queda invalidado — no donde duela menos",
+          "Mueve el stop a breakeven solo cuando el precio ya alcanzó el 1:1",
+          "Nunca muevas el stop en contra de tu posición — es la regla cardinal",
+        ],
+        ejercicio: "Retrocede en tu historial: ¿cuántas veces moviste el stop alejándolo? Calcula el impacto en tu P&L acumulado.",
+      },
+      {
+        id: "3-3",
+        titulo: "Tipos de órdenes y cuándo usar cada una",
+        duracion: "16 min",
+        descripcion: "Market, limit, stop-limit, trailing stop — cada orden tiene un propósito. Usarlas mal destruye el edge que cuesta tanto construir. Vemos en qué contexto usa cada una un especulador profesional.",
+        puntosClave: [
+          "Las órdenes limit preservan el precio de entrada — úsalas en zonas claras",
+          "Las órdenes market en breakouts reales — cuando la velocidad importa más que el precio",
+          "El trailing stop es tu mejor aliado en tendencias extendidas",
+        ],
+        ejercicio: "En tu próxima operación, documenta antes de entrar: ¿qué tipo de orden usaré en entrada, stop y salida? ¿Por qué?",
+      },
+    ],
+  },
+  {
+    id: 4,
+    titulo: "Módulo 4 — Gestión del Riesgo y el Capital",
+    color: "#ff4f6e",
+    lecciones: [
+      {
+        id: "4-1",
+        titulo: "Las reglas de oro del money management",
+        duracion: "23 min",
+        descripcion: "El money management no es un tema aburrido — es lo que determina si sobrevives el tiempo suficiente para que tu edge funcione. Vemos las reglas fundamentales que todo especulador debe cumplir sin excepción.",
+        puntosClave: [
+          "Nunca arriesgues más del 1-2% de tu capital en una sola operación",
+          "Define el máximo de pérdida diaria y semanal antes de abrir el gráfico",
+          "Después de 3 pérdidas consecutivas, para. El mercado no va a ningún lado.",
+        ],
+        ejercicio: "Calcula tu riesgo máximo por operación en euros/dólares con tu capital actual. Escríbelo. Nunca lo cambies en caliente.",
+      },
+      {
+        id: "4-2",
+        titulo: "El ratio riesgo/beneficio como filtro de operaciones",
+        duracion: "18 min",
+        descripcion: "Un sistema con 40% de aciertos puede ser muy rentable si el ratio R/B es 1:3. La matemática de la especulación no funciona como la intuición. Entendemos cómo el ratio R/B determina la rentabilidad a largo plazo.",
+        puntosClave: [
+          "Mínimo 1:2 de R/B para que el sistema sea viable con una tasa de aciertos normal",
+          "No entres en operaciones con R/B menor a 1:1.5 — el esfuerzo no vale la recompensa",
+          "La consistencia supera a la búsqueda del trade perfecto",
+        ],
+        ejercicio: "Calcula el ratio R/B promedio de tus últimas 30 operaciones. ¿Estás por encima de 1:2? Si no, ¿qué debes cambiar?",
+      },
+      {
+        id: "4-3",
+        titulo: "Dimensionamiento de posiciones: la fórmula exacta",
+        duracion: "20 min",
+        descripcion: "El tamaño de la posición no es algo que se decide a ojo. Existe una fórmula precisa que integra tu capital, tu riesgo porcentual, la distancia al stop y el precio del activo. La aplicamos con ejemplos reales en crypto.",
+        puntosClave: [
+          "Tamaño = (Capital × % Riesgo) ÷ Distancia al Stop en precio",
+          "Nunca aumentes el tamaño para recuperar pérdidas previas",
+          "En crypto volátil, reduce el tamaño estándar un 30% adicional",
+        ],
+        ejercicio: "Con tu capital actual y tu distancia de stop promedio en BTC, calcula el tamaño correcto de tu próxima posición usando la fórmula.",
+      },
+    ],
+  },
+  {
+    id: 5,
+    titulo: "Módulo 5 — Especulación Práctica en Criptomonedas",
+    color: "#a855f7",
+    lecciones: [
+      {
+        id: "5-1",
+        titulo: "El mercado cripto: particularidades y ventajas del especulador",
+        duracion: "25 min",
+        descripcion: "El mercado cripto tiene características únicas: opera 24/7, es más volátil, tiene menor liquidez en altcoins y está más influenciado por narrativas y sentimiento. Estas diferencias crean oportunidades específicas para el especulador preparado.",
+        puntosClave: [
+          "La volatilidad alta es una ventaja — si gestionas bien el riesgo",
+          "Bitcoin marca el ritmo: cuando BTC cae, las altcoins caen más. Cuando sube, las altcoins pueden superar a BTC",
+          "El sentimiento de mercado (Fear & Greed) es un input, no una señal directa",
+        ],
+        ejercicio: "Observa el mercado durante una semana completa. Documenta cómo se comportan ETH, SOL y las altcoins principales en relación a BTC en cada movimiento relevante.",
+      },
+      {
+        id: "5-2",
+        titulo: "Pools de liquidez como herramienta del especulador avanzado",
+        duracion: "30 min",
+        descripcion: "Los pools de liquidez en Uniswap V3 y protocolos similares no son solo para proveer liquidez pasiva — el especulador puede usarlos activamente para generar yield sobre posiciones direccionales. Integramos este conocimiento con las herramientas del Liquidity Engine.",
+        puntosClave: [
+          "Los pools concentrados en V3 permiten expresar una visión de precio con un rango específico",
+          "El impermanent loss es gestionable si el rango se establece con análisis técnico",
+          "Combinar fees de pool + especulación direccional puede mejorar el ratio R/B total",
+        ],
+        ejercicio: "Usando el Liquidity Engine de esta plataforma, abre un pool simulado en el rango que tu análisis técnico indique como zona de valor. Monitorea por 7 días.",
+      },
+      {
+        id: "5-3",
+        titulo: "Tu plan de trading personalizado: el documento que te hace profesional",
+        duracion: "27 min",
+        descripcion: "El plan de trading es el contrato que firmas contigo mismo. Define tu estrategia, tus reglas de entrada y salida, tu gestión del riesgo, tus horarios de operación y tu proceso de revisión. Sin este documento, estás improvisando.",
+        puntosClave: [
+          "El plan de trading elimina las decisiones emocionales en tiempo real",
+          "Debe ser lo suficientemente específico para que otra persona pueda seguirlo",
+          "Revísalo y actualízalo cada mes con base en los resultados reales",
+        ],
+        ejercicio: "Redacta hoy la primera versión de tu plan de trading. Mínimo: activos, timeframe, setup de entrada, reglas de stop, reglas de take profit y límites de riesgo diario.",
+      },
+    ],
+  },
+];
+
+function ProgramaTab() {
+  const [moduloActivo, setModuloActivo] = useState(0);
+  const [leccionActiva, setLeccionActiva] = useState(0);
+  const [completadas, setCompletadas] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("crypto_edu_completadas") || "[]"); }
+    catch { return []; }
+  });
+  const [notasAbiertas, setNotasAbiertas] = useState(false);
+  const [nota, setNota] = useState("");
+
+  const totalLecciones = CURSO.reduce((a, m) => a + m.lecciones.length, 0);
+  const progreso = Math.round((completadas.length / totalLecciones) * 100);
+
+  const modulo = CURSO[moduloActivo];
+  const leccion = modulo?.lecciones[leccionActiva];
+
+  const toggleCompletada = (id) => {
+    const next = completadas.includes(id)
+      ? completadas.filter(x => x !== id)
+      : [...completadas, id];
+    setCompletadas(next);
+    localStorage.setItem("crypto_edu_completadas", JSON.stringify(next));
+  };
+
+  const irSiguiente = () => {
+    if (leccionActiva < modulo.lecciones.length - 1) {
+      if (!completadas.includes(leccion.id)) toggleCompletada(leccion.id);
+      setLeccionActiva(l => l + 1);
+    } else if (moduloActivo < CURSO.length - 1) {
+      if (!completadas.includes(leccion.id)) toggleCompletada(leccion.id);
+      setModuloActivo(m => m + 1);
+      setLeccionActiva(0);
+    }
+  };
+
+  const S = {
+    wrap: { display:"flex", gap:0, height:"100%", minHeight:0 },
+    sidebar: {
+      width:280, minWidth:240, maxWidth:300, borderRight:"1px solid #0e2435",
+      overflowY:"auto", paddingBottom:16, flexShrink:0,
+    },
+    instrHero: {
+      padding:"20px 18px 16px", borderBottom:"1px solid #0e2435",
+      background:"linear-gradient(135deg,#070d14 0%,#0a1a24 100%)",
+    },
+    avatar: {
+      width:44, height:44, background:"#00e5ff", display:"flex",
+      alignItems:"center", justifyContent:"center",
+      fontWeight:900, fontSize:16, color:"#050a0f", marginBottom:10,
+    },
+    instrNombre: { fontSize:15, fontWeight:700, color:"#e0f4ff", marginBottom:2 },
+    instrTitulo: { fontSize:11, color:"#2a5a72", letterSpacing:1.5, textTransform:"uppercase" },
+    progressWrap: { padding:"12px 18px", borderBottom:"1px solid #0e2435" },
+    progressLabel: { display:"flex", justifyContent:"space-between", fontSize:11, color:"#2a5a72", marginBottom:6, letterSpacing:1 },
+    progressBar: { height:3, background:"#0e2435", position:"relative" },
+    progressFill: { height:"100%", background:"#00e5ff", transition:"width 0.4s ease" },
+    moduloHeader: {
+      padding:"10px 18px 6px", fontSize:11, letterSpacing:1.5,
+      textTransform:"uppercase", fontWeight:700, display:"flex", alignItems:"center", gap:8,
+    },
+    dot: (c) => ({ width:8, height:8, minWidth:8, borderRadius:"50%", background:c }),
+    leccionItem: (activa, done) => ({
+      padding:"9px 18px 9px 26px", cursor:"pointer", fontSize:13,
+      color: activa ? "#e0f4ff" : done ? "#4a7a96" : "#3a6a86",
+      background: activa ? "#0a1a24" : "transparent",
+      borderLeft: activa ? "2px solid #00e5ff" : "2px solid transparent",
+      display:"flex", alignItems:"center", gap:8, transition:"all 0.15s",
+    }),
+    checkCircle: (done) => ({
+      width:16, height:16, minWidth:16, borderRadius:"50%",
+      border: done ? "none" : "1px solid #1a3a5e",
+      background: done ? "#00ff88" : "transparent",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      fontSize:9, color:"#050a0f", fontWeight:900, flexShrink:0,
+    }),
+    main: { flex:1, overflowY:"auto", padding:"24px 28px", minWidth:0 },
+    modBadge: (c) => ({
+      display:"inline-block", padding:"2px 10px", fontSize:11,
+      border:`1px solid ${c}`, color:c, letterSpacing:1.5,
+      textTransform:"uppercase", marginBottom:14,
+    }),
+    lecTitulo: { fontSize:22, fontWeight:700, color:"#e0f4ff", marginBottom:8, lineHeight:1.3 },
+    metaRow: { display:"flex", alignItems:"center", gap:16, marginBottom:20, flexWrap:"wrap" },
+    metaChip: { fontSize:12, color:"#4a7a96", display:"flex", alignItems:"center", gap:5 },
+    videoBox: {
+      background:"#070d14", border:"1px solid #0e2435",
+      aspectRatio:"16/9", display:"flex", flexDirection:"column",
+      alignItems:"center", justifyContent:"center", gap:10,
+      marginBottom:22, cursor:"pointer", position:"relative", overflow:"hidden",
+    },
+    videoIcon: {
+      width:56, height:56, background:"rgba(0,229,255,0.1)",
+      border:"2px solid #00e5ff", borderRadius:"50%",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      fontSize:20, color:"#00e5ff",
+    },
+    videoLabel: { fontSize:13, color:"#2a5a72", letterSpacing:1 },
+    sectionTitle: {
+      fontSize:11, letterSpacing:2, color:"#2a5a72", textTransform:"uppercase",
+      marginBottom:12, marginTop:22, paddingBottom:8, borderBottom:"1px solid #0e2435",
+    },
+    desc: { fontSize:14, color:"#7ab8d4", lineHeight:1.8, marginBottom:20 },
+    puntoItem: {
+      display:"flex", alignItems:"flex-start", gap:10, marginBottom:10,
+      padding:"10px 14px", background:"#070d14", border:"1px solid #0e2435",
+    },
+    puntoBullet: { color:"#00e5ff", fontSize:14, marginTop:1, flexShrink:0 },
+    puntoText: { fontSize:13, color:"#c8d8e8", lineHeight:1.6 },
+    ejercicioBox: {
+      background:"#070d14", border:"1px solid #c9a227",
+      padding:"16px 18px", marginTop:8, marginBottom:24,
+    },
+    ejercicioLabel: { fontSize:11, letterSpacing:2, color:"#c9a227", textTransform:"uppercase", marginBottom:8 },
+    ejercicioText: { fontSize:13, color:"#a08020", lineHeight:1.7 },
+    actionsRow: { display:"flex", gap:10, flexWrap:"wrap", alignItems:"center", paddingTop:8 },
+    btnComplete: (done) => ({
+      padding:"9px 20px", fontSize:13, cursor:"pointer",
+      fontFamily:"Outfit,sans-serif", fontWeight:700,
+      background: done ? "transparent" : "#00ff88",
+      border: done ? "1px solid #00ff88" : "1px solid #00ff88",
+      color: done ? "#00ff88" : "#050a0f",
+      letterSpacing:"0.5px", transition:"all 0.15s",
+    }),
+    btnNext: {
+      padding:"9px 20px", fontSize:13, cursor:"pointer",
+      fontFamily:"Outfit,sans-serif", fontWeight:700,
+      background:"#00e5ff", border:"1px solid #00e5ff",
+      color:"#050a0f", letterSpacing:"0.5px",
+    },
+    btnNota: {
+      padding:"9px 16px", fontSize:13, cursor:"pointer",
+      fontFamily:"Outfit,sans-serif",
+      background:"transparent", border:"1px solid #1a3a5e",
+      color:"#4a7a96", letterSpacing:"0.5px",
+    },
+    notasPanel: {
+      position:"fixed", bottom:0, right:0, width:340, height:260,
+      background:"#070d14", border:"1px solid #1a3a5e",
+      borderBottom:"none", borderRight:"none", zIndex:50, display:"flex",
+      flexDirection:"column",
+    },
+    notasHeader: {
+      padding:"10px 14px", borderBottom:"1px solid #0e2435",
+      display:"flex", justifyContent:"space-between", alignItems:"center",
+      fontSize:12, color:"#4a7a96", letterSpacing:1, textTransform:"uppercase",
+    },
+    notasTextarea: {
+      flex:1, background:"transparent", border:"none", outline:"none",
+      color:"#c8d8e8", fontSize:13, padding:"12px 14px", resize:"none",
+      fontFamily:"Outfit,sans-serif", lineHeight:1.7,
+    },
+  };
+
+  return (
+    <div style={S.wrap}>
+      {/* ── Sidebar del curso ── */}
+      <div style={S.sidebar}>
+        {/* Instructor */}
+        <div style={S.instrHero}>
+          <div style={S.avatar}>OB</div>
+          <div style={S.instrNombre}>Oscar Bolaños</div>
+          <div style={S.instrTitulo}>Instructor · The Crypto House</div>
+          <div style={{ marginTop:10, fontSize:12, color:"#2a5a72", lineHeight:1.6 }}>
+            Especulación en mercados cripto con enfoque en gestión del riesgo y pools de liquidez.
+          </div>
+        </div>
+
+        {/* Progreso */}
+        <div style={S.progressWrap}>
+          <div style={S.progressLabel}>
+            <span>PROGRESO DEL CURSO</span>
+            <span style={{ color:"#00e5ff" }}>{progreso}%</span>
+          </div>
+          <div style={S.progressBar}>
+            <div style={{ ...S.progressFill, width:`${progreso}%` }} />
+          </div>
+          <div style={{ fontSize:11, color:"#2a5a72", marginTop:6 }}>
+            {completadas.length} / {totalLecciones} lecciones completadas
+          </div>
+        </div>
+
+        {/* Módulos y lecciones */}
+        {CURSO.map((mod, mi) => (
+          <div key={mod.id}>
+            <div style={S.moduloHeader}>
+              <div style={S.dot(mod.color)} />
+              <span style={{ color: moduloActivo === mi ? mod.color : "#2a4a5e", fontSize:11 }}>
+                {mod.titulo}
+              </span>
+            </div>
+            {mod.lecciones.map((lec, li) => {
+              const activa = moduloActivo === mi && leccionActiva === li;
+              const done   = completadas.includes(lec.id);
+              return (
+                <div key={lec.id} style={S.leccionItem(activa, done)}
+                  onClick={() => { setModuloActivo(mi); setLeccionActiva(li); }}>
+                  <div style={S.checkCircle(done)}>{done ? "✓" : ""}</div>
+                  <span style={{ lineHeight:1.4 }}>{lec.titulo}</span>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+
+      {/* ── Contenido de la lección ── */}
+      <div style={S.main}>
+        {leccion && (
+          <>
+            <div style={S.modBadge(modulo.color)}>{modulo.titulo}</div>
+            <div style={S.lecTitulo}>{leccion.titulo}</div>
+
+            <div style={S.metaRow}>
+              <div style={S.metaChip}>
+                <span style={{ color:"#00e5ff" }}>▷</span>
+                <span>{leccion.duracion}</span>
+              </div>
+              <div style={S.metaChip}>
+                <span>Lección {leccionActiva + 1} de {modulo.lecciones.length}</span>
+              </div>
+              {completadas.includes(leccion.id) && (
+                <div style={{ fontSize:12, color:"#00ff88", display:"flex", alignItems:"center", gap:4 }}>
+                  <span>✓</span> Completada
+                </div>
+              )}
+            </div>
+
+            {/* Video placeholder */}
+            <div style={S.videoBox}>
+              <div style={{
+                position:"absolute", inset:0,
+                background:"linear-gradient(135deg,#050a0f 0%,#0a1520 100%)",
+              }} />
+              <div style={{ position:"relative", zIndex:1, textAlign:"center" }}>
+                <div style={S.videoIcon}>▷</div>
+                <div style={{ ...S.videoLabel, marginTop:12 }}>VIDEO DE LA LECCIÓN</div>
+                <div style={{ fontSize:11, color:"#1a3a5e", marginTop:4 }}>
+                  Sube tu video aquí · YouTube / Vimeo embed
+                </div>
+              </div>
+            </div>
+
+            {/* Descripción */}
+            <div style={S.sectionTitle}>Descripción</div>
+            <p style={S.desc}>{leccion.descripcion}</p>
+
+            {/* Puntos clave */}
+            <div style={S.sectionTitle}>Puntos Clave</div>
+            {leccion.puntosClave.map((p, i) => (
+              <div key={i} style={S.puntoItem}>
+                <span style={S.puntoBullet}>▸</span>
+                <span style={S.puntoText}>{p}</span>
+              </div>
+            ))}
+
+            {/* Ejercicio */}
+            <div style={S.sectionTitle}>Ejercicio Práctico</div>
+            <div style={S.ejercicioBox}>
+              <div style={S.ejercicioLabel}>Tu tarea</div>
+              <div style={S.ejercicioText}>{leccion.ejercicio}</div>
+            </div>
+
+            {/* Acciones */}
+            <div style={S.actionsRow}>
+              <button style={S.btnComplete(completadas.includes(leccion.id))}
+                onClick={() => toggleCompletada(leccion.id)}>
+                {completadas.includes(leccion.id) ? "✓ Completada" : "Marcar como completada"}
+              </button>
+              {(leccionActiva < modulo.lecciones.length - 1 || moduloActivo < CURSO.length - 1) && (
+                <button style={S.btnNext} onClick={irSiguiente}>
+                  Siguiente lección →
+                </button>
+              )}
+              <button style={S.btnNota} onClick={() => setNotasAbiertas(n => !n)}>
+                ✎ Mis notas
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ── Panel de notas flotante ── */}
+      {notasAbiertas && (
+        <div style={S.notasPanel}>
+          <div style={S.notasHeader}>
+            <span>Notas — {leccion?.titulo?.slice(0, 30)}…</span>
+            <span style={{ cursor:"pointer" }} onClick={() => setNotasAbiertas(false)}>✕</span>
+          </div>
+          <textarea
+            style={S.notasTextarea}
+            placeholder="Escribe tus notas aquí..."
+            value={nota}
+            onChange={e => setNota(e.target.value)}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════════
 // APP
 // ════════════════════════════════════════════════════════════════════
-const TABS = ["Wallets","Cobertura","Trading Automatizado","Insider (Trading)"];
+const TABS = ["Wallets","Cobertura","Trading Automatizado","Insider (Trading)","Programa CryptoEducation"];
 const TABS_WITH_BADGE = ["Insider (Trading)"];
 const NAV_ITEMS = ["Dashboard","Programa","Preguntas"];
 
@@ -3478,10 +3999,11 @@ export default function App() {
 
   const renderTab = () => {
     switch (activeTab) {
-      case "Wallets":               return <WalletsTab />;
-      case "Cobertura":             return <HedgeTab />;
-      case "Trading Automatizado":  return <TradingTab />;
-      default:           return <ComingSoonTab name={activeTab} />;
+      case "Wallets":                    return <WalletsTab />;
+      case "Cobertura":                  return <CoberturaTab />;
+      case "Trading Automatizado":       return <TradingTab />;
+      case "Programa CryptoEducation":   return <ProgramaTab />;
+      default:                           return <ComingSoonTab name={activeTab} />;
     }
   };
 
@@ -3574,7 +4096,7 @@ export default function App() {
               ))}
             </div>
           </div>
-          <div className="content">{renderTab()}</div>
+          <div className="content" style={activeTab === "Programa CryptoEducation" ? { padding:0 } : {}}>{renderTab()}</div>
         </div>
       </div>
     </>

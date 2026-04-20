@@ -358,7 +358,7 @@ function SignupModal({ onClose, onSwitch }) {
   )
 }
 
-const FEATS = ['Monitoreo de pools LP en tiempo real','Hedge automático SHORT en Hyperliquid','Datos precisos de Revert Finance','Alertas cuando tu pool sale de rango','Dashboard futurista personalizado']
+const FEATS = ['Monitoreo de pools LP en tiempo real','Cobertura automático SHORT en Hyperliquid','Datos precisos de Revert Finance','Alertas cuando tu pool sale de rango','Dashboard futurista personalizado']
 
 export default function Login() {
   const [modal, setModal] = useState(null)
@@ -378,16 +378,11 @@ export default function Login() {
         </nav>
         <div className="lp-hero">
           <h1 className="lp-title">Protege tu<br/>liquidez con<br/><span>inteligencia.</span></h1>
-          <p className="lp-desc">Monitorea tus pools de Uniswap V3, activa hedges automáticos en Hyperliquid y gestiona tu exposición en tiempo real.</p>
+          <p className="lp-desc">Monitorea tus pools de Uniswap V3, activa Coberturas automáticos en Hyperliquid y gestiona tu exposición en tiempo real.</p>
           <div className="lp-feats">{FEATS.map((f,i)=><div key={i} className="lp-feat"><div className="lp-dot"/>{f}</div>)}</div>
           <div className="lp-cta">
             <button className="btn-cyan" style={{fontSize:16,padding:'13px 32px',fontWeight:700}} onClick={()=>setModal('signup')}>Empezar gratis</button>
             <button className="btn-ghost" style={{fontSize:15,padding:'13px 24px'}} onClick={()=>setModal('login')}>Ya tengo cuenta</button>
-          </div>
-          <div className="lp-plans">
-            <div className="lp-plan on">Free</div>
-            <div className="lp-plan">Pro</div>
-            <div className="lp-plan">Premium</div>
           </div>
         </div>
       </div>
