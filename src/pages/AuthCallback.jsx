@@ -7,7 +7,7 @@ export default function AuthCallback() {
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        window.location.href = '/'
+        window.location.href = '/app'
       }
     })
   }, [])
@@ -19,7 +19,7 @@ export default function AuthCallback() {
       fontFamily: 'Outfit, sans-serif', fontSize: 16,
     }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 32, marginBottom: 16 }}>⟳</div>
+        <div style={{ fontSize: 32, marginBottom: 16 }}>◈</div>
         <div>Verificando acceso...</div>
       </div>
     </div>
