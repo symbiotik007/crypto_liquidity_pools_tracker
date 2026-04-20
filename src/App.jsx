@@ -3856,7 +3856,7 @@ function ProgramaTab() {
 // ════════════════════════════════════════════════════════════════════
 // APP
 // ════════════════════════════════════════════════════════════════════
-const TABS = ["Wallets","Cobertura","Trading Automatizado","Insider (Trading)","Programa CryptoEducation"];
+const TABS = ["Wallets","Cobertura","Trading Automatizado","Insider (Trading)"];
 const TABS_WITH_BADGE = ["Insider (Trading)"];
 const NAV_ITEMS = ["Dashboard","Programa","Preguntas"];
 
@@ -4002,7 +4002,6 @@ export default function App() {
       case "Wallets":                    return <WalletsTab />;
       case "Cobertura":                  return <CoberturaTab />;
       case "Trading Automatizado":       return <TradingTab />;
-      case "Programa CryptoEducation":   return <ProgramaTab />;
       default:                           return <ComingSoonTab name={activeTab} />;
     }
   };
@@ -4096,7 +4095,7 @@ export default function App() {
               ))}
             </div>
           </div>
-          <div className="content" style={activeTab === "Programa CryptoEducation" ? { padding:0 } : {}}>{renderTab()}</div>
+          <div className="content">{renderTab()}</div>
         </div>
       </div>
     </>
