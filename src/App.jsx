@@ -4002,6 +4002,8 @@ export default function App() {
       case "Wallets":                    return <WalletsTab />;
       case "Cobertura":                  return <CoberturaTab />;
       case "Trading Automatizado":       return <TradingTab />;
+      case "Programa CryptoEducation":   return <ProgramaTab />;
+      case "Programa":                   return <ProgramaTab />;
       default:                           return <ComingSoonTab name={activeTab} />;
     }
   };
@@ -4020,7 +4022,7 @@ export default function App() {
             <div className="logo-text">The Crypto<br />House</div>
           </div>
           <div className="nav-section">
-            {NAV_ITEMS.map(l => <div key={l} className="nav-item" onClick={closeSidebar}>{l}</div>)}
+            {NAV_ITEMS.map(l => <div key={l} className={`nav-item ${activeTab === l ? 'active' : ''}`} onClick={() => { setActiveTab(l); closeSidebar(); }}>{l}</div>)}
           </div>
           <div className="nav-section">
             <div className="nav-label">Herramientas</div>
@@ -4095,7 +4097,7 @@ export default function App() {
               ))}
             </div>
           </div>
-          <div className="content">{renderTab()}</div>
+          <div className="content" style={activeTab === "Programa" ? { padding:0 } : {}}>{renderTab()}</div>
         </div>
       </div>
     </>
