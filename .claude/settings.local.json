@@ -9,7 +9,9 @@
       "Bash(node -e ':*)",
       "Bash(node ~/tradingview-mcp/src/cli/index.js health)",
       "Bash(node ~/tradingview-mcp/src/cli/index.js --help)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(git push *)",
+      "Bash(npm run *)"
     ]
   }
 }
