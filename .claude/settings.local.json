@@ -11,7 +11,8 @@
       "Bash(node ~/tradingview-mcp/src/cli/index.js --help)",
       "Bash(node:*)",
       "Bash(git push *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(taskkill //F //IM node.exe)"
     ]
   }
 }

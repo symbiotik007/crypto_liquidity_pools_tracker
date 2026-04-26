@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "./lib/AuthContext";
-import { usePoolsSync, useWalletsSync } from "./lib/useSupabaseSync";
+import { usePoolsSync, useWalletsSync, useNotasSync, usePreguntasSync, useUsersAdmin, useNotificaciones, insertarNotificacion } from "./lib/useSupabaseSync";
 import { encode as msgpackEncode } from "@msgpack/msgpack";
+import cryptoHouseLogo from "./assets/cryptohouselogo.png";
 
 // ══════════════════════════════════════════════════════
 // ON-CHAIN RPC CONFIG
@@ -294,7 +295,11 @@ const styles = `
   .user-info { padding: 16px 18px; border-top: 1px solid #0e2435; display: flex; align-items: center; gap: 10px; }
   .user-avatar { width: 32px; height: 32px; min-width: 32px; background: #0a2a3e; border: 1px solid #1a4a6e; display: flex; align-items: center; justify-content: center; font-size: 13px; color: #00b4d8; font-weight: 700; }
   .user-name { font-size: 13px; color: #7ab8d4; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .user-plan { font-size: 12px; color: #2a5a72; }
+  .user-plan { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; }
+  .user-plan.free { color: #2a5a72; }
+  .user-plan.paid { color: #00e5ff; text-shadow: 0 0 8px rgba(0,229,255,0.4); }
+  .plan-upgrade-btn { width:100%; padding:8px 0; margin-top:8px; background:transparent; border:1px solid rgba(0,229,255,0.25); color:#00e5ff; font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.15s; }
+  .plan-upgrade-btn:hover { background:rgba(0,229,255,0.06); border-color:#00e5ff; }
   .hamburger { display: none; background: none; border: none; cursor: pointer; padding: 4px 8px 4px 0; color: #4a7a96; font-size: 20px; line-height: 1; }
   .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 99; }
   .overlay.open { display: block; }
@@ -3554,6 +3559,7 @@ const CURSO = [
 ];
 
 function ProgramaTab() {
+  const { user } = useAuth();
   const [moduloActivo, setModuloActivo] = useState(0);
   const [leccionActiva, setLeccionActiva] = useState(0);
   const [completadas, setCompletadas] = useState(() => {
@@ -3561,7 +3567,9 @@ function ProgramaTab() {
     catch { return []; }
   });
   const [notasAbiertas, setNotasAbiertas] = useState(false);
-  const [nota, setNota] = useState("");
+  const [notasVista,    setNotasVista]    = useState("actual"); // "actual" | "todas"
+  const [copied,        setCopied]        = useState(false);
+  const { notas, notasMeta, saveNota, saving, lastSaved, syncError } = useNotasSync(user?.id);
 
   const totalLecciones = CURSO.reduce((a, m) => a + m.lecciones.length, 0);
   const progreso = Math.round((completadas.length / totalLecciones) * 100);
@@ -3575,6 +3583,15 @@ function ProgramaTab() {
       : [...completadas, id];
     setCompletadas(next);
     localStorage.setItem("crypto_edu_completadas", JSON.stringify(next));
+    // Notificación al completar TODAS las lecciones
+    if (!completadas.includes(id) && next.length === totalLecciones && user?.id) {
+      insertarNotificacion(
+        user.id,
+        'curso_completado',
+        '🎓 ¡Felicitaciones! Completaste el programa',
+        '¡Lo lograste! Completaste el 100% del programa Trader en Formación. Oscar está orgulloso de ti.'
+      )
+    }
   };
 
   const irSiguiente = () => {
@@ -3684,25 +3701,34 @@ function ProgramaTab() {
     },
     btnNota: {
       padding:"9px 16px", fontSize:13, cursor:"pointer",
-      fontFamily:"Outfit,sans-serif",
+      fontFamily:"Outfit,sans-serif", fontWeight:600,
       background:"transparent", border:"1px solid #1a3a5e",
-      color:"#4a7a96", letterSpacing:"0.5px",
+      color:"#4a7a96", letterSpacing:"0.5px", display:"flex",
+      alignItems:"center", gap:6, transition:"all 0.15s",
     },
     notasPanel: {
-      position:"fixed", bottom:0, right:0, width:340, height:260,
+      position:"fixed", bottom:0, right:0, width:420, height:460,
       background:"#070d14", border:"1px solid #1a3a5e",
       borderBottom:"none", borderRight:"none", zIndex:50, display:"flex",
-      flexDirection:"column",
+      flexDirection:"column", boxShadow:"-4px -4px 32px rgba(0,0,0,0.5)",
     },
     notasHeader: {
-      padding:"10px 14px", borderBottom:"1px solid #0e2435",
+      padding:"12px 16px", borderBottom:"1px solid #0e2435",
       display:"flex", justifyContent:"space-between", alignItems:"center",
-      fontSize:12, color:"#4a7a96", letterSpacing:1, textTransform:"uppercase",
+      fontSize:12, background:"#050a0f",
+    },
+    notasTabs: {
+      display:"flex", borderBottom:"1px solid #0e2435",
     },
     notasTextarea: {
       flex:1, background:"transparent", border:"none", outline:"none",
-      color:"#c8d8e8", fontSize:13, padding:"12px 14px", resize:"none",
-      fontFamily:"Outfit,sans-serif", lineHeight:1.7,
+      color:"#c8d8e8", fontSize:13, padding:"14px 16px", resize:"none",
+      fontFamily:"Outfit,sans-serif", lineHeight:1.8,
+    },
+    notasFooter: {
+      padding:"8px 14px", borderTop:"1px solid #0e2435",
+      display:"flex", alignItems:"center", gap:8,
+      background:"#050a0f", fontSize:11,
     },
   };
 
@@ -3826,8 +3852,17 @@ function ProgramaTab() {
                   Siguiente lección →
                 </button>
               )}
-              <button style={S.btnNota} onClick={() => setNotasAbiertas(n => !n)}>
+              <button style={{
+                ...S.btnNota,
+                borderColor: notasAbiertas ? "#00e5ff" : "#1a3a5e",
+                color: notasAbiertas ? "#00e5ff" : "#4a7a96",
+              }} onClick={() => setNotasAbiertas(n => !n)}>
                 ✎ Mis notas
+                {Object.values(notas).filter(n => n?.trim()).length > 0 && (
+                  <span style={{ padding:"1px 6px", background:"rgba(0,229,255,0.15)", border:"1px solid rgba(0,229,255,0.3)", borderRadius:2, fontSize:10, color:"#00e5ff", fontWeight:700 }}>
+                    {Object.values(notas).filter(n => n?.trim()).length}
+                  </span>
+                )}
               </button>
             </div>
           </>
@@ -3835,20 +3870,134 @@ function ProgramaTab() {
       </div>
 
       {/* ── Panel de notas flotante ── */}
-      {notasAbiertas && (
-        <div style={S.notasPanel}>
-          <div style={S.notasHeader}>
-            <span>Notas — {leccion?.titulo?.slice(0, 30)}…</span>
-            <span style={{ cursor:"pointer" }} onClick={() => setNotasAbiertas(false)}>✕</span>
+      {notasAbiertas && (() => {
+        const notaActual    = notas[leccion?.id] || ""
+        const charCount     = notaActual.length
+        const savedAt       = notasMeta?.[leccion?.id]
+        const fmtTs         = (ts) => ts ? new Date(ts).toLocaleString("es-CO", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" }) : null
+        const todasConNota  = CURSO.flatMap(m => m.lecciones.map(l => ({ ...l, modulo:m.titulo }))).filter(l => notas[l.id]?.trim())
+        const handleCopy    = () => { navigator.clipboard.writeText(notaActual); setCopied(true); setTimeout(()=>setCopied(false), 2000) }
+        const handleClear   = () => { if(leccion && window.confirm("¿Borrar la nota de esta lección?")) saveNota(leccion.id, "") }
+
+        return (
+          <div style={S.notasPanel}>
+
+            {/* Header */}
+            <div style={S.notasHeader}>
+              <div style={{ display:"flex", flexDirection:"column", gap:2, flex:1, minWidth:0 }}>
+                <span style={{ fontSize:11, fontWeight:700, color:"#00e5ff", letterSpacing:1, textTransform:"uppercase" }}>✎ Mis notas</span>
+                {notasVista === "actual" && leccion && (
+                  <span style={{ fontSize:11, color:"#2a5a72", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                    {leccion.titulo.slice(0, 40)}{leccion.titulo.length > 40 ? "…" : ""}
+                  </span>
+                )}
+              </div>
+              <button onClick={() => setNotasAbiertas(false)}
+                style={{ background:"none", border:"none", color:"#2a5a72", fontSize:18, cursor:"pointer", padding:0, lineHeight:1, marginLeft:10, flexShrink:0 }}>✕</button>
+            </div>
+
+            {/* Tabs */}
+            <div style={S.notasTabs}>
+              {[["actual","Esta lección"], ["todas", `Todas (${todasConNota.length})`]].map(([k,l]) => (
+                <button key={k} onClick={() => setNotasVista(k)} style={{
+                  flex:1, padding:"8px 0", background:"none", border:"none", cursor:"pointer",
+                  fontFamily:"Outfit,sans-serif", fontSize:12, fontWeight:600,
+                  borderBottom:`2px solid ${notasVista===k?"#00e5ff":"transparent"}`,
+                  color: notasVista===k ? "#00e5ff" : "#2a5a72", transition:"all 0.15s",
+                }}>{l}</button>
+              ))}
+            </div>
+
+            {/* Vista: Esta lección */}
+            {notasVista === "actual" && (
+              <>
+                <textarea
+                  style={S.notasTextarea}
+                  placeholder="Escribe tus apuntes de esta lección... Se guardan automáticamente."
+                  value={notaActual}
+                  onChange={e => leccion && saveNota(leccion.id, e.target.value)}
+                  maxLength={2000}
+                />
+                {/* Footer */}
+                <div style={S.notasFooter}>
+                  <span style={{ color:"#2a5a72" }}>{charCount}/2000</span>
+                  <div style={{ flex:1 }} />
+                  {savedAt && !saving && (
+                    <span style={{ color:"#2a5a72", fontSize:10 }}>
+                      🕐 {fmtTs(savedAt)}
+                    </span>
+                  )}
+                  <span style={{ color: syncError?"#ff6b88":saving?"#ffb347":lastSaved?"#00ff88":"#2a5a72", fontWeight:600 }}>
+                    {syncError?"⚠ Error":saving?"↑ Guardando":lastSaved?"✓ Sincronizado":"● Local"}
+                  </span>
+                  <button onClick={handleCopy} disabled={!notaActual}
+                    title="Copiar nota"
+                    style={{ background:"none", border:"1px solid #1a3a5e", color:copied?"#00ff88":"#4a7a96", cursor:notaActual?"pointer":"not-allowed", padding:"3px 8px", fontSize:11, fontFamily:"Outfit,sans-serif", transition:"all 0.15s" }}>
+                    {copied ? "✓ Copiado" : "📋 Copiar"}
+                  </button>
+                  <button onClick={handleClear} disabled={!notaActual}
+                    title="Borrar nota"
+                    style={{ background:"none", border:"1px solid #1a3a5e", color:"#4a7a96", cursor:notaActual?"pointer":"not-allowed", padding:"3px 8px", fontSize:11, fontFamily:"Outfit,sans-serif" }}>
+                    🗑
+                  </button>
+                </div>
+                {!user && (
+                  <div style={{ padding:"6px 14px", fontSize:10, color:"#4a7a96", borderTop:"1px solid #0e2435", background:"#050a0f", textAlign:"center" }}>
+                    ⚠ Inicia sesión para sincronizar en todos tus dispositivos
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Vista: Todas mis notas */}
+            {notasVista === "todas" && (
+              <div style={{ flex:1, overflowY:"auto", padding:"8px 0" }}>
+                {todasConNota.length === 0 ? (
+                  <div style={{ padding:"32px 16px", textAlign:"center", color:"#2a5a72", fontSize:13 }}>
+                    Aún no tienes notas guardadas
+                  </div>
+                ) : (
+                  todasConNota.map(l => {
+                    const ts = notasMeta?.[l.id]
+                    const isActive = l.id === leccion?.id
+                    return (
+                      <div key={l.id}
+                        onClick={() => {
+                          // Navegar a la lección con la nota
+                          const mIdx = CURSO.findIndex(m => m.lecciones.some(ll => ll.id === l.id))
+                          const lIdx = CURSO[mIdx]?.lecciones.findIndex(ll => ll.id === l.id)
+                          if (mIdx >= 0 && lIdx >= 0) { setModuloActivo(mIdx); setLeccionActiva(lIdx); setNotasVista("actual") }
+                        }}
+                        style={{
+                          padding:"12px 16px", cursor:"pointer", borderBottom:"1px solid #0e2435",
+                          background: isActive ? "rgba(0,229,255,0.04)" : "transparent",
+                          borderLeft: isActive ? "2px solid #00e5ff" : "2px solid transparent",
+                          transition:"background 0.15s",
+                        }}
+                        onMouseEnter={e => { if(!isActive) e.currentTarget.style.background="rgba(255,255,255,0.02)" }}
+                        onMouseLeave={e => { if(!isActive) e.currentTarget.style.background="transparent" }}
+                      >
+                        <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", marginBottom:3, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                          {l.titulo}
+                        </div>
+                        <div style={{ fontSize:12, color:"#4a7a96", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", lineHeight:1.5 }}>
+                          {notas[l.id]?.slice(0, 70)}{notas[l.id]?.length > 70 ? "…" : ""}
+                        </div>
+                        {ts && (
+                          <div style={{ fontSize:10, color:"#1a3a5e", marginTop:4 }}>
+                            🕐 {fmtTs(ts)}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            )}
+
           </div>
-          <textarea
-            style={S.notasTextarea}
-            placeholder="Escribe tus notas aquí..."
-            value={nota}
-            onChange={e => setNota(e.target.value)}
-          />
-        </div>
-      )}
+        )
+      })()}
     </div>
   );
 }
@@ -3858,7 +4007,8 @@ function ProgramaTab() {
 // ════════════════════════════════════════════════════════════════════
 const TABS = ["Wallets","Cobertura","Trading Automatizado","Insider (Trading)"];
 const TABS_WITH_BADGE = ["Insider (Trading)"];
-const NAV_ITEMS = ["Dashboard","Programa","Preguntas"];
+const NAV_ITEMS       = ["Dashboard","Programa","Preguntas"];
+const NAV_ITEMS_ADMIN = ["Users Admin"];
 
 // ════════════════════════════════════════════════════════════════════
 // CONTACT MODAL
@@ -3897,7 +4047,7 @@ function ContactModal({ onClose }) {
         <div style={{ padding:"24px 28px 0", display:"flex", justifyContent:"space-between", alignItems:"flex-start", borderBottom:"1px solid #0e2435", paddingBottom:20 }}>
           <div>
             <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
-              <div style={{ width:32,height:32,background:"#00e5ff",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800,fontSize:13,color:"#050a0f" }}>CH</div>
+              <img src={cryptoHouseLogo} alt="The Crypto House" style={{ width:32, height:32, objectFit:"contain" }} />
               <div>
                 <div style={{ fontSize:11,fontWeight:700,color:"#7ab8d4",letterSpacing:2,textTransform:"uppercase" }}>The Crypto House</div>
                 <div style={{ fontSize:10,color:"#2a5a72",letterSpacing:1,textTransform:"uppercase" }}>Liquidity Engine · Soporte</div>
@@ -3982,29 +4132,1031 @@ function ContactModal({ onClose }) {
   );
 }
 
+const PAID_TABS = ["Wallets","Cobertura","Trading Automatizado","Programa CryptoEducation","Programa"];
+
+// ── NotificationBell ──────────────────────────────────────────────────
+function NotificationBell({ userId }) {
+  const { notifs, noLeidas, marcarLeida, marcarTodasLeidas } = useNotificaciones(userId)
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  // Cerrar al hacer clic fuera
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const iconos = { pregunta_respondida:'💬', plan_actualizado:'⚡', curso_completado:'🎓' }
+  const fmtDate = (d) => {
+    const diff = Date.now() - new Date(d).getTime()
+    const min  = Math.floor(diff / 60000)
+    const hrs  = Math.floor(diff / 3600000)
+    const dias = Math.floor(diff / 86400000)
+    if (min < 1)   return 'Ahora'
+    if (min < 60)  return `Hace ${min}m`
+    if (hrs < 24)  return `Hace ${hrs}h`
+    return `Hace ${dias}d`
+  }
+
+  return (
+    <div ref={ref} style={{ position:'relative' }}>
+      {/* Botón campanita */}
+      <button
+        onClick={() => { setOpen(o => !o); if (!open && noLeidas > 0) {} }}
+        style={{ position:'relative', background:'none', border:'1px solid #1a3a5e', color: noLeidas > 0 ? '#00e5ff' : '#4a7a96', width:36, height:36, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', transition:'all 0.15s', flexShrink:0 }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor='#00e5ff'; e.currentTarget.style.color='#00e5ff' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor='#1a3a5e'; e.currentTarget.style.color= noLeidas>0?'#00e5ff':'#4a7a96' }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        {noLeidas > 0 && (
+          <span style={{ position:'absolute', top:-4, right:-4, background:'#ff4f6e', color:'#fff', fontSize:9, fontWeight:800, width:16, height:16, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', border:'2px solid #050a0f' }}>
+            {noLeidas > 9 ? '9+' : noLeidas}
+          </span>
+        )}
+      </button>
+
+      {/* Panel dropdown */}
+      {open && (
+        <div style={{ position:'absolute', top:'calc(100% + 8px)', right:0, width:320, background:'#070d14', border:'1px solid #1a3a5e', zIndex:300, boxShadow:'0 8px 32px rgba(0,0,0,0.6)', maxHeight:420, display:'flex', flexDirection:'column' }}>
+          {/* Header */}
+          <div style={{ padding:'14px 16px', borderBottom:'1px solid #0e2435', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <span style={{ fontSize:13, fontWeight:700, color:'#c8e6f0' }}>Notificaciones</span>
+            {noLeidas > 0 && (
+              <button onClick={marcarTodasLeidas}
+                style={{ background:'none', border:'none', color:'#00e5ff', fontSize:11, cursor:'pointer', fontFamily:'Outfit,sans-serif' }}>
+                Marcar todas como leídas
+              </button>
+            )}
+          </div>
+
+          {/* Lista */}
+          <div style={{ overflowY:'auto', flex:1 }}>
+            {notifs.length === 0 ? (
+              <div style={{ padding:'32px 16px', textAlign:'center', color:'#2a5a72', fontSize:13 }}>
+                Sin notificaciones
+              </div>
+            ) : (
+              notifs.map(n => (
+                <div key={n.id}
+                  onClick={() => { if (!n.leida) marcarLeida(n.id) }}
+                  style={{ padding:'14px 16px', borderBottom:'1px solid #0e2435', cursor: n.leida?'default':'pointer', background: n.leida?'transparent':'rgba(0,229,255,0.03)', display:'flex', gap:12, alignItems:'flex-start', transition:'background 0.15s' }}
+                  onMouseEnter={e => { if(!n.leida) e.currentTarget.style.background='rgba(0,229,255,0.06)' }}
+                  onMouseLeave={e => { if(!n.leida) e.currentTarget.style.background='rgba(0,229,255,0.03)' }}
+                >
+                  <span style={{ fontSize:18, flexShrink:0, marginTop:1 }}>{iconos[n.tipo] || '🔔'}</span>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:13, fontWeight: n.leida?400:700, color: n.leida?'#4a7a96':'#c8e6f0', marginBottom:3 }}>{n.titulo}</div>
+                    <div style={{ fontSize:12, color:'#4a7a96', lineHeight:1.5 }}>{n.mensaje}</div>
+                    <div style={{ fontSize:10, color:'#2a5a72', marginTop:5, display:'flex', alignItems:'center', gap:6 }}>
+                      {fmtDate(n.created_at)}
+                      {!n.leida && <span style={{ width:6, height:6, borderRadius:'50%', background:'#00e5ff', display:'inline-block' }} />}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── UsersAdminTab ─────────────────────────────────────────────────────
+function UsersAdminTab() {
+  const { user: me, isAdmin } = useAuth()
+  const { users, loading, error, updateUser, deleteUser, reload } = useUsersAdmin(isAdmin)
+
+  const [search,  setSearch]  = useState("")
+  const [confirm, setConfirm] = useState(null) // { user, action, label }
+  const [saving,  setSaving]  = useState(null)
+  const [toast,   setToast]   = useState(null)
+
+  const showToast = (msg, ok = true) => {
+    setToast({ msg, ok })
+    setTimeout(() => setToast(null), 3000)
+  }
+
+  const handleConfirm = async () => {
+    if (!confirm) return
+    setSaving(confirm.user.id)
+    const { error } = confirm.deleteUser
+      ? await deleteUser(confirm.user.id)
+      : await updateUser(confirm.user.id, confirm.changes)
+    setSaving(null)
+    setConfirm(null)
+    if (error) showToast("Error: " + error, false)
+    else showToast(confirm.successMsg)
+  }
+
+  const filtered = users.filter(u =>
+    !search ||
+    u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+    u.email?.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const initials = (u) => (u.full_name || u.email || "?").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("es-CO", { day:"numeric", month:"short", year:"numeric" }) : "—"
+
+  const badge = (txt, color, bg) => (
+    <span style={{ padding:"3px 10px", fontSize:10, fontWeight:700, letterSpacing:1, textTransform:"uppercase", border:`1px solid ${color}44`, color, background:bg || `${color}11` }}>{txt}</span>
+  )
+
+  if (!isAdmin) return (
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"60%", color:"#2a5a72", fontSize:14 }}>
+      🔒 Acceso restringido
+    </div>
+  )
+
+  return (
+    <div style={{ padding:"32px", maxWidth:1100, margin:"0 auto", display:"flex", flexDirection:"column", gap:24, position:"relative" }}>
+
+      {/* Toast */}
+      {toast && (
+        <div style={{ position:"fixed", top:24, right:24, zIndex:999, padding:"12px 20px", background: toast.ok ? "#001a0e" : "#1a0810", border:`1px solid ${toast.ok?"#003a22":"#5a1a28"}`, color: toast.ok?"#00ff88":"#ff6b88", fontSize:13, fontWeight:600, boxShadow:"0 4px 20px rgba(0,0,0,0.5)" }}>
+          {toast.ok ? "✓" : "⚠"} {toast.msg}
+        </div>
+      )}
+
+      {/* Modal de confirmación */}
+      {confirm && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(5,10,15,0.85)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(6px)" }}>
+          <div style={{ background:"#070d14", border:"1px solid #1a3a5e", width:"100%", maxWidth:400, padding:"32px", display:"flex", flexDirection:"column", gap:20 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", letterSpacing:3, textTransform:"uppercase" }}>Confirmar cambio</div>
+            <div>
+              <div style={{ fontSize:16, fontWeight:700, color:"#fff", marginBottom:8 }}>{confirm.label}</div>
+              <div style={{ display:"flex", alignItems:"center", gap:12, padding:"16px", background:"#0a1520", border:"1px solid #0e2435" }}>
+                <div style={{ width:40, height:40, background:"#0a2a3e", border:"1px solid #1a4a6e", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, color:"#00e5ff", fontWeight:700, flexShrink:0 }}>
+                  {initials(confirm.user)}
+                </div>
+                <div>
+                  <div style={{ fontSize:14, fontWeight:600, color:"#c8e6f0" }}>{confirm.user.full_name || "Sin nombre"}</div>
+                  <div style={{ fontSize:12, color:"#4a7a96" }}>{confirm.user.email}</div>
+                </div>
+              </div>
+              <div style={{ marginTop:12, display:"flex", alignItems:"center", gap:10, fontSize:13, color:"#7ab8d4" }}>
+                <span>{confirm.fromLabel}</span>
+                <span style={{ color:"#00e5ff" }}>→</span>
+                <span style={{ fontWeight:700, color:"#fff" }}>{confirm.toLabel}</span>
+              </div>
+            </div>
+            <div style={{ display:"flex", gap:10 }}>
+              <button onClick={() => setConfirm(null)}
+                style={{ flex:1, padding:"11px 0", background:"transparent", border:"1px solid #1a3a5e", color:"#4a7a96", fontFamily:"Outfit,sans-serif", fontSize:13, fontWeight:600, cursor:"pointer" }}>
+                Cancelar
+              </button>
+              <button onClick={handleConfirm} disabled={saving === confirm.user.id}
+                style={{ flex:1, padding:"11px 0", background:"transparent", border:`1px solid ${confirm.danger?"#ff4f6e":"#00e5ff"}`, color:confirm.danger?"#ff4f6e":"#00e5ff", fontFamily:"Outfit,sans-serif", fontSize:13, fontWeight:700, cursor:"pointer" }}>
+                {saving === confirm.user.id ? "Guardando..." : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Header */}
+      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
+        <div>
+          <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", letterSpacing:3, textTransform:"uppercase", marginBottom:8 }}>Panel Admin</div>
+          <h2 style={{ fontSize:26, fontWeight:800, color:"#fff", marginBottom:4 }}>Gestión de usuarios</h2>
+          <p style={{ fontSize:13, color:"#4a7a96" }}>{users.length} usuario{users.length !== 1 ? "s" : ""} registrado{users.length !== 1 ? "s" : ""}</p>
+        </div>
+        <div style={{ display:"flex", gap:10 }}>
+          <input
+            placeholder="Buscar por nombre o email..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{ padding:"9px 14px", background:"#0a1520", border:"1px solid #1a3a5e", color:"#c8e6f0", fontFamily:"Outfit,sans-serif", fontSize:13, outline:"none", width:240 }}
+          />
+          <button onClick={reload}
+            style={{ padding:"9px 14px", background:"transparent", border:"1px solid #1a3a5e", color:"#4a7a96", fontFamily:"Outfit,sans-serif", fontSize:13, cursor:"pointer" }}>
+            ↻ Actualizar
+          </button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{ display:"flex", gap:14, flexWrap:"wrap" }}>
+        {[
+          { label:"Total usuarios",        val:users.length,                            color:"#00e5ff" },
+          { label:"Trader en Formación",   val:users.filter(u=>u.is_paid).length,       color:"#00ff88" },
+          { label:"Potencial Trader",      val:users.filter(u=>!u.is_paid).length,      color:"#ffb347" },
+          { label:"Login con Google",      val:users.filter(u=>u.is_sso_gmail).length,  color:"#627eea" },
+        ].map((s, i) => (
+          <div key={i} style={{ background:"#070d14", border:"1px solid #1a3a5e", padding:"16px 20px", flex:1, minWidth:140 }}>
+            <div style={{ fontSize:24, fontWeight:800, color:s.color, lineHeight:1 }}>{s.val}</div>
+            <div style={{ fontSize:11, color:"#4a7a96", marginTop:4, textTransform:"uppercase", letterSpacing:1 }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Tabla */}
+      {loading && <div style={{ color:"#2a5a72", fontSize:13 }}>Cargando usuarios...</div>}
+      {error   && <div style={{ color:"#ff6b88", fontSize:13 }}>⚠ {error}</div>}
+      {!loading && !error && (
+        <div style={{ background:"#070d14", border:"1px solid #1a3a5e" }}>
+          {/* Cabecera */}
+          <div style={{ display:"grid", gridTemplateColumns:"2fr 2fr 1fr 1fr 1fr 160px", gap:0, padding:"10px 20px", borderBottom:"1px solid #0e2435", fontSize:10, fontWeight:700, color:"#2a5a72", letterSpacing:2, textTransform:"uppercase" }}>
+            <span>Usuario</span><span>Email</span><span>Plan</span><span>Admin</span><span>Registro</span><span style={{ textAlign:"right" }}>Acciones</span>
+          </div>
+          {filtered.length === 0 && (
+            <div style={{ padding:"32px", textAlign:"center", color:"#2a5a72", fontSize:13 }}>Sin resultados</div>
+          )}
+          {filtered.map((u, i) => {
+            const isMe = u.id === me?.id
+            return (
+              <div key={u.id} style={{ display:"grid", gridTemplateColumns:"2fr 2fr 1fr 1fr 1fr 160px", gap:0, padding:"14px 20px", borderBottom: i < filtered.length-1 ? "1px solid #0e2435" : "none", alignItems:"center", background: isMe ? "rgba(0,229,255,0.02)" : "transparent" }}>
+
+                {/* Nombre */}
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <div style={{ width:32, height:32, background:"#0a2a3e", border:"1px solid #1a4a6e", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"#00e5ff", fontWeight:700, flexShrink:0 }}>
+                    {initials(u)}
+                  </div>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:600, color:"#c8e6f0" }}>
+                      {u.full_name || "Sin nombre"}
+                      {isMe && <span style={{ marginLeft:6, fontSize:9, color:"#00e5ff", fontWeight:700, letterSpacing:1 }}>TÚ</span>}
+                    </div>
+                    {u.is_sso_gmail && <div style={{ fontSize:10, color:"#627eea" }}>G Google</div>}
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div style={{ fontSize:12, color:"#4a7a96", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", paddingRight:8 }}>{u.email || "—"}</div>
+
+                {/* Plan */}
+                <div>
+                  {u.is_paused
+                    ? badge("Pausado","#ffb347","#1a0800")
+                    : u.is_paid
+                      ? badge("Formación","#00ff88")
+                      : badge("Potencial","#4a7a96")
+                  }
+                </div>
+
+                {/* Admin */}
+                <div>{u.is_admin ? badge("Admin","#00e5ff") : <span style={{ fontSize:11, color:"#1a3a5e" }}>—</span>}</div>
+
+                {/* Fecha */}
+                <div style={{ fontSize:11, color:"#2a5a72" }}>{fmtDate(u.created_at)}</div>
+
+                {/* Acciones */}
+                <div style={{ display:"flex", gap:6, justifyContent:"flex-end", flexWrap:"wrap" }}>
+                  {/* Toggle plan */}
+                  {!isMe && (
+                    <button
+                      disabled={saving === u.id}
+                      onClick={() => setConfirm({
+                        user: u,
+                        changes: { is_paid: !u.is_paid },
+                        label: u.is_paid ? "Bajar a Potencial Trader" : "Subir a Trader en Formación",
+                        fromLabel: u.is_paid ? "Trader en Formación" : "Potencial Trader",
+                        toLabel:   u.is_paid ? "Potencial Trader" : "Trader en Formación",
+                        successMsg: `${u.full_name || u.email} actualizado correctamente`,
+                        danger: u.is_paid,
+                      })}
+                      style={{
+                        padding:"5px 10px", fontSize:11, fontWeight:700, cursor:"pointer",
+                        fontFamily:"Outfit,sans-serif", letterSpacing:"0.5px",
+                        background:"transparent",
+                        border:`1px solid ${u.is_paid?"#ff4f6e44":"#00ff8844"}`,
+                        color: u.is_paid ? "#ff4f6e" : "#00ff88",
+                        transition:"all 0.15s", whiteSpace:"nowrap",
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = u.is_paid?"#ff4f6e":"#00ff88"}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = u.is_paid?"#ff4f6e44":"#00ff8844"}
+                    >
+                      {saving===u.id ? "..." : u.is_paid ? "↓ Bajar plan" : "↑ Activar plan"}
+                    </button>
+                  )}
+                  {/* Toggle admin */}
+                  {!isMe && (
+                    <button
+                      disabled={saving === u.id}
+                      onClick={() => setConfirm({
+                        user: u,
+                        changes: { is_admin: !u.is_admin },
+                        label: u.is_admin ? "Quitar rol de admin" : "Dar rol de admin",
+                        fromLabel: u.is_admin ? "Admin" : "Usuario",
+                        toLabel:   u.is_admin ? "Usuario" : "Admin",
+                        successMsg: `Rol de ${u.full_name || u.email} actualizado`,
+                        danger: false,
+                      })}
+                      style={{ padding:"5px 10px", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"Outfit,sans-serif", background:"transparent", border:"1px solid #1a3a5e", color:"#4a7a96", transition:"all 0.15s" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor="#00e5ff"; e.currentTarget.style.color="#00e5ff" }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor="#1a3a5e"; e.currentTarget.style.color="#4a7a96" }}
+                    >
+                      {u.is_admin ? "− Admin" : "+ Admin"}
+                    </button>
+                  )}
+
+                  {/* Pausar membresía */}
+                  {!isMe && (
+                    <button
+                      disabled={saving === u.id}
+                      onClick={() => setConfirm({
+                        user: u,
+                        changes: { is_paused: !u.is_paused },
+                        label: u.is_paused ? "Reactivar membresía" : "Pausar membresía",
+                        fromLabel: u.is_paused ? "Pausada" : "Activa",
+                        toLabel:   u.is_paused ? "Activa" : "Pausada",
+                        successMsg: `Membresía de ${u.full_name || u.email} ${u.is_paused ? "reactivada" : "pausada"}`,
+                        danger: !u.is_paused,
+                      })}
+                      style={{ padding:"5px 10px", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"Outfit,sans-serif", background:"transparent", border:`1px solid ${u.is_paused?"#00ff8844":"#ffb34744"}`, color:u.is_paused?"#00ff88":"#ffb347", transition:"all 0.15s" }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = u.is_paused?"#00ff88":"#ffb347"}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = u.is_paused?"#00ff8844":"#ffb34744"}
+                    >
+                      {u.is_paused ? "▶ Reactivar" : "⏸ Pausar"}
+                    </button>
+                  )}
+
+                  {/* Eliminar usuario */}
+                  {!isMe && (
+                    <button
+                      disabled={saving === u.id}
+                      onClick={() => setConfirm({
+                        user: u,
+                        changes: null,
+                        deleteUser: true,
+                        label: "Eliminar usuario permanentemente",
+                        fromLabel: u.email,
+                        toLabel:   "Eliminado",
+                        successMsg: `${u.full_name || u.email} eliminado`,
+                        danger: true,
+                      })}
+                      style={{ padding:"5px 10px", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"Outfit,sans-serif", background:"transparent", border:"1px solid #ff4f6e44", color:"#ff4f6e", transition:"all 0.15s" }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor="#ff4f6e"}
+                      onMouseLeave={e => e.currentTarget.style.borderColor="#ff4f6e44"}
+                    >
+                      🗑 Eliminar
+                    </button>
+                  )}
+
+                  {isMe && <span style={{ fontSize:11, color:"#1a3a5e", paddingRight:4 }}>Tu cuenta</span>}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── PreguntasTab ──────────────────────────────────────────────────────
+function PreguntasTab() {
+  const { user, profile, isAdmin } = useAuth()
+  const userName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuario"
+  const { misPreguntas, faqPublica, pendientes, loading,
+          enviarPregunta, responderPregunta, eliminarPregunta, reload } = usePreguntasSync(user?.id, isAdmin)
+
+  const [texto,       setTexto]       = useState("")
+  const [sending,     setSending]     = useState(false)
+  const [sendOk,      setSendOk]      = useState(false)
+  const [sendErr,     setSendErr]     = useState("")
+  const [openFaq,     setOpenFaq]     = useState(null)
+  const [adminTab,    setAdminTab]    = useState("pendientes")
+  const [respuestas,  setRespuestas]  = useState({})
+  const [publicas,    setPublicas]    = useState({})
+  const [answering,   setAnswering]   = useState(null)
+
+  const handleEnviar = async (e) => {
+    e.preventDefault()
+    if (!texto.trim()) return
+    setSending(true); setSendErr("")
+    const { error } = await enviarPregunta(texto.trim(), userName)
+    setSending(false)
+    if (error) { setSendErr("No se pudo enviar. Intenta de nuevo."); return }
+    setTexto(""); setSendOk(true)
+    setTimeout(() => setSendOk(false), 4000)
+  }
+
+  const handleResponder = async (id) => {
+    const r = respuestas[id]?.trim()
+    if (!r) return
+    setAnswering(id)
+    const pub = publicas[id] !== false // default true
+    await responderPregunta(id, r, pub)
+    setAnswering(null)
+    setRespuestas(prev => { const n = {...prev}; delete n[id]; return n })
+  }
+
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("es-CO", { day:"numeric", month:"short", year:"numeric" }) : ""
+
+  const pill = (txt, color) => (
+    <span style={{ padding:"2px 8px", fontSize:10, fontWeight:700, letterSpacing:1, border:`1px solid ${color}33`, color, background:`${color}11`, textTransform:"uppercase" }}>{txt}</span>
+  )
+
+  return (
+    <div style={{ padding:"32px", maxWidth:1100, margin:"0 auto", display:"flex", flexDirection:"column", gap:28 }}>
+
+      {/* ── Header ── */}
+      <div>
+        <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", letterSpacing:3, textTransform:"uppercase", marginBottom:8 }}>Comunidad</div>
+        <h2 style={{ fontSize:26, fontWeight:800, color:"#fff", marginBottom:6 }}>Preguntas & Respuestas</h2>
+        <p style={{ fontSize:14, color:"#4a7a96" }}>
+          {isAdmin ? `Panel de administración — ${pendientes.length} pregunta${pendientes.length !== 1 ? "s" : ""} pendiente${pendientes.length !== 1 ? "s" : ""}` : "Envía tu pregunta y Oscar te responderá. Las respuestas útiles se publican en el FAQ de la comunidad."}
+        </p>
+      </div>
+
+      {/* ══ VISTA ADMIN ══════════════════════════════════════════════ */}
+      {isAdmin && (
+        <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
+
+          {/* Tabs admin */}
+          <div style={{ display:"flex", borderBottom:"1px solid #0e2435" }}>
+            {[["pendientes", `Sin responder (${pendientes.length})`], ["respondidas", `Respondidas (${misPreguntas.length})`], ["faq", `FAQ pública (${faqPublica.length})`]].map(([k, l]) => (
+              <button key={k} onClick={() => setAdminTab(k)} style={{
+                padding:"10px 20px", background:"none", border:"none", cursor:"pointer",
+                fontFamily:"Outfit,sans-serif", fontSize:13, fontWeight:600,
+                borderBottom:`2px solid ${adminTab===k?"#00e5ff":"transparent"}`,
+                color: adminTab===k ? "#00e5ff" : "#4a7a96", transition:"all 0.15s",
+              }}>{l}</button>
+            ))}
+            <button onClick={reload} style={{ marginLeft:"auto", background:"none", border:"none", color:"#2a5a72", cursor:"pointer", fontSize:12, padding:"10px 16px" }}>↻ Actualizar</button>
+          </div>
+
+          {/* Pendientes */}
+          {adminTab === "pendientes" && (
+            <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+              {loading && <div style={{ color:"#2a5a72", fontSize:13 }}>Cargando...</div>}
+              {!loading && pendientes.length === 0 && (
+                <div style={{ textAlign:"center", padding:"40px 0", color:"#2a5a72", fontSize:14 }}>
+                  ✓ No hay preguntas pendientes
+                </div>
+              )}
+              {pendientes.map(p => (
+                <div key={p.id} style={{ background:"#070d14", border:"1px solid #1a3a5e", padding:"24px" }}>
+                  <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:12, marginBottom:16 }}>
+                    <div>
+                      <div style={{ fontSize:12, fontWeight:700, color:"#00e5ff", marginBottom:4 }}>{p.user_name || "Usuario"}</div>
+                      <div style={{ fontSize:15, color:"#c8e6f0", lineHeight:1.6 }}>{p.pregunta}</div>
+                      <div style={{ fontSize:11, color:"#2a5a72", marginTop:6 }}>{fmtDate(p.created_at)}</div>
+                    </div>
+                    <button onClick={() => eliminarPregunta(p.id)} style={{ background:"none", border:"none", color:"#2a5a72", cursor:"pointer", fontSize:16, flexShrink:0, padding:0 }} title="Eliminar">✕</button>
+                  </div>
+                  <textarea
+                    placeholder="Escribe la respuesta..."
+                    value={respuestas[p.id] || ""}
+                    onChange={e => setRespuestas(prev => ({...prev, [p.id]: e.target.value}))}
+                    style={{ width:"100%", minHeight:90, background:"#0a1520", border:"1px solid #1a3a5e", color:"#c8e6f0", fontFamily:"Outfit,sans-serif", fontSize:14, padding:"12px 14px", outline:"none", resize:"vertical", boxSizing:"border-box" }}
+                  />
+                  <div style={{ display:"flex", alignItems:"center", gap:16, marginTop:12 }}>
+                    <label style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, color:"#4a7a96", cursor:"pointer" }}>
+                      <input type="checkbox"
+                        checked={publicas[p.id] !== false}
+                        onChange={e => setPublicas(prev => ({...prev, [p.id]: e.target.checked}))}
+                        style={{ accentColor:"#00e5ff" }}
+                      />
+                      Publicar en FAQ de la comunidad
+                    </label>
+                    <button
+                      onClick={() => handleResponder(p.id)}
+                      disabled={!respuestas[p.id]?.trim() || answering === p.id}
+                      style={{ marginLeft:"auto", padding:"9px 24px", background:"transparent", border:"1px solid #00e5ff", color:"#00e5ff", fontFamily:"Outfit,sans-serif", fontSize:13, fontWeight:700, cursor:"pointer", opacity:!respuestas[p.id]?.trim()?0.4:1, transition:"all 0.15s" }}
+                    >
+                      {answering === p.id ? "Enviando..." : "Responder →"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Respondidas (admin) */}
+          {adminTab === "respondidas" && (
+            <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+              {misPreguntas.map(p => (
+                <div key={p.id} style={{ background:"#070d14", border:"1px solid #0e2435", padding:"20px 24px" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                    <div style={{ fontSize:12, fontWeight:700, color:"#7ab8d4" }}>{p.user_name || "Usuario"}</div>
+                    <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                      {p.publica ? pill("FAQ", "#00e5ff") : pill("Privada", "#4a7a96")}
+                      <span style={{ fontSize:11, color:"#2a5a72" }}>{fmtDate(p.answered_at)}</span>
+                      <button onClick={() => eliminarPregunta(p.id)} style={{ background:"none", border:"none", color:"#2a5a72", cursor:"pointer", fontSize:14, padding:0 }}>✕</button>
+                    </div>
+                  </div>
+                  <div style={{ fontSize:14, color:"#c8e6f0", marginBottom:10 }}>{p.pregunta}</div>
+                  <div style={{ fontSize:13, color:"#4a7a96", paddingLeft:14, borderLeft:"2px solid #00e5ff", lineHeight:1.7 }}>{p.respuesta}</div>
+                </div>
+              ))}
+              {misPreguntas.length === 0 && <div style={{ color:"#2a5a72", fontSize:13, textAlign:"center", padding:"40px 0" }}>Sin preguntas respondidas aún</div>}
+            </div>
+          )}
+
+          {/* FAQ pública (admin) */}
+          {adminTab === "faq" && (
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              {faqPublica.map(p => (
+                <div key={p.id} style={{ background:"#070d14", border:"1px solid #0e2435", padding:"20px 24px" }}>
+                  <div style={{ fontSize:14, fontWeight:600, color:"#c8e6f0", marginBottom:8 }}>{p.pregunta}</div>
+                  <div style={{ fontSize:13, color:"#4a7a96", paddingLeft:14, borderLeft:"2px solid #00e5ff", lineHeight:1.7 }}>{p.respuesta}</div>
+                  <div style={{ fontSize:11, color:"#2a5a72", marginTop:8 }}>Respondida el {fmtDate(p.answered_at)}</div>
+                </div>
+              ))}
+              {faqPublica.length === 0 && <div style={{ color:"#2a5a72", fontSize:13, textAlign:"center", padding:"40px 0" }}>Sin preguntas públicas aún</div>}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ══ VISTA USUARIO ════════════════════════════════════════════ */}
+      {!isAdmin && (
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:24, alignItems:"start" }}>
+
+          {/* Columna izquierda — Enviar + Mis preguntas */}
+          <div style={{ display:"flex", flexDirection:"column", gap:20 }}>
+
+            {/* Formulario */}
+            <div style={{ background:"#070d14", border:"1px solid #1a3a5e", padding:"24px" }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"#c8e6f0", marginBottom:16 }}>Hacer una pregunta</div>
+              {sendOk ? (
+                <div style={{ background:"#001a0e", border:"1px solid #003a22", padding:"16px", fontSize:14, color:"#00ff88", textAlign:"center", lineHeight:1.7 }}>
+                  ✓ Pregunta enviada — Oscar te responderá pronto
+                </div>
+              ) : (
+                <form onSubmit={handleEnviar} style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                  <textarea
+                    placeholder="¿Sobre qué tienes dudas? Sé específico para obtener la mejor respuesta..."
+                    value={texto}
+                    onChange={e => { setTexto(e.target.value); setSendErr("") }}
+                    rows={5}
+                    style={{ background:"#0a1520", border:"1px solid #1a3a5e", color:"#c8e6f0", fontFamily:"Outfit,sans-serif", fontSize:14, padding:"12px 14px", outline:"none", resize:"vertical", transition:"border-color 0.15s" }}
+                    onFocus={e => e.target.style.borderColor="#00e5ff"}
+                    onBlur={e => e.target.style.borderColor="#1a3a5e"}
+                  />
+                  <div style={{ fontSize:11, color:"#2a5a72", display:"flex", justifyContent:"space-between" }}>
+                    <span>Se enviará como <strong style={{ color:"#4a7a96" }}>{userName}</strong></span>
+                    <span style={{ color: texto.length > 800 ? "#ff4f6e" : "#2a5a72" }}>{texto.length}/1000</span>
+                  </div>
+                  {sendErr && <div style={{ fontSize:12, color:"#ff6b88" }}>⚠ {sendErr}</div>}
+                  <button type="submit" disabled={!texto.trim() || sending || texto.length > 1000}
+                    style={{ padding:"11px", background:"transparent", border:"1px solid #00e5ff", color:"#00e5ff", fontFamily:"Outfit,sans-serif", fontSize:14, fontWeight:700, cursor:"pointer", opacity:!texto.trim()?0.4:1, transition:"all 0.15s" }}>
+                    {sending ? "Enviando..." : "Enviar pregunta →"}
+                  </button>
+                </form>
+              )}
+            </div>
+
+            {/* Mis preguntas */}
+            <div style={{ background:"#070d14", border:"1px solid #1a3a5e", padding:"24px" }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+                <div style={{ fontSize:13, fontWeight:700, color:"#c8e6f0" }}>Mis preguntas</div>
+                <button onClick={reload} style={{ background:"none", border:"none", color:"#2a5a72", cursor:"pointer", fontSize:12 }}>↻</button>
+              </div>
+              {loading && <div style={{ fontSize:13, color:"#2a5a72" }}>Cargando...</div>}
+              {!loading && misPreguntas.length === 0 && (
+                <div style={{ fontSize:13, color:"#2a5a72", textAlign:"center", padding:"20px 0" }}>
+                  Aún no has enviado preguntas
+                </div>
+              )}
+              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                {misPreguntas.map(p => (
+                  <div key={p.id} style={{ padding:"16px", background:"#0a1520", border:`1px solid ${p.respondida?"#1a3a5e":"#0e2435"}` }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:8, marginBottom:8 }}>
+                      <div style={{ fontSize:13, color:"#7ab8d4", lineHeight:1.5, flex:1 }}>{p.pregunta}</div>
+                      {p.respondida ? pill("Respondida","#00ff88") : pill("Pendiente","#ffb347")}
+                    </div>
+                    {p.respondida && p.respuesta && (
+                      <div style={{ marginTop:10, paddingLeft:12, borderLeft:"2px solid #00e5ff" }}>
+                        <div style={{ fontSize:10, fontWeight:700, color:"#00e5ff", letterSpacing:1, textTransform:"uppercase", marginBottom:4 }}>Respuesta de Oscar</div>
+                        <div style={{ fontSize:13, color:"#c8e6f0", lineHeight:1.7 }}>{p.respuesta}</div>
+                        <div style={{ fontSize:11, color:"#2a5a72", marginTop:6 }}>{fmtDate(p.answered_at)}</div>
+                      </div>
+                    )}
+                    {!p.respondida && (
+                      <div style={{ fontSize:11, color:"#2a5a72", marginTop:6 }}>Enviada el {fmtDate(p.created_at)}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Columna derecha — FAQ comunidad */}
+          <div style={{ background:"#070d14", border:"1px solid #1a3a5e", padding:"24px" }}>
+            <div style={{ fontSize:13, fontWeight:700, color:"#c8e6f0", marginBottom:4 }}>FAQ de la comunidad</div>
+            <div style={{ fontSize:12, color:"#2a5a72", marginBottom:20 }}>Preguntas respondidas por Oscar</div>
+            {loading && <div style={{ fontSize:13, color:"#2a5a72" }}>Cargando...</div>}
+            {!loading && faqPublica.length === 0 && (
+              <div style={{ fontSize:13, color:"#2a5a72", textAlign:"center", padding:"40px 0" }}>
+                Aún no hay preguntas públicas.<br />
+                <span style={{ fontSize:11 }}>¡Sé el primero en preguntar!</span>
+              </div>
+            )}
+            <div style={{ display:"flex", flexDirection:"column", gap:0 }}>
+              {faqPublica.map((p, i) => (
+                <div key={p.id} style={{ borderBottom:"1px solid #0e2435" }}>
+                  <button
+                    onClick={() => setOpenFaq(openFaq === p.id ? null : p.id)}
+                    style={{ width:"100%", padding:"16px 0", background:"none", border:"none", display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, cursor:"pointer", fontFamily:"Outfit,sans-serif", textAlign:"left" }}
+                  >
+                    <span style={{ fontSize:14, fontWeight:600, color: openFaq===p.id?"#00e5ff":"#c8e6f0", lineHeight:1.4, flex:1 }}>{p.pregunta}</span>
+                    <span style={{ color:"#00e5ff", fontSize:18, flexShrink:0, transition:"transform 0.2s", transform: openFaq===p.id?"rotate(45deg)":"none" }}>+</span>
+                  </button>
+                  {openFaq === p.id && (
+                    <div style={{ paddingBottom:16, paddingLeft:0 }}>
+                      <div style={{ fontSize:13, color:"#7ab8d4", lineHeight:1.8, paddingLeft:14, borderLeft:"2px solid #00e5ff" }}>
+                        {p.respuesta}
+                      </div>
+                      <div style={{ fontSize:11, color:"#2a5a72", marginTop:8 }}>
+                        {p.user_name && <span>Preguntado por {p.user_name} · </span>}{fmtDate(p.answered_at)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Genera el link de WhatsApp con datos del usuario ─────────────────
+function buildWaUpgradeUrl(name, email) {
+  const n = name || "un usuario interesado"
+  const e = email || "no indicado"
+  const msg = `Hola Oscar 👋 Soy *${n}* y me registré con el email *${e}*. Estoy interesado en actualizar mi plan al programa *Trader en Formación*. ¿Me puedes dar más información?`
+  return `https://wa.me/573215646716?text=${encodeURIComponent(msg)}`
+}
+
+// ── DashboardTab ──────────────────────────────────────────────────────
+function DashboardTab() {
+  const { user, profile, isPaid, planLabel } = useAuth()
+  const { pools }   = usePoolsSync(user?.id)
+  const { wallets } = useWalletsSync(user?.id)
+  const { notas }   = useNotasSync(user?.id)
+
+  const [prices, setPrices]         = useState({ btc: null, eth: null })
+  const [fng, setFng]               = useState(null)
+  const [loadingMkt, setLoadingMkt] = useState(true)
+
+  // ── course progress ──
+  const completadas = (() => { try { return JSON.parse(localStorage.getItem("crypto_edu_completadas") || "[]") } catch { return [] } })()
+  const totalLecciones = CURSO.reduce((a, m) => a + m.lecciones.length, 0)
+  const progreso       = Math.round((completadas.length / totalLecciones) * 100)
+  const notasCount     = Object.values(notas).filter(n => n?.trim()).length
+
+  // ── pool stats ──
+  const poolsInRange  = pools.filter(p => p.status?.label === "En rango").length
+  const poolsOutRange = pools.filter(p => p.status?.label === "Fuera de rango").length
+  const totalValueUsd = pools.reduce((a, p) => a + (p.valueUsd || 0), 0)
+
+  // ── activity ──
+  const activity = (() => { try { return JSON.parse(localStorage.getItem("liquidity_engine_activity") || "[]") } catch { return [] } })()
+
+  // ── member since ──
+  const memberSince = user?.created_at
+    ? new Date(user.created_at).toLocaleDateString("es-CO", { month:"long", year:"numeric" })
+    : null
+
+  // ── market data ──
+  useEffect(() => {
+    Promise.all([
+      fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true").then(r => r.json()).catch(() => null),
+      fetch("https://api.alternative.me/fng/?limit=1").then(r => r.json()).catch(() => null),
+    ]).then(([pd, fd]) => {
+      if (pd) setPrices({
+        btc: { price: pd?.bitcoin?.usd, change: pd?.bitcoin?.usd_24h_change },
+        eth: { price: pd?.ethereum?.usd, change: pd?.ethereum?.usd_24h_change },
+      })
+      if (fd) setFng(fd?.data?.[0])
+      setLoadingMkt(false)
+    })
+  }, [])
+
+  const dashUserName  = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0]
+  const dashUserEmail = user?.email
+  const waUrl         = buildWaUpgradeUrl(dashUserName, dashUserEmail)
+
+  const fmtPrice  = (v) => !v ? "—" : v >= 1000 ? "$" + v.toLocaleString("en-US", { maximumFractionDigits:0 }) : "$" + v.toFixed(2)
+  const fmtChange = (c) => !c && c !== 0 ? "" : (c >= 0 ? "+" : "") + c.toFixed(2) + "%"
+  const fmtUsd    = (v) => !v ? "$0" : v >= 1000 ? "$" + (v/1000).toFixed(1) + "K" : "$" + v.toFixed(0)
+  const fngColor  = (v) => { const n = parseInt(v||0); if(n<=25) return "#ff4f6e"; if(n<=45) return "#ffb347"; if(n<=55) return "#f0e68c"; if(n<=75) return "#00ff88"; return "#00e5ff" }
+  const fngLabel  = (v) => { const n = parseInt(v||0); if(n<=25) return "Miedo Extremo"; if(n<=45) return "Miedo"; if(n<=55) return "Neutral"; if(n<=75) return "Codicia"; return "Codicia Extrema" }
+
+  const card = (val, label, sub, color="#00e5ff", locked=false) => (
+    <div style={{ background:"#070d14", border:`1px solid ${locked?"#0e2435":"#1a3a5e"}`, padding:"20px 24px", flex:1, minWidth:0, position:"relative", overflow:"hidden" }}>
+      {locked && (
+        <div style={{ position:"absolute", inset:0, background:"rgba(5,10,15,0.7)", display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(2px)", zIndex:1 }}>
+          <span style={{ fontSize:18, opacity:0.6 }}>🔒</span>
+        </div>
+      )}
+      <div style={{ fontSize:28, fontWeight:800, color, lineHeight:1, marginBottom:6 }}>{val}</div>
+      <div style={{ fontSize:13, fontWeight:600, color:"#c8e6f0" }}>{label}</div>
+      {sub && <div style={{ fontSize:11, color:"#2a5a72", marginTop:4 }}>{sub}</div>}
+    </div>
+  )
+
+  return (
+    <div style={{ padding:"32px", maxWidth:1100, margin:"0 auto", display:"flex", flexDirection:"column", gap:28 }}>
+
+      {/* ── Welcome ── */}
+      <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
+        <div>
+          <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", letterSpacing:3, textTransform:"uppercase", marginBottom:8 }}>Dashboard</div>
+          <h2 style={{ fontSize:28, fontWeight:800, color:"#fff", lineHeight:1.2, marginBottom:6 }}>
+            Bienvenido, <span style={{ color:"#00e5ff" }}>{(profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuario").split(" ")[0]}</span>
+          </h2>
+          {memberSince && <div style={{ fontSize:13, color:"#4a7a96" }}>Miembro desde {memberSince}</div>}
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:8 }}>
+          <div style={{
+            padding:"6px 16px", fontSize:12, fontWeight:700, letterSpacing:1,
+            border:`1px solid ${isPaid ? "rgba(0,229,255,0.4)" : "#1a3a5e"}`,
+            color: isPaid ? "#00e5ff" : "#2a5a72",
+            background: isPaid ? "rgba(0,229,255,0.06)" : "transparent",
+            textTransform:"uppercase",
+          }}>
+            {isPaid ? "⚡ " : ""}{planLabel}
+          </div>
+          {!isPaid && (
+            <a href={waUrl}
+              target="_blank" rel="noreferrer"
+              style={{ fontSize:11, color:"#4a7a96", textDecoration:"underline" }}>
+              Actualizar plan →
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* ── Stats bar ── */}
+      <div style={{ display:"flex", gap:16, flexWrap:"wrap" }}>
+        {card(`${progreso}%`, "Programa completado", `${completadas.length} / ${totalLecciones} lecciones`)}
+        {card(notasCount.toString(), "Notas guardadas", "en lecciones del curso")}
+        {card(isPaid ? pools.length.toString() : "—", "Pools activos", isPaid ? `${poolsInRange} en rango · ${poolsOutRange} fuera` : "Plan pago requerido", poolsOutRange > 0 ? "#ffb347" : "#00e5ff", !isPaid)}
+        {card(isPaid ? fmtUsd(totalValueUsd) : "—", "Valor en pools", isPaid ? `${wallets.length} wallet${wallets.length !== 1 ? "s" : ""} conectada${wallets.length !== 1 ? "s" : ""}` : "Plan pago requerido", "#00ff88", !isPaid)}
+      </div>
+
+      {/* ── Market strip ── */}
+      <div style={{ background:"#070d14", border:"1px solid #1a3a5e", padding:"16px 24px" }}>
+        <div style={{ fontSize:11, fontWeight:700, color:"#2a5a72", letterSpacing:2, textTransform:"uppercase", marginBottom:14 }}>Mercado en tiempo real</div>
+        {loadingMkt ? (
+          <div style={{ fontSize:13, color:"#2a5a72" }}>Cargando precios...</div>
+        ) : (
+          <div style={{ display:"flex", gap:32, flexWrap:"wrap", alignItems:"center" }}>
+            {[
+              { label:"BTC", data:prices.btc, color:"#f7931a" },
+              { label:"ETH", data:prices.eth, color:"#627eea" },
+            ].map(({ label, data, color }) => (
+              <div key={label} style={{ display:"flex", alignItems:"center", gap:12 }}>
+                <div style={{ width:32, height:32, background:color+"18", border:`1px solid ${color}33`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:800, color }}>{label}</div>
+                <div>
+                  <div style={{ fontSize:18, fontWeight:800, color:"#fff" }}>{fmtPrice(data?.price)}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color: data?.change >= 0 ? "#00ff88" : "#ff4f6e" }}>
+                    {data?.change >= 0 ? "▲" : "▼"} {fmtChange(data?.change)}
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div style={{ width:1, height:40, background:"#0e2435" }} />
+            {fng && (
+              <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                <div style={{ width:32, height:32, background:fngColor(fng.value)+"18", border:`1px solid ${fngColor(fng.value)}33`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:900, color:fngColor(fng.value) }}>{fng.value}</div>
+                <div>
+                  <div style={{ fontSize:15, fontWeight:700, color:fngColor(fng.value) }}>{fngLabel(fng.value)}</div>
+                  <div style={{ fontSize:11, color:"#2a5a72" }}>Fear & Greed Index</div>
+                </div>
+              </div>
+            )}
+            <div style={{ marginLeft:"auto", fontSize:11, color:"#1a3a5e" }}>↻ CoinGecko · alternative.me</div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Two columns ── */}
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
+
+        {/* Progreso del programa */}
+        <div style={{ background:"#070d14", border:"1px solid #1a3a5e", padding:"24px" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:"#c8e6f0" }}>Progreso del programa</div>
+            <div style={{ fontSize:22, fontWeight:900, color:"#00e5ff" }}>{progreso}%</div>
+          </div>
+          <div style={{ height:4, background:"#0e2435", marginBottom:20, position:"relative" }}>
+            <div style={{ position:"absolute", left:0, top:0, height:"100%", width:`${progreso}%`, background:"#00e5ff", transition:"width 0.6s ease" }} />
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+            {CURSO.map(m => {
+              const ids   = m.lecciones.map(l => l.id)
+              const done  = ids.filter(id => completadas.includes(id)).length
+              const pct   = Math.round((done / ids.length) * 100)
+              return (
+                <div key={m.id}>
+                  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:5 }}>
+                    <span style={{ fontSize:12, color: done === ids.length ? "#00ff88" : "#7ab8d4" }}>
+                      {done === ids.length ? "✓ " : ""}{m.titulo.replace(/Módulo \d+ — /, "")}
+                    </span>
+                    <span style={{ fontSize:11, color:"#4a7a96" }}>{done}/{ids.length}</span>
+                  </div>
+                  <div style={{ height:3, background:"#0e2435" }}>
+                    <div style={{ height:"100%", width:`${pct}%`, background: done === ids.length ? "#00ff88" : "#00e5ff", transition:"width 0.4s" }} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Accesos rápidos + actividad */}
+        <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+
+          {/* Quick actions */}
+          <div style={{ background:"#070d14", border:"1px solid #1a3a5e", padding:"24px" }}>
+            <div style={{ fontSize:13, fontWeight:700, color:"#c8e6f0", marginBottom:16 }}>Accesos rápidos</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              {[
+                { icon:"🛡", label:"Cobertura",       section:"liquidity", tab:"Cobertura",            paid:true },
+                { icon:"🤖", label:"Trading Auto",    section:"liquidity", tab:"Trading Automatizado", paid:true },
+                { icon:"📚", label:"Programa",         section:"Programa",  tab:null,                  paid:true },
+                { icon:"💬", label:"Contactar Oscar",  href:"https://wa.me/573215646716", paid:false },
+              ].map((a, i) => {
+                const locked = a.paid && !isPaid
+                return (
+                  <div key={i}
+                    onClick={() => {
+                      if (locked || !a.section) return
+                      // navigate handled by parent — use custom event pattern
+                    }}
+                    style={{
+                      padding:"12px 14px", background:"#0a1520",
+                      border:`1px solid ${locked ? "#0e2435" : "#1a3a5e"}`,
+                      display:"flex", alignItems:"center", gap:10,
+                      cursor: locked ? "not-allowed" : "pointer",
+                      opacity: locked ? 0.5 : 1,
+                      transition:"border-color 0.15s",
+                      textDecoration:"none", color:"inherit",
+                    }}
+                    onMouseEnter={e => { if(!locked) e.currentTarget.style.borderColor="#00e5ff" }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = locked ? "#0e2435" : "#1a3a5e" }}
+                    {...(a.href ? { as:"a", href:a.href, target:"_blank", rel:"noreferrer" } : {})}
+                  >
+                    <span style={{ fontSize:18 }}>{a.icon}</span>
+                    <span style={{ fontSize:13, color: locked ? "#2a5a72" : "#7ab8d4", fontWeight:600 }}>{a.label}</span>
+                    {locked && <span style={{ marginLeft:"auto", fontSize:10, color:"#2a5a72" }}>🔒</span>}
+                  </div>
+                )
+              })}
+            </div>
+            {/* WhatsApp separately since it needs href */}
+          </div>
+
+          {/* Actividad reciente */}
+          <div style={{ background:"#070d14", border:"1px solid #1a3a5e", padding:"24px", flex:1 }}>
+            <div style={{ fontSize:13, fontWeight:700, color:"#c8e6f0", marginBottom:16 }}>Actividad reciente</div>
+            {activity.length === 0 ? (
+              <div style={{ fontSize:13, color:"#2a5a72", textAlign:"center", padding:"20px 0" }}>
+                Sin actividad registrada aún.<br />
+                <span style={{ fontSize:11 }}>Empieza añadiendo un pool o abriendo el programa.</span>
+              </div>
+            ) : (
+              <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+                {activity.slice(0, 5).map((a, i) => (
+                  <div key={i} style={{ display:"flex", gap:12, alignItems:"flex-start", fontSize:12 }}>
+                    <div style={{ width:6, height:6, background:"#00e5ff", flexShrink:0, marginTop:4 }} />
+                    <div style={{ flex:1, color:"#7ab8d4" }}>{a.msg || a}</div>
+                    {a.ts && <div style={{ color:"#2a5a72", whiteSpace:"nowrap" }}>{new Date(a.ts).toLocaleDateString("es-CO")}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── CTA gratuito ── */}
+      {!isPaid && (
+        <div style={{ background:"linear-gradient(135deg,#071a14 0%,#050a0f 50%,#071020 100%)", border:"1px solid #1a3a5e", padding:"32px", textAlign:"center" }}>
+          <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", letterSpacing:3, textTransform:"uppercase", marginBottom:12 }}>Desbloquea todo el potencial</div>
+          <h3 style={{ fontSize:22, fontWeight:800, color:"#fff", marginBottom:10 }}>
+            Conviértete en <span style={{ color:"#00e5ff" }}>Trader en Formación</span>
+          </h3>
+          <p style={{ fontSize:14, color:"#4a7a96", marginBottom:24, maxWidth:480, margin:"0 auto 24px" }}>
+            Accede al Liquidity Engine, el programa completo y acompañamiento 1 a 1 con Oscar.
+          </p>
+          <a href={waUrl}
+            target="_blank" rel="noreferrer"
+            style={{ display:"inline-block", padding:"13px 36px", background:"#00e5ff", color:"#050a0f", fontFamily:"Outfit,sans-serif", fontSize:14, fontWeight:700, textDecoration:"none" }}>
+            Hablar con Oscar →
+          </a>
+        </div>
+      )}
+
+    </div>
+  )
+}
+
+// ── LockedTab — pantalla de upgrade para usuarios gratuitos ──────────
+function LockedTab({ tabName }) {
+  const { user, profile } = useAuth()
+  const userName  = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0]
+  const userEmail = user?.email
+  const waUrl     = buildWaUpgradeUrl(userName, userEmail)
+  return (
+    <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"60px 24px" }}>
+      <div style={{ maxWidth:480, width:"100%", textAlign:"center" }}>
+        <div style={{ fontSize:48, marginBottom:16 }}>🔒</div>
+        <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", letterSpacing:3, textTransform:"uppercase", marginBottom:12 }}>
+          Contenido exclusivo
+        </div>
+        <h2 style={{ fontSize:28, fontWeight:800, color:"#fff", marginBottom:12, lineHeight:1.2 }}>
+          Acceso disponible para<br /><span style={{ color:"#00e5ff" }}>Traders en Formación</span>
+        </h2>
+        <p style={{ fontSize:14, color:"#4a7a96", lineHeight:1.7, marginBottom:32 }}>
+          <strong style={{ color:"#7ab8d4" }}>{tabName}</strong> es parte del programa de formación profesional.
+          Únete y obtén acceso completo a todas las herramientas, el programa educativo y el acompañamiento personalizado.
+        </p>
+        <div style={{ display:"flex", flexDirection:"column", gap:10, alignItems:"center" }}>
+          <a
+            href={waUrl}
+            target="_blank" rel="noreferrer"
+            style={{ display:"inline-block", padding:"13px 36px", background:"#00e5ff", color:"#050a0f", fontFamily:"Outfit,sans-serif", fontSize:14, fontWeight:700, letterSpacing:"0.5px", textDecoration:"none", transition:"opacity 0.15s" }}
+            onMouseEnter={e=>e.currentTarget.style.opacity="0.88"}
+            onMouseLeave={e=>e.currentTarget.style.opacity="1"}
+          >
+            Hablar con Oscar →
+          </a>
+          <a
+            href="/"
+            style={{ fontSize:13, color:"#2a5a72", textDecoration:"none", transition:"color 0.15s" }}
+            onMouseEnter={e=>e.currentTarget.style.color="#7ab8d4"}
+            onMouseLeave={e=>e.currentTarget.style.color="#2a5a72"}
+          >
+            Ver planes y precios
+          </a>
+        </div>
+        <div style={{ marginTop:40, padding:"20px 24px", background:"#070d14", border:"1px solid #0e2435", textAlign:"left" }}>
+          <div style={{ fontSize:11, fontWeight:700, color:"#4a7a96", letterSpacing:2, textTransform:"uppercase", marginBottom:14 }}>
+            Incluido en tu plan
+          </div>
+          {[
+            "Programa completo de formación en criptomonedas",
+            "Liquidity Engine — gestión de pools Uniswap V3",
+            "Trading automatizado en Hyperliquid",
+            "Cobertura automático SHORT",
+            "Acompañamiento personalizado 1 a 1",
+          ].map((item, i) => (
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:10, fontSize:13, color:"#7ab8d4", marginBottom:10 }}>
+              <div style={{ width:6, height:6, background:"#00e5ff", flexShrink:0 }} />
+              {item}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
-  const { user, profile, signOut } = useAuth();
-  const [activeTab, setActiveTab]     = useState("Cobertura");
+  const { user, profile, signOut, isPaid, planLabel, isAdmin } = useAuth();
+
+  // activeSection: sección del sidebar (NAV_ITEMS o "liquidity")
+  const [activeSection, setActiveSection] = useState("Dashboard");
+  // activeLiquidityTab: sub-tab dentro de Liquidity Engine
+  const [activeLiquidityTab, setActiveLiquidityTab] = useState("Cobertura");
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [hlTestOpen, setHlTestOpen]   = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
 
-  // Dynamic user info from Google/Supabase
-  const userName   = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuario";
-  const userEmail  = user?.email || "";
-  const userPlan   = profile?.plan_id === "pro" ? "Pro" : profile?.plan_id === "premium" ? "Premium" : "Gratuito";
-  const avatarUrl  = profile?.avatar_url || user?.user_metadata?.avatar_url || null;
-  const initials   = userName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  const isLiquiditySection = activeSection === "liquidity";
 
-  const renderTab = () => {
-    switch (activeTab) {
-      case "Wallets":                    return <WalletsTab />;
-      case "Cobertura":                  return <CoberturaTab />;
-      case "Trading Automatizado":       return <TradingTab />;
-      case "Programa CryptoEducation":   return <ProgramaTab />;
-      case "Programa":                   return <ProgramaTab />;
-      default:                           return <ComingSoonTab name={activeTab} />;
+  // Dynamic user info from Google/Supabase
+  const userName  = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuario";
+  const userEmail = user?.email || "";
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || null;
+  const initials  = userName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  const waUpgradeUrl = buildWaUpgradeUrl(userName !== "Usuario" ? userName : null, userEmail || null);
+
+  const SECTION_TITLES = { liquidity:"Liquidity Engine", Dashboard:"Dashboard", Programa:"Programa", Preguntas:"Preguntas", "Users Admin":"Users Admin" };
+
+  const renderContent = () => {
+    if (isLiquiditySection) {
+      if (!isPaid && PAID_TABS.includes(activeLiquidityTab)) return <LockedTab tabName={activeLiquidityTab} />;
+      switch (activeLiquidityTab) {
+        case "Wallets":              return <WalletsTab />;
+        case "Cobertura":            return <CoberturaTab />;
+        case "Trading Automatizado": return <TradingTab />;
+        default:                     return <ComingSoonTab name={activeLiquidityTab} />;
+      }
+    }
+    // Secciones del sidebar
+    if (!isPaid && PAID_TABS.includes(activeSection)) return <LockedTab tabName={activeSection} />;
+    switch (activeSection) {
+      case "Dashboard":    return <DashboardTab />;
+      case "Programa":     return <ProgramaTab />;
+      case "Preguntas":    return <PreguntasTab />;
+      case "Users Admin":  return <UsersAdminTab />;
+      default:             return <ComingSoonTab name={activeSection} />;
     }
   };
 
@@ -4018,15 +5170,33 @@ export default function App() {
 
         <div className={`sidebar ${sidebarOpen ? "open" : ""}`}>
           <div className="logo">
-            <div className="logo-box">CH</div>
+            <div className="logo-box" style={{ background:"#00e5ff", padding:2 }}>
+              <img src={cryptoHouseLogo} alt="The Crypto House" style={{ width:32, height:32, objectFit:"contain", display:"block" }} />
+            </div>
             <div className="logo-text">The Crypto<br />House</div>
           </div>
           <div className="nav-section">
-            {NAV_ITEMS.map(l => <div key={l} className={`nav-item ${activeTab === l ? 'active' : ''}`} onClick={() => { setActiveTab(l); closeSidebar(); }}>{l}</div>)}
+            {NAV_ITEMS.map(l => {
+              const locked = !isPaid && PAID_TABS.includes(l);
+              const isActive = activeSection === l;
+              return (
+                <div key={l}
+                  className={`nav-item ${isActive ? 'active' : ''}`}
+                  onClick={() => { setActiveSection(l); closeSidebar(); }}
+                  style={locked ? { opacity:0.5 } : {}}
+                >
+                  {l}
+                  {locked && <span style={{ marginLeft:"auto", fontSize:11, color:"#2a5a72" }}>🔒</span>}
+                </div>
+              );
+            })}
           </div>
           <div className="nav-section">
             <div className="nav-label">Herramientas</div>
-            <div className="nav-item active" onClick={closeSidebar}>
+            <div
+              className={`nav-item ${isLiquiditySection ? 'active' : ''}`}
+              onClick={() => { setActiveSection("liquidity"); closeSidebar(); }}
+            >
               Liquidity Engine <span className="badge">BETA</span>
             </div>
           </div>
@@ -4036,6 +5206,22 @@ export default function App() {
               💬 WhatsApp / Email
             </div>
           </div>
+          {/* Sección Admin — solo visible para admins */}
+          {isAdmin && (
+            <div className="nav-section">
+              <div className="nav-label" style={{ color:"#00e5ff44" }}>Admin</div>
+              {NAV_ITEMS_ADMIN.map(l => (
+                <div key={l}
+                  className={`nav-item ${activeSection === l ? "active" : ""}`}
+                  onClick={() => { setActiveSection(l); closeSidebar(); }}
+                  style={{ color: activeSection===l ? "#00e5ff" : "#4a7a96" }}
+                >
+                  ⚙ {l}
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="sidebar-spacer" />
 
           {/* User info + logout */}
@@ -4049,7 +5235,7 @@ export default function App() {
               )}
               <div style={{ minWidth:0, flex:1 }}>
                 <div className="user-name" title={userName}>{userName}</div>
-                <div className="user-plan">{userPlan}</div>
+                <div className={`user-plan ${isPaid ? "paid" : "free"}`}>{planLabel}</div>
               </div>
             </div>
             <button onClick={signOut} style={{
@@ -4065,6 +5251,16 @@ export default function App() {
             >
               ⎋ Cerrar sesión
             </button>
+            {!isPaid && (
+              <a
+                href={waUpgradeUrl}
+                target="_blank" rel="noreferrer"
+                className="plan-upgrade-btn"
+                style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, textDecoration:"none", marginTop:8 }}
+              >
+                ⚡ Actualizar plan
+              </a>
+            )}
           </div>
         </div>
 
@@ -4072,32 +5268,40 @@ export default function App() {
           <div className="topbar">
             <div className="topbar-row">
               <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
-              <span className="page-title">Liquidity Engine</span>
-              <span className="beta-tag">BETA</span>
-              <button onClick={() => setHlTestOpen(true)} style={{
-                marginLeft:"auto", padding:"5px 12px",
-                background:"transparent", border:"1px solid #ffb347",
-                color:"#ffb347", fontFamily:"Outfit,sans-serif",
-                fontSize:11, fontWeight:700, cursor:"pointer",
-                letterSpacing:"0.5px",
-              }}>
+              <span className="page-title">{SECTION_TITLES[activeSection] || "Liquidity Engine"}</span>
+              {isLiquiditySection && <span className="beta-tag">BETA</span>}
+              <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
+                <NotificationBell userId={user?.id} />
+                <button onClick={() => setHlTestOpen(true)} style={{
+                  padding:"5px 12px",
+                  background:"transparent", border:"1px solid #ffb347",
+                  color:"#ffb347", fontFamily:"Outfit,sans-serif",
+                  fontSize:11, fontWeight:700, cursor:"pointer",
+                  letterSpacing:"0.5px",
+                }}>
                 ⚡ TEST HL API
-              </button>
+                </button>
+              </div>
             </div>
             <div className="page-sub">
               <span className="dot-active" />
-              <span>Monitoreo Pools de Liquidez, protección de rango y trading automatizado</span>
+              {isLiquiditySection
+                ? <span>Monitoreo Pools de Liquidez, protección de rango y trading automatizado</span>
+                : <span>{SECTION_TITLES[activeSection]}</span>
+              }
             </div>
-            <div className="tabs">
-              {TABS.map(tab => (
-                <button key={tab} className={`tab ${activeTab === tab ? "active" : ""}`} onClick={() => setActiveTab(tab)}>
-                  {tab}
-                  {TABS_WITH_BADGE.includes(tab) && <span className="tab-badge">ONLINE+</span>}
-                </button>
-              ))}
-            </div>
+            {isLiquiditySection && (
+              <div className="tabs">
+                {TABS.map(tab => (
+                  <button key={tab} className={`tab ${activeLiquidityTab === tab ? "active" : ""}`} onClick={() => setActiveLiquidityTab(tab)}>
+                    {tab}
+                    {TABS_WITH_BADGE.includes(tab) && <span className="tab-badge">ONLINE+</span>}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="content" style={activeTab === "Programa" ? { padding:0 } : {}}>{renderTab()}</div>
+          <div className="content" style={activeSection === "Programa" ? { padding:0 } : {}}>{renderContent()}</div>
         </div>
       </div>
     </>

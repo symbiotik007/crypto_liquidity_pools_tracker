@@ -1,6 +1,17 @@
 // src/pages/Login.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import cryptoHouseLogo from '../assets/cryptohouselogo.png'
+
+// ── helpers ──────────────────────────────────────────────────────────
+const EMAIL_DOMAINS = [
+  'gmail.com','hotmail.com','outlook.com','yahoo.com',
+  'icloud.com','live.com','protonmail.com','me.com','yahoo.es',
+]
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())
+}
 
 function checkPassword(pw) {
   const checks = {
@@ -13,6 +24,7 @@ function checkPassword(pw) {
   return { checks, score }
 }
 
+// ── icons ─────────────────────────────────────────────────────────────
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" style={{flexShrink:0}}>
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -31,6 +43,60 @@ const EyeIcon = ({ open }) => (
   </svg>
 )
 
+// ── EmailInput con autocompletado de dominios ─────────────────────────
+function EmailInput({ value, onChange, disabled, hasError }) {
+  const [suggestions, setSuggestions] = useState([])
+
+  const handleChange = (e) => {
+    const val = e.target.value.replace(/\s/g, '') // no espacios
+    onChange(val)
+    const atIdx = val.indexOf('@')
+    if (atIdx > -1) {
+      const after = val.slice(atIdx + 1).toLowerCase()
+      const base  = val.slice(0, atIdx + 1)
+      const list  = after.length === 0
+        ? EMAIL_DOMAINS.map(d => base + d)
+        : EMAIL_DOMAINS.filter(d => d.startsWith(after) && d !== after).map(d => base + d)
+      setSuggestions(list.slice(0, 6))
+    } else {
+      setSuggestions([])
+    }
+  }
+
+  const select = (s) => { onChange(s); setSuggestions([]) }
+
+  return (
+    <div style={{ position:'relative' }}>
+      <input
+        className={`m-inp${hasError ? ' err' : ''}`}
+        type="text"
+        inputMode="email"
+        placeholder="tu@email.com"
+        value={value}
+        onChange={handleChange}
+        onBlur={() => setTimeout(() => setSuggestions([]), 160)}
+        disabled={disabled}
+        autoComplete="email"
+        spellCheck={false}
+      />
+      {suggestions.length > 0 && (
+        <div className="email-sug">
+          {suggestions.map((s, i) => {
+            const atIdx = s.indexOf('@')
+            return (
+              <div key={i} className="email-sug-item" onMouseDown={() => select(s)}>
+                <span style={{color:'#7ab8d4'}}>{s.slice(0, atIdx + 1)}</span>
+                <span style={{color:'#00e5ff', fontWeight:700}}>{s.slice(atIdx + 1)}</span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── CSS ───────────────────────────────────────────────────────────────
 const CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
   *{box-sizing:border-box;margin:0;padding:0}
@@ -99,6 +165,7 @@ const CSS = `
   .m-submit:hover{background:rgba(0,229,255,0.05)}
   .m-submit:disabled{opacity:0.4;cursor:not-allowed}
   .m-err{background:#1a0810;border:1px solid #5a1a28;padding:10px 14px;font-size:13px;color:#ff6b88}
+  .m-warn{background:#1a1000;border:1px solid #5a3a00;padding:10px 14px;font-size:13px;color:#ffb347}
   .m-ok{background:#001a0e;border:1px solid #003a22;padding:16px;font-size:14px;color:#00ff88;text-align:center;line-height:1.7}
   .m-switch{text-align:center;font-size:13px;color:#4a7a96;padding-top:8px;border-top:1px solid #0e2435}
   .m-swbtn{background:none;border:none;color:#00e5ff;cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;text-decoration:underline;padding:0}
@@ -107,9 +174,20 @@ const CSS = `
   .m-fgbtn:hover{color:#7ab8d4}
   .m-back{background:none;border:none;color:#4a7a96;cursor:pointer;font-family:'Outfit',sans-serif;font-size:12px;text-align:left;padding:0}
   .m-back:hover{color:#7ab8d4}
+
+  /* ── email autocomplete ── */
+  .email-sug{position:absolute;top:100%;left:0;right:0;background:#0a1520;border:1px solid #1a3a5e;border-top:none;z-index:20;max-height:220px;overflow-y:auto}
+  .email-sug-item{padding:9px 14px;font-size:13px;color:#c8e6f0;cursor:pointer;border-bottom:1px solid #0e2435;transition:background 0.1s;display:flex;gap:0}
+  .email-sug-item:last-child{border-bottom:none}
+  .email-sug-item:hover{background:rgba(0,229,255,0.06)}
+
+  /* ── cooldown badge ── */
+  .m-cooldown{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;background:#0a0510;border:1px solid #3a0a28;font-size:13px;color:#ff6b88}
+
   @media(max-width:640px){.lp-nav{padding:20px 24px}.lp-hero{padding:48px 24px}.lp-title{font-size:36px}.m-body,.m-head{padding-left:20px;padding-right:20px}}
 `
 
+// ── StrengthMeter ─────────────────────────────────────────────────────
 function StrengthMeter({ password }) {
   const { checks, score } = checkPassword(password)
   if (!password) return null
@@ -137,16 +215,35 @@ function StrengthMeter({ password }) {
   )
 }
 
+// ── LoginModal ────────────────────────────────────────────────────────
+const COOLDOWN_SECS = 30
+const MAX_ATTEMPTS  = 3
+
 function LoginModal({ onClose, onSwitch }) {
-  const [tab, setTab]       = useState('password')
-  const [email, setEmail]   = useState('')
-  const [pw, setPw]         = useState('')
-  const [showPw, setShowPw] = useState(false)
+  const [tab, setTab]         = useState('password')
+  const [email, setEmail]     = useState('')
+  const [emailErr, setEmailErr] = useState(false)
+  const [pw, setPw]           = useState('')
+  const [showPw, setShowPw]   = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError]   = useState('')
+  const [error, setError]     = useState('')
   const [magicOk, setMagicOk] = useState(false)
   const [resetMode, setResetMode] = useState(false)
-  const [resetOk, setResetOk]   = useState(false)
+  const [resetOk, setResetOk]    = useState(false)
+  const [attempts, setAttempts]  = useState(0)
+  const [cooldown, setCooldown]  = useState(0)
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const t = setInterval(() => setCooldown(c => { if (c <= 1) { clearInterval(t); return 0 } return c - 1 }), 1000)
+    return () => clearInterval(t)
+  }, [cooldown])
+
+  const handleEmailChange = (val) => {
+    setEmail(val)
+    setError('')
+    setEmailErr(val.includes('@') && !isValidEmail(val))
+  }
 
   const withGoogle = async () => {
     setLoading(true); setError('')
@@ -156,18 +253,37 @@ function LoginModal({ onClose, onSwitch }) {
 
   const withPassword = async (e) => {
     e.preventDefault()
-    if (!email||!pw) return setError('Completa todos los campos')
+    if (cooldown > 0) return
+    if (!email || !pw) return setError('Completa todos los campos')
+    if (!isValidEmail(email)) { setEmailErr(true); return setError('Ingresa un email válido') }
     setLoading(true); setError('')
-    const { error } = await supabase.auth.signInWithPassword({ email, password:pw })
-    if (error) setError(error.message.includes('Invalid')?'Email o contraseña incorrectos':error.message)
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: pw })
+    if (error) {
+      const next = attempts + 1
+      setAttempts(next)
+      if (next >= MAX_ATTEMPTS) {
+        setCooldown(COOLDOWN_SECS)
+        setAttempts(0)
+        setError(`Demasiados intentos fallidos. Espera ${COOLDOWN_SECS} segundos.`)
+      } else {
+        setError(
+          error.message.includes('Invalid')
+            ? `Email o contraseña incorrectos (${next}/${MAX_ATTEMPTS} intentos)`
+            : error.message
+        )
+      }
+    } else {
+      setAttempts(0)
+    }
     setLoading(false)
   }
 
   const withMagic = async (e) => {
     e.preventDefault()
     if (!email) return setError('Ingresa tu email')
+    if (!isValidEmail(email)) { setEmailErr(true); return setError('Ingresa un email válido') }
     setLoading(true); setError('')
-    const { error } = await supabase.auth.signInWithOtp({ email, options:{ emailRedirectTo:`${location.origin}/auth/callback` } })
+    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options:{ emailRedirectTo:`${location.origin}/auth/callback` } })
     if (error) { setError(error.message); setLoading(false); return }
     setMagicOk(true); setLoading(false)
   }
@@ -175,48 +291,60 @@ function LoginModal({ onClose, onSwitch }) {
   const withReset = async (e) => {
     e.preventDefault()
     if (!email) return setError('Ingresa tu email')
+    if (!isValidEmail(email)) { setEmailErr(true); return setError('Ingresa un email válido') }
     setLoading(true); setError('')
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo:`${location.origin}/auth/callback` })
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo:`${location.origin}/auth/callback` })
     if (error) { setError(error.message); setLoading(false); return }
     setResetOk(true); setLoading(false)
   }
 
   return (
-    <div className="m-overlay" onClick={e=>e.target.classList.contains('m-overlay')&&onClose()}>
+    <div className="m-overlay">
       <div className="m-box">
         <div className="m-head">
           <div><div className="m-title">Iniciar sesión</div><div className="m-sub2">Bienvenido de vuelta</div></div>
           <button className="m-close" onClick={onClose}>✕</button>
         </div>
         <div className="m-body">
-          <button className="m-google" onClick={withGoogle} disabled={loading}><GoogleIcon /> Continuar con Google</button>
+          <button className="m-google" onClick={withGoogle} disabled={loading||cooldown>0}><GoogleIcon /> Continuar con Google</button>
           <div className="m-div">o</div>
           <div className="m-tabs">
             {[['password','Contraseña'],['magic','Magic Link']].map(([k,l])=>(
-              <button key={k} className="m-tab" onClick={()=>{setTab(k);setError('');setMagicOk(false);setResetMode(false);setResetOk(false)}}
+              <button key={k} className="m-tab"
+                onClick={()=>{setTab(k);setError('');setEmailErr(false);setMagicOk(false);setResetMode(false);setResetOk(false)}}
                 style={{borderBottom:`2px solid ${tab===k?'#00e5ff':'transparent'}`,color:tab===k?'#00e5ff':'#4a7a96'}}>
                 {l}
               </button>
             ))}
           </div>
 
+          {cooldown > 0 && (
+            <div className="m-cooldown">
+              🔒 Espera <strong>{cooldown}s</strong> para volver a intentarlo
+            </div>
+          )}
+
           {tab==='password' && !resetMode && !resetOk && (
             <form onSubmit={withPassword} style={{display:'flex',flexDirection:'column',gap:14}}>
-              <div><label className="m-lbl">Email</label>
-                <input className="m-inp" type="email" placeholder="tu@email.com" value={email}
-                  onChange={e=>{setEmail(e.target.value);setError('')}} disabled={loading} /></div>
+              <div>
+                <label className="m-lbl">Email</label>
+                <EmailInput value={email} onChange={handleEmailChange} disabled={loading||cooldown>0} hasError={emailErr} />
+                {emailErr && <div style={{fontSize:11,marginTop:4,color:'#ff6b88'}}>✗ Email no válido</div>}
+              </div>
               <div><label className="m-lbl">Contraseña</label>
                 <div className="m-pw">
                   <input className="m-inp" type={showPw?'text':'password'} placeholder="••••••••" value={pw}
-                    onChange={e=>{setPw(e.target.value);setError('')}} disabled={loading} />
+                    onChange={e=>{setPw(e.target.value);setError('')}} disabled={loading||cooldown>0} />
                   <button type="button" className="m-eye" onClick={()=>setShowPw(v=>!v)}><EyeIcon open={showPw}/></button>
                 </div>
               </div>
               <div className="m-forgot-row">
-                <button type="button" className="m-fgbtn" onClick={()=>{setResetMode(true);setError('');}}>¿Olvidaste tu contraseña?</button>
+                <button type="button" className="m-fgbtn" onClick={()=>{setResetMode(true);setError('');setEmailErr(false)}}>¿Olvidaste tu contraseña?</button>
               </div>
-              {error&&<div className="m-err">⚠ {error}</div>}
-              <button className="m-submit" type="submit" disabled={loading}>{loading?'Entrando...':'Iniciar sesión'}</button>
+              {error&&!cooldown&&<div className="m-err">⚠ {error}</div>}
+              <button className="m-submit" type="submit" disabled={loading||cooldown>0}>
+                {loading?'Entrando...':cooldown>0?`Espera ${cooldown}s...`:'Iniciar sesión'}
+              </button>
             </form>
           )}
 
@@ -225,21 +353,25 @@ function LoginModal({ onClose, onSwitch }) {
               <div style={{padding:'12px',background:'#0a1520',border:'1px solid #1a3a5e',fontSize:13,color:'#4a7a96',lineHeight:1.6}}>
                 Te enviaremos un enlace para restablecer tu contraseña.
               </div>
-              <div><label className="m-lbl">Email</label>
-                <input className="m-inp" type="email" placeholder="tu@email.com" value={email}
-                  onChange={e=>{setEmail(e.target.value);setError('')}} disabled={loading} /></div>
+              <div>
+                <label className="m-lbl">Email</label>
+                <EmailInput value={email} onChange={handleEmailChange} disabled={loading} hasError={emailErr} />
+                {emailErr && <div style={{fontSize:11,marginTop:4,color:'#ff6b88'}}>✗ Email no válido</div>}
+              </div>
               {error&&<div className="m-err">⚠ {error}</div>}
               <button className="m-submit" type="submit" disabled={loading}>{loading?'Enviando...':'✉ Enviar enlace'}</button>
-              <button type="button" className="m-back" onClick={()=>{setResetMode(false);setError('');}}>← Volver</button>
+              <button type="button" className="m-back" onClick={()=>{setResetMode(false);setError('');setEmailErr(false)}}>← Volver</button>
             </form>
           )}
           {resetOk&&<div className="m-ok">✉ Enlace enviado a<br/><strong style={{color:'#00ff88'}}>{email}</strong></div>}
 
           {tab==='magic' && !magicOk && (
             <form onSubmit={withMagic} style={{display:'flex',flexDirection:'column',gap:14}}>
-              <div><label className="m-lbl">Email</label>
-                <input className="m-inp" type="email" placeholder="tu@email.com" value={email}
-                  onChange={e=>{setEmail(e.target.value);setError('')}} disabled={loading} /></div>
+              <div>
+                <label className="m-lbl">Email</label>
+                <EmailInput value={email} onChange={handleEmailChange} disabled={loading} hasError={emailErr} />
+                {emailErr && <div style={{fontSize:11,marginTop:4,color:'#ff6b88'}}>✗ Email no válido</div>}
+              </div>
               {error&&<div className="m-err">⚠ {error}</div>}
               <button className="m-submit" type="submit" disabled={loading}>{loading?'Enviando...':'✉ Enviar Magic Link'}</button>
             </form>
@@ -253,18 +385,38 @@ function LoginModal({ onClose, onSwitch }) {
   )
 }
 
+// ── SignupModal ───────────────────────────────────────────────────────
 function SignupModal({ onClose, onSwitch }) {
-  const [name, setName]   = useState('')
-  const [email, setEmail] = useState('')
-  const [pw, setPw]       = useState('')
-  const [cf, setCf]       = useState('')
+  const [name, setName]     = useState('')
+  const [nameErr, setNameErr] = useState('')
+  const [email, setEmail]   = useState('')
+  const [emailErr, setEmailErr] = useState(false)
+  const [pw, setPw]         = useState('')
+  const [cf, setCf]         = useState('')
   const [showPw, setShowPw] = useState(false)
   const [showCf, setShowCf] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [done, setDone]   = useState(false)
+  const [error, setError]   = useState('')
+  const [done, setDone]     = useState(false)
   const { score } = checkPassword(pw)
-  const match = pw===cf && cf.length>0
+  const match = pw === cf && cf.length > 0
+
+  const handleNameChange = (val) => {
+    setName(val)
+    setError('')
+    if (val.length > 0 && val.trim().length < 2)
+      setNameErr('Ingresa al menos 2 caracteres')
+    else if (val.length > 0 && /[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]/.test(val))
+      setNameErr('Solo letras y espacios')
+    else
+      setNameErr('')
+  }
+
+  const handleEmailChange = (val) => {
+    setEmail(val)
+    setError('')
+    setEmailErr(val.includes('@') && !isValidEmail(val))
+  }
 
   const withGoogle = async () => {
     setLoading(true); setError('')
@@ -274,21 +426,31 @@ function SignupModal({ onClose, onSwitch }) {
 
   const handleSignup = async (e) => {
     e.preventDefault()
-    if (!name.trim()) return setError('Ingresa tu nombre')
+    const trimmedName = name.trim()
+    if (!trimmedName || trimmedName.length < 2) return setError('Ingresa tu nombre completo')
+    if (nameErr) return setError(nameErr)
     if (!email) return setError('Ingresa tu email')
-    if (score < 4) return setError('La contraseña no cumple los requisitos')
+    if (!isValidEmail(email)) { setEmailErr(true); return setError('Ingresa un email válido') }
+    if (score < 4) return setError('La contraseña no cumple los requisitos mínimos')
     if (!match) return setError('Las contraseñas no coinciden')
     setLoading(true); setError('')
     const { error } = await supabase.auth.signUp({
-      email, password:pw,
-      options:{ data:{full_name:name.trim()}, emailRedirectTo:`${location.origin}/auth/callback` }
+      email: email.trim(),
+      password: pw,
+      options: { data: { full_name: trimmedName }, emailRedirectTo: `${location.origin}/auth/callback` }
     })
-    if (error) { setError(error.message.includes('already registered')?'Este email ya está registrado':error.message); setLoading(false); return }
+    if (error) {
+      setError(error.message.includes('already registered') ? 'Este email ya está registrado' : error.message)
+      setLoading(false)
+      return
+    }
     setDone(true); setLoading(false)
   }
 
+  const canSubmit = !loading && score >= 4 && match && !nameErr && !emailErr && name.trim().length >= 2 && isValidEmail(email)
+
   if (done) return (
-    <div className="m-overlay" onClick={e=>e.target.classList.contains('m-overlay')&&onClose()}>
+    <div className="m-overlay">
       <div className="m-box">
         <div className="m-head"><div><div className="m-title">¡Cuenta creada!</div></div>
           <button className="m-close" onClick={onClose}>✕</button></div>
@@ -309,7 +471,7 @@ function SignupModal({ onClose, onSwitch }) {
   )
 
   return (
-    <div className="m-overlay" onClick={e=>e.target.classList.contains('m-overlay')&&onClose()}>
+    <div className="m-overlay">
       <div className="m-box">
         <div className="m-head">
           <div><div className="m-title">Crear cuenta</div><div className="m-sub2">Empieza gratis — sin tarjeta de crédito</div></div>
@@ -319,33 +481,70 @@ function SignupModal({ onClose, onSwitch }) {
           <button className="m-google" onClick={withGoogle} disabled={loading}><GoogleIcon /> Registrarse con Google</button>
           <div className="m-div">o con email</div>
           <form onSubmit={handleSignup} style={{display:'flex',flexDirection:'column',gap:14}}>
-            <div><label className="m-lbl">Nombre completo</label>
-              <input className="m-inp" type="text" placeholder="Tu nombre" value={name}
-                onChange={e=>{setName(e.target.value);setError('')}} disabled={loading} /></div>
-            <div><label className="m-lbl">Email</label>
-              <input className="m-inp" type="email" placeholder="tu@email.com" value={email}
-                onChange={e=>{setEmail(e.target.value);setError('')}} disabled={loading} /></div>
-            <div><label className="m-lbl">Contraseña</label>
+
+            {/* Nombre */}
+            <div>
+              <label className="m-lbl">Nombre completo</label>
+              <input
+                className={`m-inp${nameErr?' err':''}`}
+                type="text"
+                placeholder="Tu nombre"
+                value={name}
+                onChange={e=>handleNameChange(e.target.value)}
+                disabled={loading}
+                autoComplete="name"
+                maxLength={60}
+              />
+              {nameErr && <div style={{fontSize:11,marginTop:4,color:'#ff6b88'}}>✗ {nameErr}</div>}
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="m-lbl">Email</label>
+              <EmailInput value={email} onChange={handleEmailChange} disabled={loading} hasError={emailErr} />
+              {emailErr && <div style={{fontSize:11,marginTop:4,color:'#ff6b88'}}>✗ Email no válido</div>}
+            </div>
+
+            {/* Contraseña */}
+            <div>
+              <label className="m-lbl">Contraseña</label>
               <div className="m-pw">
-                <input className={`m-inp${pw&&score<4?' err':''}`} type={showPw?'text':'password'}
-                  placeholder="Mín. 8 chars, mayúscula, número, símbolo" value={pw}
-                  onChange={e=>{setPw(e.target.value);setError('')}} disabled={loading} />
+                <input
+                  className={`m-inp${pw&&score<4?' err':''}`}
+                  type={showPw?'text':'password'}
+                  placeholder="Mín. 8 chars, mayúscula, número, símbolo"
+                  value={pw}
+                  onChange={e=>{setPw(e.target.value);setError('')}}
+                  disabled={loading}
+                  autoComplete="new-password"
+                />
                 <button type="button" className="m-eye" onClick={()=>setShowPw(v=>!v)}><EyeIcon open={showPw}/></button>
               </div>
               <StrengthMeter password={pw} />
             </div>
-            <div><label className="m-lbl">Confirmar contraseña</label>
+
+            {/* Confirmar contraseña */}
+            <div>
+              <label className="m-lbl">Confirmar contraseña</label>
               <div className="m-pw">
-                <input className={`m-inp${cf&&!match?' err':''}`} type={showCf?'text':'password'}
-                  placeholder="Repite tu contraseña" value={cf}
-                  onChange={e=>{setCf(e.target.value);setError('')}} disabled={loading} />
+                <input
+                  className={`m-inp${cf&&!match?' err':''}`}
+                  type={showCf?'text':'password'}
+                  placeholder="Repite tu contraseña"
+                  value={cf}
+                  onChange={e=>{setCf(e.target.value);setError('')}}
+                  disabled={loading}
+                  autoComplete="new-password"
+                />
                 <button type="button" className="m-eye" onClick={()=>setShowCf(v=>!v)}><EyeIcon open={showCf}/></button>
               </div>
-              {cf&&<div style={{fontSize:11,marginTop:4,color:match?'#00ff88':'#ff4f6e'}}>{match?'✓ Coinciden':'✗ No coinciden'}</div>}
+              {cf && <div style={{fontSize:11,marginTop:4,color:match?'#00ff88':'#ff4f6e'}}>{match?'✓ Coinciden':'✗ No coinciden'}</div>}
             </div>
-            {error&&<div className="m-err">⚠ {error}</div>}
-            <button className="m-submit" type="submit" disabled={loading||score<4||!match}>
-              {loading?'Creando cuenta...':'Crear cuenta gratis'}
+
+            {error && <div className="m-err">⚠ {error}</div>}
+
+            <button className="m-submit" type="submit" disabled={!canSubmit}>
+              {loading ? 'Creando cuenta...' : 'Crear cuenta gratis'}
             </button>
             <div style={{fontSize:11,color:'#2a5a72',textAlign:'center',lineHeight:1.6}}>
               Al registrarte aceptas nuestros <a href="#" style={{color:'#4a7a96'}}>Términos</a> y <a href="#" style={{color:'#4a7a96'}}>Privacidad</a>
@@ -358,6 +557,7 @@ function SignupModal({ onClose, onSwitch }) {
   )
 }
 
+// ── page ──────────────────────────────────────────────────────────────
 const FEATS = ['Monitoreo de pools LP en tiempo real','Cobertura automático SHORT en Hyperliquid','Datos precisos de Revert Finance','Alertas cuando tu pool sale de rango','Dashboard futurista personalizado']
 
 export default function Login() {
@@ -368,7 +568,9 @@ export default function Login() {
       <div className="lp-root">
         <nav className="lp-nav">
           <div className="lp-brand">
-            <div className="lp-icon">CH</div>
+            <div className="lp-icon" style={{ background:"#00e5ff", padding:4 }}>
+              <img src={cryptoHouseLogo} alt="The Crypto House" style={{ width:"100%", height:"100%", objectFit:"contain", display:"block" }} />
+            </div>
             <div><div className="lp-name">The Crypto House</div><div className="lp-sub">Liquidity Engine</div></div>
           </div>
           <div className="lp-nav-btns">

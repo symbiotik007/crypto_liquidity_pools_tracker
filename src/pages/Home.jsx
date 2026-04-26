@@ -1,6 +1,7 @@
 // src/pages/Home.jsx
 import { useState, useEffect } from 'react'
 import oscarImg from '../assets/OscarB1.jpg'
+import cryptoHouseLogo from '../assets/cryptohouselogo.png'
 
 // ── Top 15 CoinGecko IDs ──────────────────────────────────────────
 const COIN_IDS = [
@@ -612,7 +613,7 @@ export default function Home() {
       {/* ── NAVBAR (fixed top: 32px, debajo del price bar) ── */}
       <nav className="nav">
         <a href="#" className="nav-brand" onClick={e => { e.preventDefault(); scrollTop(); }}>
-          <div className="nav-icon">CH</div>
+          <img src={cryptoHouseLogo} alt="The Crypto House" style={{ height:38, width:'auto', objectFit:'contain' }} />
           <div>
             <div className="nav-name">The Crypto House</div>
           </div>
@@ -874,6 +875,14 @@ export default function Home() {
                 </div>
                 <div className="contact-arrow">→</div>
               </a>
+              <a className="contact-card" href="https://www.linkedin.com/in/oscandrebol/" target="_blank" rel="noreferrer">
+                <div className="contact-card-icon">💼</div>
+                <div>
+                  <div className="contact-card-label">LinkedIn</div>
+                  <div className="contact-card-val">Oscar Bolaños · Perfil profesional</div>
+                </div>
+                <div className="contact-arrow">→</div>
+              </a>
             </div>
           </div>
 
@@ -920,7 +929,7 @@ export default function Home() {
           <div className="footer-top">
             <div>
               <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:4 }}>
-                <div className="nav-icon">CH</div>
+                <img src={cryptoHouseLogo} alt="The Crypto House" style={{ height:38, width:'auto', objectFit:'contain' }} />
                 <div className="nav-name">The Crypto House</div>
               </div>
               <p className="footer-brand-desc">
@@ -930,6 +939,7 @@ export default function Home() {
               <div className="footer-socials">
                 <a className="footer-social" href="https://wa.me/573215646716" target="_blank" rel="noreferrer">W</a>
                 <a className="footer-social" href="mailto:profeoscarbol@gmail.com">@</a>
+                <a className="footer-social" href="https://www.linkedin.com/in/oscandrebol/" target="_blank" rel="noreferrer" title="LinkedIn">in</a>
               </div>
             </div>
             <div>

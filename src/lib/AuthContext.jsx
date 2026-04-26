@@ -8,11 +8,10 @@ const AuthContext = createContext({})
 export function AuthProvider({ children }) {
   const [session, setSession]   = useState(null)
   const [user, setUser]         = useState(null)
-  const [profile, setProfile]   = useState(null)  // datos de nuestra tabla users
+  const [profile, setProfile]   = useState(null)
   const [loading, setLoading]   = useState(true)
 
   useEffect(() => {
-    // Sesión inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
@@ -20,7 +19,6 @@ export function AuthProvider({ children }) {
       setLoading(false)
     })
 
-    // Escuchar cambios de sesión
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session)
@@ -35,20 +33,14 @@ export function AuthProvider({ children }) {
   }, [])
 
   const fetchProfile = async (userId) => {
+    // Lee de la tabla profiles (creada con is_admin, is_paid, is_sso_gmail)
     const { data, error } = await supabase
-      .from('users')
-      .select('*, plans(*)')
+      .from('profiles')
+      .select('*')
       .eq('id', userId)
       .single()
 
-    if (!error && data) {
-      setProfile(data)
-      // Actualizar last_seen_at
-      await supabase
-        .from('users')
-        .update({ last_seen_at: new Date().toISOString() })
-        .eq('id', userId)
-    }
+    if (!error && data) setProfile(data)
   }
 
   const signOut = async () => {
@@ -58,22 +50,29 @@ export function AuthProvider({ children }) {
     setProfile(null)
   }
 
-  // Plan limits helper
+  // Plan limits helper — mantiene compatibilidad con tabla plans si existe
   const canAddPool = (currentPools) => {
     if (!profile) return false
     const maxPools = profile.plans?.max_pools ?? 1
-    if (maxPools === -1) return true          // unlimited
+    if (maxPools === -1) return true
     return currentPools < maxPools
   }
 
-  const isPro     = profile?.plan_id === 'pro' || profile?.plan_id === 'premium'
-  const isPremium = profile?.plan_id === 'premium'
+  // Derivados directo desde profiles
+  const isAdmin    = profile?.is_admin    === true
+  const isPaid     = profile?.is_paid     === true
+  const isPaused   = profile?.is_paused   === true
+  const isSsoGmail = profile?.is_sso_gmail === true
+  const isPro      = isPaid
+  const isPremium  = isPaid
+  const planLabel  = isPaid ? 'Trader en Formación' : 'Potencial Trader'
 
   return (
     <AuthContext.Provider value={{
       session, user, profile, loading,
       signOut, fetchProfile, canAddPool,
-      isPro, isPremium,
+      isAdmin, isPaid, isPaused, isSsoGmail,
+      isPro, isPremium, planLabel,
     }}>
       {children}
     </AuthContext.Provider>
