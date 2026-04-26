@@ -4019,7 +4019,7 @@ function ContactModal({ onClose }) {
   const [sent, setSent]       = useState(false);
 
   const handleWA = () => {
-    const text = encodeURIComponent(`Hola! Soy ${form.name || "un usuario"} de Liquidity Engine. ${form.msg}`);
+    const text = encodeURIComponent(`Hola. Soy ${form.name || "un usuario"} de Liquidity Engine ™. ${form.msg}`);
     window.open(`https://wa.me/573215646716?text=${text}`, "_blank");
   };
 
