@@ -124,15 +124,13 @@ export function usePoolsSync(userId) {
 
   // ── Remove pool ──────────────────────────────────────────────────
   const removePool = useCallback(async (tokenId) => {
-    if (!userId) return
-
-    const pool = pools.find(p => p.tokenId === tokenId)
-    if (pool?._dbId) {
+    const pool = pools.find(p => String(p.tokenId) === String(tokenId))
+    if (userId && pool?._dbId) {
       await supabase.from('pools').delete().eq('id', pool._dbId)
     }
 
     setPools(prev => {
-      const updated = prev.filter(p => p.tokenId !== tokenId)
+      const updated = prev.filter(p => String(p.tokenId) !== String(tokenId))
       localStorage.setItem('liquidity_engine_pools', JSON.stringify(updated))
       return updated
     })

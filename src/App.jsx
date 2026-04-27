@@ -2251,7 +2251,7 @@ function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
   const savedTrading = (() => {
     try {
       const all = JSON.parse(localStorage.getItem("hl_trading") || "[]");
-      return all.find(p => p.poolId === pos.tokenId && p.status === "active") || null;
+      return all.find(p => String(p.poolId) === String(pos.tokenId) && p.status === "active") || null;
     } catch { return null; }
   })();
 
@@ -2696,6 +2696,47 @@ async function fetchPricesFallback() {
   } catch { return {}; }
 }
 
+async function enrichPoolsWithMarketData(pools) {
+  const wallets = [...new Set(pools.map(p => p.og_owner || p.walletAddress).filter(Boolean))];
+  const revertMaps = await Promise.all(wallets.map(w => fetchRevertPositions(w)));
+  const revertAll = Object.assign({}, ...revertMaps);
+  const priceMap = Object.keys(revertAll).length > 0
+    ? buildPriceMapFromRevert(revertAll)
+    : await fetchPricesFallback();
+
+  return pools.map(pos => {
+    const r = revertAll[String(pos.tokenId)] ?? pos.revert ?? null;
+    const sym0 = (pos.token0Symbol || "").toUpperCase().replace("WETH", "ETH");
+    const sym1 = (pos.token1Symbol || "").toUpperCase();
+    const isStable1 = sym1.includes("USD") || ["USDC", "USDT", "DAI"].includes(sym1);
+    const livePrice = r
+      ? parseFloat(r.pool_price ?? pos.currentPrice ?? 0)
+      : (isStable1 ? (priceMap[sym0] ?? pos.currentPrice ?? 0) : (pos.currentPrice ?? 0));
+    const inRange = r ? r.in_range : (livePrice >= pos.priceLower && livePrice <= pos.priceUpper);
+    let status;
+    if (inRange) status = { label: "En Rango", color: "#00ff88", bg: "#001a0e", border: "#003a22" };
+    else if (livePrice < pos.priceLower) status = { label: "Fuera (Abajo)", color: "#ff4f6e", bg: "#1a0810", border: "#5a1a28" };
+    else status = { label: "Fuera (Arriba)", color: "#ffb347", bg: "#1a0e00", border: "#5a3a00" };
+
+    const amount0 = r ? parseFloat(r.current_amount0 ?? pos.amount0 ?? "0") : parseFloat(pos.amount0 ?? "0");
+    const amount1 = r ? parseFloat(r.current_amount1 ?? pos.amount1 ?? "0") : parseFloat(pos.amount1 ?? "0");
+    const valueUsd = r
+      ? parseFloat(r.underlying_value ?? "0")
+      : (amount0 * (priceMap[sym0] ?? livePrice ?? 0) + amount1 * (isStable1 ? 1 : (priceMap[sym1] ?? 0)));
+
+    return {
+      ...pos,
+      currentPrice: livePrice,
+      status,
+      valueUsd,
+      amount0: String(amount0),
+      amount1: String(amount1),
+      revert: r,
+      og_owner: pos.og_owner ?? pos.walletAddress,
+    };
+  });
+}
+
 
 function CoberturaTab() {
   const { user } = useAuth()
@@ -2714,37 +2755,9 @@ function CoberturaTab() {
   // ── Master refresh: Revert + live prices every 10s ────────────────
   const refreshAll = async () => {
     setRevertLoading(true);
-    const current = poolsRef.current;
-
-    // 1. Unique wallet addresses
-    const wallets = [...new Set(current.map(p => p.og_owner || p.walletAddress).filter(Boolean))];
-
-    // 2. Revert data for all wallets
-    const revertMaps = await Promise.all(wallets.map(w => fetchRevertPositions(w)));
-    const revertAll  = Object.assign({}, ...revertMaps);
-
-    // 3. Build price map from Revert data (no external auth needed)
-    const map = Object.keys(revertAll).length > 0
-      ? buildPriceMapFromRevert(revertAll)
-      : await fetchPricesFallback();   // only if Revert returned nothing
-
-    // 4. Enrich pools
-    setPools(prev => prev.map(pos => {
-      const r         = revertAll[String(pos.tokenId)] ?? pos.revert ?? null;
-      const sym0      = (pos.token0Symbol || "").toUpperCase().replace("WETH","ETH");
-      const sym1      = (pos.token1Symbol || "").toUpperCase();
-      const isStable1 = sym1.includes("USD") || ["USDC","USDT","DAI"].includes(sym1);
-      const livePrice = r ? parseFloat(r.pool_price ?? pos.currentPrice) : (isStable1 ? (map[sym0] ?? pos.currentPrice) : pos.currentPrice);
-      const inRange   = r ? r.in_range : (livePrice >= pos.priceLower && livePrice <= pos.priceUpper);
-      let newStatus;
-      if (inRange)                         newStatus = { label: "En Rango",        color: "#00ff88", bg: "#001a0e", border: "#003a22" };
-      else if (livePrice < pos.priceLower) newStatus = { label: "Fuera (Abajo)",  color: "#ff4f6e", bg: "#1a0810", border: "#5a1a28" };
-      else                                 newStatus = { label: "Fuera (Arriba)", color: "#ffb347", bg: "#1a0e00", border: "#5a3a00" };
-      const amt0     = r ? parseFloat(r.current_amount0 ?? pos.amount0 ?? "0") : parseFloat(pos.amount0 ?? "0");
-      const amt1     = r ? parseFloat(r.current_amount1 ?? pos.amount1 ?? "0") : parseFloat(pos.amount1 ?? "0");
-      const valueUsd = r ? parseFloat(r.underlying_value) : (amt0 * (map[sym0] ?? livePrice ?? 0) + amt1 * (isStable1 ? 1 : (map[sym1] ?? 0)));
-      return { ...pos, currentPrice: livePrice, status: newStatus, valueUsd, amount0: String(amt0), amount1: String(amt1), revert: r, og_owner: pos.og_owner ?? pos.walletAddress };
-    }));
+    const enriched = await enrichPoolsWithMarketData(poolsRef.current);
+    setPools(enriched);
+    localStorage.setItem("liquidity_engine_pools", JSON.stringify(enriched));
 
     setLastRefresh(new Date());
     setRevertLoading(false);
@@ -3288,19 +3301,41 @@ function HLTestModal({ onClose }) {
 
 
 function TradingTab() {
-  const [pools] = useState(() => {
-    try {
-      const saved = localStorage.getItem("liquidity_engine_pools");
-      if (!saved) return [];
-      return JSON.parse(saved).map(p => ({
-        ...p,
-        valueUsd:        p.valueUsd        ?? 0,
-        status:          p.status          ?? { label:"Fuera (Abajo)",color:"#ff4f6e",bg:"#1a0810",border:"#5a1a28" },
-        amount0:         p.amount0         ?? "0",
-        amount1:         p.amount1         ?? "0",
-      }));
-    } catch { return []; }
-  });
+  const { user } = useAuth()
+  const { pools, setPools, removePool } = usePoolsSync(user?.id)
+  const { registrar: registrarActividad } = useActividadPools(user?.id)
+  const poolsRef = useRef([])
+
+  useEffect(() => {
+    poolsRef.current = pools
+  }, [pools])
+
+  const refreshTradingPools = async () => {
+    if (poolsRef.current.length === 0) return
+    const enriched = await enrichPoolsWithMarketData(poolsRef.current)
+    setPools(enriched)
+    localStorage.setItem("liquidity_engine_pools", JSON.stringify(enriched))
+  }
+
+  useEffect(() => {
+    refreshTradingPools()
+    const interval = setInterval(refreshTradingPools, 10000)
+    return () => clearInterval(interval)
+  }, []) // eslint-disable-line
+
+  useEffect(() => {
+    if (pools.length > 0 && !pools.some(p => p.revert)) refreshTradingPools()
+  }, [pools.length]) // eslint-disable-line
+
+  const handleRemove = async (tokenId) => {
+    await removePool(tokenId)
+    await registrarActividad({
+      poolId: tokenId,
+      pair:   "Pool eliminada",
+      chain:  "",
+      action: "removed",
+    })
+  }
 
   // Counts
   const activeBots = (() => {
@@ -3344,7 +3379,7 @@ function TradingTab() {
           <PoolCard
             key={pos.tokenId}
             pos={pos}
-            onRemove={() => {}}   // no eliminar desde trading tab
+            onRemove={handleRemove}
             mode="trading"
           />
         ))
@@ -3584,10 +3619,163 @@ const CURSO = [
   },
 ];
 
+const CRYPTO_BOOTCAMP = [
+  { id:"crypto-01", titulo:"Introducción", lessons:4, sourcePath:"/crypto/learn/introduction" },
+  { id:"crypto-02", titulo:"Bitcoin desde cero", lessons:5, sourcePath:"/crypto/learn/bitcoin-for-beginners" },
+  { id:"crypto-03", titulo:"Cómo funciona la red Bitcoin", lessons:4, sourcePath:"/crypto/learn/bitcoin-network-for-beginners" },
+  { id:"crypto-04", titulo:"Hashing y seguridad criptográfica", lessons:4, sourcePath:"/crypto/learn/hashing-for-beginners" },
+  { id:"crypto-05", titulo:"Minería de Bitcoin y consenso", lessons:4, sourcePath:"/crypto/learn/bitcoin-mining-for-beginners" },
+  { id:"crypto-06", titulo:"Fundamentos de blockchain", lessons:2, sourcePath:"/crypto/learn/blockchain-for-beginners" },
+  { id:"crypto-07", titulo:"Wallets, llaves y autocustodia", lessons:8, sourcePath:"/crypto/learn/bitcoin-wallets-for-beginners" },
+  { id:"crypto-08", titulo:"Firmas digitales y prueba de propiedad", lessons:7, sourcePath:"/crypto/learn/digital-signatures-for-beginners" },
+  { id:"crypto-09", titulo:"Altcoins, narrativas y ciclos de mercado", lessons:4, sourcePath:"/crypto/learn/altcoins-for-beginners" },
+  { id:"crypto-10", titulo:"Exchanges cripto y ejecución segura", lessons:12, sourcePath:"/crypto/learn/crypto-exchanges-for-beginners" },
+  { id:"crypto-11", titulo:"Estafas cripto: señales de alerta y defensa", lessons:4, sourcePath:"/crypto/learn/crypto-scams-for-beginners" },
+  { id:"crypto-12", titulo:"Ethereum, smart contracts y gas", lessons:7, sourcePath:"/crypto/learn/ethereum-for-beginners" },
+  { id:"crypto-13", titulo:"Trading cripto: mercado, riesgo y estrategia", lessons:8, sourcePath:"/crypto/learn/crypto-trading-for-beginners" },
+  { id:"crypto-14", titulo:"NFTs, utilidad y economía digital", lessons:9, sourcePath:"/crypto/learn/nfts-for-beginners" },
+  { id:"crypto-15", titulo:"ETFs cripto y acceso institucional", lessons:5, sourcePath:"/crypto/learn/crypto-etfs-for-beginners" },
+  { id:"crypto-16", titulo:"Análisis on-chain para tomar decisiones", lessons:12, sourcePath:"/crypto/learn/on-chain-analysis-for-beginners" },
+].map((mod) => {
+  const clasesModulo1 = [
+    {
+      id:"crypto-01-1",
+      titulo:"¿Qué es una criptomoneda?",
+      resumen:"Qué es una criptomoneda, en qué se diferencia de las monedas tradicionales y qué la hace especial.",
+      estado:"Contenido cargado",
+      sourceUrl:"https://www.babypips.com/crypto/learn/what-is-cryptocurrency",
+      contenido:[
+        {
+          titulo:"Idea central",
+          texto:"Una criptomoneda es una forma de dinero digital que combina software, redes distribuidas y criptografía para funcionar sin depender de bancos centrales, gobiernos o intermediarios tradicionales.",
+        },
+        {
+          titulo:"Características principales",
+          puntos:[
+            "Digital: no existe en billetes ni monedas físicas; vive como información registrada por software.",
+            "Global: puede enviarse por internet entre personas ubicadas en cualquier país.",
+            "Sin permiso: no necesitas aprobación de un banco para enviar, recibir o mantener criptoactivos.",
+            "Descentralizada: no hay una sola institución controlando la emisión o validación de la red.",
+            "Difícil de falsificar: usa criptografía para proteger transacciones y registros.",
+          ],
+        },
+        {
+          titulo:"Por qué importa",
+          texto:"Estas propiedades permiten que una persona tenga mayor control sobre su dinero y pueda interactuar directamente con otras personas o aplicaciones. Ese potencial es poderoso, pero todavía depende de adopción, educación y una buena gestión del riesgo.",
+        },
+      ],
+      imagenes:[
+        { alt:"Bitcoin es una criptomoneda", src:"https://www.babypips.com/crypto/learn/what-is-cryptocurrency" },
+      ],
+    },
+    {
+      id:"crypto-01-2",
+      titulo:"Cripto como nueva clase de activo",
+      resumen:"Las criptomonedas ya son vistas como activos financieros que pueden mantenerse como inversiones alternativas.",
+      estado:"Contenido cargado",
+      sourceUrl:"https://www.babypips.com/crypto/learn/cryptocurrencies-new-asset-class",
+      contenido:[
+        {
+          titulo:"Más que dinero digital",
+          texto:"Además de servir como medio de pago, muchas criptomonedas se usan como activos financieros para especular, invertir, diversificar portafolios o participar en nuevos ecosistemas digitales.",
+        },
+        {
+          titulo:"Nueva categoría de inversión",
+          puntos:[
+            "Cripto comparte rasgos con otros activos financieros, pero opera en mercados 24/7.",
+            "Bitcoin sigue siendo el activo cripto más reconocido, pero existen miles de otros proyectos.",
+            "El mercado puede ofrecer oportunidades, aunque también contiene proyectos débiles, inútiles o directamente fraudulentos.",
+            "La volatilidad es alta, por lo que entrar sin entender el activo aumenta el riesgo de pérdidas fuertes.",
+          ],
+        },
+        {
+          titulo:"Mentalidad correcta",
+          texto:"La lección enfatiza que cripto debe estudiarse antes de invertir. No todo token tiene valor real, y la narrativa de “hacerse rico rápido” suele atraer a quienes no entienden el riesgo.",
+        },
+      ],
+      imagenes:[
+        { alt:"Ejemplos de clases de activos", src:"https://www.babypips.com/crypto/learn/cryptocurrencies-new-asset-class" },
+      ],
+    },
+    {
+      id:"crypto-01-3",
+      titulo:"Conoce a Toshi Moshi",
+      resumen:"Presentación de Toshi Moshi, el guía amigable para empezar el recorrido por el mundo cripto.",
+      estado:"Contenido cargado",
+      sourceUrl:"https://www.babypips.com/crypto/learn/meet-toshi-moshi",
+      contenido:[
+        {
+          titulo:"Propósito del curso",
+          texto:"Toshi Moshi presenta el curso como una guía para principiantes que quieren entender Bitcoin, altcoins, tokens y el mercado cripto sin caer en exceso de jerga ni promesas irreales.",
+        },
+        {
+          titulo:"Advertencia de riesgo",
+          puntos:[
+            "El interés en cripto ha crecido, pero también la desinformación y los malos consejos.",
+            "La lección rechaza la idea de cripto como fórmula para hacerse rico rápido.",
+            "Antes de arriesgar capital, hay que entender qué se compra, cómo funciona y qué puede salir mal.",
+            "La educación es presentada como defensa contra estafas, FOMO y decisiones impulsivas.",
+          ],
+        },
+        {
+          titulo:"Objetivo",
+          texto:"La meta es que el estudiante pase de sentirse perdido a tomar decisiones más informadas, entendiendo conceptos básicos y gestionando el riesgo con prudencia.",
+        },
+      ],
+      imagenes:[
+        { alt:"Bienvenida de Toshi Moshi", src:"https://www.babypips.com/crypto/learn/meet-toshi-moshi" },
+        { alt:"Riesgo de quedar atrapado en cripto sin entender", src:"https://bpcdn.co/images/2022/07/21110412/old-crypto-trader.png" },
+      ],
+    },
+    {
+      id:"crypto-01-4",
+      titulo:"Primeros pasos con Bitcoin",
+      resumen:"La curva de aprendizaje cripto puede ser fuerte; este inicio se enfoca en Bitcoin antes de cubrir todo el mercado.",
+      estado:"Contenido cargado",
+      sourceUrl:"https://www.babypips.com/crypto/learn/getting-started-bitcoin",
+      contenido:[
+        {
+          titulo:"Por qué empezar con Bitcoin",
+          texto:"El mercado cripto tiene miles de activos y puede ser abrumador. Bitcoin es el punto de partida natural porque fue la primera criptomoneda y muchos conceptos del ecosistema nacen de su diseño.",
+        },
+        {
+          titulo:"Definición inicial",
+          puntos:[
+            "Bitcoin es una moneda digital descentralizada basada en software abierto.",
+            "Las transacciones se registran en una blockchain pública y distribuida.",
+            "La red usa conceptos como minería, prueba de trabajo, llaves públicas, firmas digitales y funciones hash.",
+            "Aunque suena técnico al principio, el curso propone construir el vocabulario paso a paso.",
+          ],
+        },
+        {
+          titulo:"Meta de aprendizaje",
+          texto:"La lección busca reducir la intimidación inicial. Si entiendes Bitcoin, tendrás una base más sólida para comprender otros criptoactivos, sus riesgos y sus diferencias.",
+        },
+      ],
+      imagenes:[
+        { alt:"Guía inicial de Bitcoin", src:"https://www.babypips.com/crypto/learn/getting-started-bitcoin" },
+      ],
+    },
+  ];
+
+  return {
+    ...mod,
+    clases:mod.id === "crypto-01"
+      ? clasesModulo1
+      : Array.from({ length:mod.lessons }, (_, i) => ({
+          id:`${mod.id}-${i + 1}`,
+          titulo:`Clase ${i + 1}`,
+          resumen:"Contenido de la lección pendiente por cargar.",
+          estado:"Contenido pendiente",
+        })),
+  };
+});
+
 function ProgramaTab() {
   const { user } = useAuth();
   const [moduloActivo, setModuloActivo] = useState(0);
   const [leccionActiva, setLeccionActiva] = useState(0);
+  const [modulosAbiertos, setModulosAbiertos] = useState(() => new Set([CURSO[0]?.id]));
   const [completadas, setCompletadas] = useState(() => {
     try { return JSON.parse(localStorage.getItem("crypto_edu_completadas") || "[]"); }
     catch { return []; }
@@ -3626,9 +3814,26 @@ function ProgramaTab() {
       setLeccionActiva(l => l + 1);
     } else if (moduloActivo < CURSO.length - 1) {
       if (!completadas.includes(leccion.id)) toggleCompletada(leccion.id);
+      const nextModulo = CURSO[moduloActivo + 1];
+      if (nextModulo) setModulosAbiertos(prev => new Set([...prev, nextModulo.id]));
       setModuloActivo(m => m + 1);
       setLeccionActiva(0);
     }
+  };
+
+  const toggleModulo = (modId) => {
+    setModulosAbiertos(prev => {
+      const next = new Set(prev);
+      if (next.has(modId)) next.delete(modId);
+      else next.add(modId);
+      return next;
+    });
+  };
+
+  const seleccionarLeccion = (mi, li) => {
+    setModuloActivo(mi);
+    setLeccionActiva(li);
+    setModulosAbiertos(prev => new Set([...prev, CURSO[mi].id]));
   };
 
   const S = {
@@ -3655,7 +3860,19 @@ function ProgramaTab() {
     moduloHeader: {
       padding:"10px 18px 6px", fontSize:11, letterSpacing:1.5,
       textTransform:"uppercase", fontWeight:700, display:"flex", alignItems:"center", gap:8,
+      cursor:"pointer", userSelect:"none", transition:"background 0.15s",
     },
+    moduloChevron: (open, c) => ({
+      marginLeft:"auto", color:open ? c : "#1a3a5e", fontSize:14,
+      transform:open ? "rotate(90deg)" : "rotate(0deg)",
+      transition:"transform 0.15s, color 0.15s",
+    }),
+    leccionesDrop: (open) => ({
+      overflow:"hidden",
+      maxHeight:open ? 520 : 0,
+      opacity:open ? 1 : 0,
+      transition:"max-height 0.2s ease, opacity 0.15s ease",
+    }),
     dot: (c) => ({ width:8, height:8, minWidth:8, borderRadius:"50%", background:c }),
     leccionItem: (activa, done) => ({
       padding:"9px 18px 9px 26px", cursor:"pointer", fontSize:13,
@@ -3787,27 +4004,43 @@ function ProgramaTab() {
         </div>
 
         {/* Módulos y lecciones */}
-        {CURSO.map((mod, mi) => (
+        {CURSO.map((mod, mi) => {
+          const abierto = modulosAbiertos.has(mod.id);
+          const leccionesCompletadas = mod.lecciones.filter(lec => completadas.includes(lec.id)).length;
+          return (
           <div key={mod.id}>
-            <div style={S.moduloHeader}>
+            <div
+              style={{
+                ...S.moduloHeader,
+                background: moduloActivo === mi ? "rgba(0,229,255,0.04)" : "transparent",
+              }}
+              onClick={() => toggleModulo(mod.id)}
+            >
               <div style={S.dot(mod.color)} />
-              <span style={{ color: moduloActivo === mi ? mod.color : "#2a4a5e", fontSize:11 }}>
+              <span style={{ color: moduloActivo === mi ? mod.color : "#2a4a5e", fontSize:11, lineHeight:1.35 }}>
                 {mod.titulo}
               </span>
+              <span style={{ marginLeft:"auto", fontSize:10, color:"#2a5a72", whiteSpace:"nowrap" }}>
+                {leccionesCompletadas}/{mod.lecciones.length}
+              </span>
+              <span style={S.moduloChevron(abierto, mod.color)}>›</span>
             </div>
-            {mod.lecciones.map((lec, li) => {
-              const activa = moduloActivo === mi && leccionActiva === li;
-              const done   = completadas.includes(lec.id);
-              return (
-                <div key={lec.id} style={S.leccionItem(activa, done)}
-                  onClick={() => { setModuloActivo(mi); setLeccionActiva(li); }}>
-                  <div style={S.checkCircle(done)}>{done ? "✓" : ""}</div>
-                  <span style={{ lineHeight:1.4 }}>{lec.titulo}</span>
-                </div>
-              );
-            })}
+            <div style={S.leccionesDrop(abierto)}>
+              {mod.lecciones.map((lec, li) => {
+                const activa = moduloActivo === mi && leccionActiva === li;
+                const done   = completadas.includes(lec.id);
+                return (
+                  <div key={lec.id} style={S.leccionItem(activa, done)}
+                    onClick={() => seleccionarLeccion(mi, li)}>
+                    <div style={S.checkCircle(done)}>{done ? "✓" : ""}</div>
+                    <span style={{ lineHeight:1.4 }}>{lec.titulo}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* ── Contenido de la lección ── */}
@@ -3992,7 +4225,7 @@ function ProgramaTab() {
                           // Navegar a la lección con la nota
                           const mIdx = CURSO.findIndex(m => m.lecciones.some(ll => ll.id === l.id))
                           const lIdx = CURSO[mIdx]?.lecciones.findIndex(ll => ll.id === l.id)
-                          if (mIdx >= 0 && lIdx >= 0) { setModuloActivo(mIdx); setLeccionActiva(lIdx); setNotasVista("actual") }
+                          if (mIdx >= 0 && lIdx >= 0) { seleccionarLeccion(mIdx, lIdx); setNotasVista("actual") }
                         }}
                         style={{
                           padding:"12px 16px", cursor:"pointer", borderBottom:"1px solid #0e2435",
@@ -4028,12 +4261,268 @@ function ProgramaTab() {
   );
 }
 
+function CryptoBootcampTab() {
+  const [abiertos, setAbiertos] = useState(() => new Set([CRYPTO_BOOTCAMP[0]?.id]));
+  const [moduloActivo, setModuloActivo] = useState(0);
+  const [claseActiva, setClaseActiva] = useState(0);
+  const [completadas, setCompletadas] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("crypto_bootcamp_completadas") || "[]"); }
+    catch { return []; }
+  });
+  const totalClases = CRYPTO_BOOTCAMP.reduce((acc, mod) => acc + mod.clases.length, 0);
+  const progreso = Math.round((completadas.length / totalClases) * 100);
+  const modulo = CRYPTO_BOOTCAMP[moduloActivo];
+  const clase = modulo?.clases[claseActiva];
+  const isDirectImage = (src) => /\.(png|jpe?g|webp|gif|svg)(\?|$)/i.test(src || "");
+
+  const toggle = (id) => {
+    setAbiertos(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const seleccionarClase = (mi, ci) => {
+    setModuloActivo(mi);
+    setClaseActiva(ci);
+    setAbiertos(prev => new Set([...prev, CRYPTO_BOOTCAMP[mi].id]));
+  };
+
+  const toggleCompletada = (id) => {
+    const next = completadas.includes(id)
+      ? completadas.filter(x => x !== id)
+      : [...completadas, id];
+    setCompletadas(next);
+    localStorage.setItem("crypto_bootcamp_completadas", JSON.stringify(next));
+  };
+
+  const irSiguiente = () => {
+    if (!clase || !modulo) return;
+    if (!completadas.includes(clase.id)) toggleCompletada(clase.id);
+    if (claseActiva < modulo.clases.length - 1) {
+      setClaseActiva(c => c + 1);
+      return;
+    }
+    if (moduloActivo < CRYPTO_BOOTCAMP.length - 1) {
+      const nextModulo = CRYPTO_BOOTCAMP[moduloActivo + 1];
+      setModuloActivo(m => m + 1);
+      setClaseActiva(0);
+      setAbiertos(prev => new Set([...prev, nextModulo.id]));
+    }
+  };
+
+  const S = {
+    wrap:{ display:"flex", gap:0, height:"100%", minHeight:0 },
+    sidebar:{ width:340, minWidth:280, maxWidth:380, borderRight:"1px solid #0e2435", overflowY:"auto", paddingBottom:16, flexShrink:0 },
+    content:{ flex:1, minWidth:0, overflowY:"auto", padding:"28px 32px 40px" },
+    intro:{ padding:"20px 18px 16px", borderBottom:"1px solid #0e2435", background:"linear-gradient(135deg,#070d14 0%,#0a1a24 100%)" },
+    eyebrow:{ fontSize:11, letterSpacing:2.4, textTransform:"uppercase", color:"#00e5ff", fontWeight:800, marginBottom:8 },
+    title:{ fontSize:24, lineHeight:1.2, color:"#e0f4ff", fontWeight:800, marginBottom:8 },
+    sub:{ fontSize:13, color:"#4a7a96", lineHeight:1.7 },
+    stats:{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, padding:"12px 18px", borderBottom:"1px solid #0e2435" },
+    stat:{ background:"#070d14", border:"1px solid #0e2435", padding:"10px 12px" },
+    statLabel:{ fontSize:10, color:"#2a5a72", letterSpacing:1.4, textTransform:"uppercase", marginBottom:6 },
+    statValue:{ fontSize:18, color:"#e0f4ff", fontWeight:800 },
+    progressWrap:{ padding:"12px 18px", borderBottom:"1px solid #0e2435" },
+    progressLabel:{ display:"flex", justifyContent:"space-between", fontSize:11, color:"#2a5a72", marginBottom:6, letterSpacing:1 },
+    progressBar:{ height:3, background:"#0e2435", position:"relative" },
+    progressFill:{ height:"100%", background:"#00e5ff", transition:"width 0.4s ease" },
+    list:{ display:"flex", flexDirection:"column", gap:0 },
+    module:{ borderBottom:"1px solid #0e2435" },
+    header:(open) => ({
+      width:"100%", display:"flex", alignItems:"center", gap:12, padding:"14px 16px",
+      background:open ? "rgba(0,229,255,0.04)" : "transparent",
+      border:"none", borderBottom:open ? "1px solid #0e2435" : "1px solid transparent",
+      color:"#c8e6f0", cursor:"pointer", textAlign:"left", fontFamily:"Outfit,sans-serif",
+    }),
+    number:{ width:30, height:30, minWidth:30, display:"flex", alignItems:"center", justifyContent:"center", background:"#0a1520", border:"1px solid #1a3a5e", color:"#00e5ff", fontSize:12, fontWeight:800 },
+    moduleTitle:{ fontSize:14, color:"#e0f4ff", fontWeight:800, lineHeight:1.35 },
+    meta:{ fontSize:11, color:"#4a7a96", marginTop:3 },
+    chevron:(open) => ({ marginLeft:"auto", color:open ? "#00e5ff" : "#1a3a5e", fontSize:18, transform:open ? "rotate(90deg)" : "rotate(0deg)", transition:"transform 0.15s" }),
+    drop:(open) => ({ overflow:"hidden", maxHeight:open ? 680 : 0, opacity:open ? 1 : 0, transition:"max-height 0.2s ease, opacity 0.15s ease" }),
+    lesson:(active) => ({
+      width:"100%", display:"flex", alignItems:"center", gap:10, padding:"10px 16px 10px 58px",
+      border:"none", borderBottom:"1px solid rgba(14,36,53,0.55)",
+      background:active ? "#0a1a24" : "transparent", cursor:"pointer", textAlign:"left",
+      borderLeft:active ? "2px solid #00e5ff" : "2px solid transparent", fontFamily:"Outfit,sans-serif",
+    }),
+    checkCircle:(done) => ({
+      width:16, height:16, minWidth:16, borderRadius:"50%",
+      border:done ? "none" : "1px solid #1a3a5e",
+      background:done ? "#00ff88" : "transparent",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      fontSize:9, color:"#050a0f", fontWeight:900, flexShrink:0,
+    }),
+    lessonTitle:(active) => ({ fontSize:13, color:active ? "#e0f4ff" : "#7ab8d4", flex:1, lineHeight:1.4 }),
+    pill:{ fontSize:10, color:"#2a5a72", border:"1px solid #12304a", padding:"2px 7px", whiteSpace:"nowrap" },
+    badge:{ display:"inline-block", padding:"2px 10px", fontSize:11, border:"1px solid #00e5ff", color:"#00e5ff", letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 },
+    lessonHeader:{ fontSize:26, fontWeight:800, color:"#e0f4ff", lineHeight:1.25, marginBottom:10 },
+    metaRow:{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap", marginBottom:24, color:"#4a7a96", fontSize:12 },
+    sectionTitle:{ fontSize:11, letterSpacing:2, color:"#2a5a72", textTransform:"uppercase", marginBottom:12, marginTop:22, paddingBottom:8, borderBottom:"1px solid #0e2435" },
+    desc:{ fontSize:15, color:"#7ab8d4", lineHeight:1.8, maxWidth:760, marginBottom:20 },
+    pending:{ background:"#070d14", border:"1px solid #0e2435", padding:"18px 20px", color:"#4a7a96", fontSize:13, lineHeight:1.7, maxWidth:760 },
+    contentBlock:{ background:"#070d14", border:"1px solid #0e2435", padding:"16px 18px", marginBottom:12, maxWidth:820 },
+    contentTitle:{ fontSize:13, color:"#00e5ff", fontWeight:800, marginBottom:8 },
+    contentText:{ fontSize:14, color:"#9ab8c8", lineHeight:1.75 },
+    contentList:{ margin:0, paddingLeft:18, color:"#9ab8c8", fontSize:14, lineHeight:1.75 },
+    mediaGrid:{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))", gap:12, maxWidth:820 },
+    image:{ width:"100%", border:"1px solid #0e2435", background:"#050a0f", display:"block" },
+    sourceCard:{ border:"1px solid #0e2435", background:"#070d14", padding:"12px 14px", color:"#4a7a96", fontSize:12, lineHeight:1.5 },
+    sourceLink:{ color:"#00e5ff", textDecoration:"none", fontSize:12, wordBreak:"break-word" },
+    actions:{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center", paddingTop:18 },
+    btnComplete:(done) => ({
+      padding:"9px 20px", fontSize:13, cursor:"pointer", fontFamily:"Outfit,sans-serif",
+      fontWeight:700, background:done ? "transparent" : "#00ff88",
+      border:"1px solid #00ff88", color:done ? "#00ff88" : "#050a0f",
+      letterSpacing:"0.5px", transition:"all 0.15s",
+    }),
+    btnNext:{
+      padding:"9px 20px", fontSize:13, cursor:"pointer", fontFamily:"Outfit,sans-serif",
+      fontWeight:700, background:"#00e5ff", border:"1px solid #00e5ff",
+      color:"#050a0f", letterSpacing:"0.5px",
+    },
+  };
+
+  return (
+    <div style={S.wrap}>
+      <div style={S.sidebar}>
+        <div style={S.intro}>
+          <div style={S.eyebrow}>School of Crypto</div>
+          <div style={S.title}>Crypto Bootcamp</div>
+          <div style={S.sub}>
+            Formación práctica en criptomonedas, organizada por módulos y clases.
+          </div>
+        </div>
+
+        <div style={S.progressWrap}>
+          <div style={S.progressLabel}>
+            <span>PROGRESO DEL CURSO</span>
+            <span style={{ color:"#00e5ff" }}>{progreso}%</span>
+          </div>
+          <div style={S.progressBar}>
+            <div style={{ ...S.progressFill, width:`${progreso}%` }} />
+          </div>
+          <div style={{ fontSize:11, color:"#2a5a72", marginTop:6 }}>
+            {completadas.length} / {totalClases} clases completadas
+          </div>
+        </div>
+
+        <div style={S.list}>
+          {CRYPTO_BOOTCAMP.map((mod, i) => {
+            const open = abiertos.has(mod.id);
+            return (
+              <div key={mod.id} style={S.module}>
+                <button style={S.header(open)} onClick={() => toggle(mod.id)}>
+                  <span style={S.number}>{String(i + 1).padStart(2, "0")}</span>
+                  <span style={{ minWidth:0 }}>
+                    <div style={S.moduleTitle}>{mod.titulo}</div>
+                    <div style={S.meta}>{mod.clases.length} clases</div>
+                  </span>
+                  <span style={S.chevron(open)}>›</span>
+                </button>
+                <div style={S.drop(open)}>
+                  {mod.clases.map((item, ci) => {
+                    const active = moduloActivo === i && claseActiva === ci;
+                    const done = completadas.includes(item.id);
+                    return (
+                      <button key={item.id} style={S.lesson(active)} onClick={() => seleccionarClase(i, ci)}>
+                        <span style={S.checkCircle(done)}>{done ? "✓" : ""}</span>
+                        <span style={S.lessonTitle(active)}>{item.titulo}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={S.content}>
+        {modulo && clase && (
+          <>
+            <div style={S.badge}>{modulo.titulo}</div>
+            <div style={S.lessonHeader}>{clase.titulo}</div>
+            <div style={S.metaRow}>
+              <span>Clase {claseActiva + 1} de {modulo.clases.length}</span>
+              <span>{clase.estado}</span>
+              {completadas.includes(clase.id) && <span style={{ color:"#00ff88" }}>Completada</span>}
+            </div>
+
+            <div style={S.sectionTitle}>Resumen</div>
+            <div style={S.desc}>{clase.resumen}</div>
+
+            <div style={S.sectionTitle}>Contenido de la clase</div>
+            {clase.contenido ? (
+              clase.contenido.map((bloque, i) => (
+                <div key={i} style={S.contentBlock}>
+                  <div style={S.contentTitle}>{bloque.titulo}</div>
+                  {bloque.texto && <div style={S.contentText}>{bloque.texto}</div>}
+                  {bloque.puntos && (
+                    <ul style={S.contentList}>
+                      {bloque.puntos.map((p, idx) => <li key={idx}>{p}</li>)}
+                    </ul>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div style={S.pending}>
+                Aún no se ha cargado el contenido completo de esta clase. Cuando compartas la información, la agrego aquí manteniendo esta estructura.
+              </div>
+            )}
+
+            {(clase.imagenes?.length > 0 || clase.sourceUrl) && (
+              <>
+                <div style={S.sectionTitle}>Imágenes y fuente</div>
+                <div style={S.mediaGrid}>
+                  {clase.imagenes?.map((img, i) => (
+                    isDirectImage(img.src) ? (
+                      <figure key={i} style={{ margin:0 }}>
+                        <img src={img.src} alt={img.alt} style={S.image} />
+                        <figcaption style={{ color:"#2a5a72", fontSize:11, marginTop:6 }}>{img.alt}</figcaption>
+                      </figure>
+                    ) : (
+                      <div key={i} style={S.sourceCard}>
+                        <div>{img.alt}</div>
+                        <a href={img.src} target="_blank" rel="noreferrer" style={S.sourceLink}>Abrir página fuente</a>
+                      </div>
+                    )
+                  ))}
+                  {clase.sourceUrl && (
+                    <div style={S.sourceCard}>
+                      <div>Fuente original de la lección</div>
+                      <a href={clase.sourceUrl} target="_blank" rel="noreferrer" style={S.sourceLink}>{clase.sourceUrl}</a>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            <div style={S.actions}>
+              <button style={S.btnComplete(completadas.includes(clase.id))} onClick={() => toggleCompletada(clase.id)}>
+                {completadas.includes(clase.id) ? "✓ Completada" : "Marcar como completada"}
+              </button>
+              {(claseActiva < modulo.clases.length - 1 || moduloActivo < CRYPTO_BOOTCAMP.length - 1) && (
+                <button style={S.btnNext} onClick={irSiguiente}>
+                  Siguiente lección →
+                </button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ════════════════════════════════════════════════════════════════════
 // APP
 // ════════════════════════════════════════════════════════════════════
 const TABS = ["Wallets","Cobertura","Monitor de Cobertura","Trading Automatizado","Insider (Trading)"];
 const TABS_WITH_BADGE = ["Insider (Trading)"];
-const NAV_ITEMS       = ["Dashboard","Programa","Preguntas"];
+const NAV_ITEMS       = ["Dashboard","Programa","Crypto Bootcamp","Preguntas"];
 const NAV_ITEMS_ADMIN = ["Users Admin"];
 
 // ════════════════════════════════════════════════════════════════════
@@ -4158,7 +4647,7 @@ function ContactModal({ onClose }) {
   );
 }
 
-const PAID_TABS = ["Wallets","Cobertura","Trading Automatizado","Programa CryptoEducation","Programa"];
+const PAID_TABS = ["Wallets","Cobertura","Trading Automatizado","Programa CryptoEducation","Programa","Crypto Bootcamp"];
 
 // ── NotificationBell ──────────────────────────────────────────────────
 function NotificationBell({ userId }) {
@@ -5163,7 +5652,7 @@ export default function App() {
   const initials  = userName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   const waUpgradeUrl = buildWaUpgradeUrl(userName !== "Usuario" ? userName : null, userEmail || null);
 
-  const SECTION_TITLES = { liquidity:"Liquidity Engine", Dashboard:"Dashboard", Programa:"Programa", Preguntas:"Preguntas", "Users Admin":"Users Admin" };
+  const SECTION_TITLES = { liquidity:"Liquidity Engine", Dashboard:"Dashboard", Programa:"Programa", "Crypto Bootcamp":"Crypto Bootcamp", Preguntas:"Preguntas", "Users Admin":"Users Admin" };
 
   const renderContent = () => {
     if (isLiquiditySection) {
@@ -5182,6 +5671,7 @@ export default function App() {
     switch (activeSection) {
       case "Dashboard":    return <DashboardTab />;
       case "Programa":     return <ProgramaTab />;
+      case "Crypto Bootcamp": return <CryptoBootcampTab />;
       case "Preguntas":    return <PreguntasTab />;
       case "Users Admin":  return <UsersAdminTab />;
       default:             return <ComingSoonTab name={activeSection} />;
