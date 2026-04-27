@@ -606,3 +606,465 @@ export function useNotificaciones(userId) {
 
   return { notifs, loading, noLeidas, marcarLeida, marcarTodasLeidas, reload: load }
 }
+
+// ════════════════════════════════════════════════════════════════════
+// COBERTURAS (Hedge Tracker)
+//
+// Tabla requerida — ejecutar en Supabase SQL Editor:
+//
+//   create table coberturas (
+//     id          uuid default gen_random_uuid() primary key,
+//     user_id     uuid references auth.users(id) on delete cascade not null,
+//     pool_id     text not null,
+//     wallet_id   text,
+//     coin        text not null,
+//     size        text not null,
+//     leverage    numeric default 1,
+//     buffer      numeric default 0,
+//     stop_loss   numeric,
+//     breakeven   numeric,
+//     open_price  numeric,
+//     opened_at   timestamptz default now(),
+//     close_price numeric,
+//     closed_at   timestamptz,
+//     final_pnl   numeric,
+//     close_reason text,
+//     status      text default 'active',
+//     is_demo     boolean default false,
+//     chain_name  text,
+//     sym0        text,
+//     sym1        text,
+//     pool_pair   text
+//   );
+//   alter table coberturas enable row level security;
+//   create policy "own coberturas" on coberturas for all
+//     using (auth.uid() = user_id) with check (auth.uid() = user_id);
+// ════════════════════════════════════════════════════════════════════
+export function useCoberturas(userId) {
+  const [activas,  setActivas]  = useState([])
+  const [historial, setHistorial] = useState([])
+  const [loading,  setLoading]  = useState(true)
+
+  const load = useCallback(async () => {
+    if (!userId) { setLoading(false); return }
+    setLoading(true)
+    const { data } = await supabase
+      .from('coberturas')
+      .select('*')
+      .eq('user_id', userId)
+      .order('opened_at', { ascending: false })
+      .limit(200)
+    const rows = data || []
+    setActivas(rows.filter(r => r.status === 'active').map(mapRow))
+    setHistorial(rows.filter(r => r.status !== 'active').map(mapRow))
+    setLoading(false)
+  }, [userId])
+
+  useEffect(() => { load() }, [load])
+
+  // Realtime
+  useEffect(() => {
+    if (!userId) return
+    const ch = supabase.channel('coberturas_' + userId)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'coberturas', filter: `user_id=eq.${userId}` },
+        () => load())
+      .subscribe()
+    return () => supabase.removeChannel(ch)
+  }, [userId, load])
+
+  const abrir = useCallback(async (prot) => {
+    if (!userId) return { error: 'No autenticado' }
+    const row = {
+      user_id:      userId,
+      pool_id:      String(prot.poolId),
+      wallet_id:    prot.walletId ?? null,
+      coin:         prot.coin,
+      size:         String(prot.size),
+      leverage:     prot.leverage ?? 1,
+      buffer:       prot.buffer ?? 0,
+      stop_loss:    prot.stopLoss ?? null,
+      breakeven:    prot.breakeven ?? null,
+      open_price:   prot.openPrice,
+      opened_at:    new Date(prot.openedAt).toISOString(),
+      status:       'active',
+      is_demo:      prot._demo ?? false,
+      chain_name:   prot.chainName ?? null,
+      sym0:         prot.sym0 ?? null,
+      sym1:         prot.sym1 ?? null,
+      pool_pair:    prot.poolPair ?? null,
+    }
+    const { data, error } = await supabase.from('coberturas').insert(row).select().single()
+    if (error) console.error('[useCoberturas] abrir error:', error)
+    return { data, error }
+  }, [userId])
+
+  const cerrar = useCallback(async (id, { closePrice, finalPnl, closeReason }) => {
+    const { error } = await supabase.from('coberturas').update({
+      status:       'closed',
+      close_price:  closePrice,
+      closed_at:    new Date().toISOString(),
+      final_pnl:    finalPnl,
+      close_reason: closeReason,
+    }).eq('id', id)
+    if (error) console.error('[useCoberturas] cerrar error:', error)
+    else load()
+    return { error }
+  }, [load])
+
+  return { activas, historial, loading, abrir, cerrar, reload: load }
+}
+
+function mapRow(r) {
+  return {
+    id:           r.id,
+    poolId:       r.pool_id,
+    walletId:     r.wallet_id,
+    coin:         r.coin,
+    size:         r.size,
+    leverage:     r.leverage,
+    buffer:       r.buffer,
+    stopLoss:     r.stop_loss,
+    breakeven:    r.breakeven,
+    openPrice:    r.open_price,
+    openedAt:     new Date(r.opened_at).getTime(),
+    closePrice:   r.close_price,
+    closedAt:     r.closed_at ? new Date(r.closed_at).getTime() : null,
+    finalPnl:     r.final_pnl,
+    closeReason:  r.close_reason,
+    status:       r.status,
+    _demo:        r.is_demo,
+    chainName:    r.chain_name,
+    sym0:         r.sym0,
+    sym1:         r.sym1,
+    poolPair:     r.pool_pair,
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// TRADING CONFIGS  (hl_trading)
+//
+//   create table trading_configs (
+//     id              uuid default gen_random_uuid() primary key,
+//     user_id         uuid references auth.users(id) on delete cascade not null,
+//     pool_id         text not null,
+//     wallet_id       text,
+//     coin            text not null,
+//     direction       text default 'both',
+//     capital         numeric,
+//     leverage        numeric default 1,
+//     buffer          numeric default 0,
+//     breakout_buffer numeric,
+//     stop_loss       numeric,
+//     breakeven       numeric,
+//     trailing_stop   boolean default false,
+//     take_profit     numeric,
+//     auto_rearm      boolean default false,
+//     status          text default 'active',
+//     activated_at    timestamptz default now()
+//   );
+//   alter table trading_configs enable row level security;
+//   create policy "own trading_configs" on trading_configs for all
+//     using (auth.uid() = user_id) with check (auth.uid() = user_id);
+// ════════════════════════════════════════════════════════════════════
+export function useTradingConfigs(userId) {
+  const [configs,  setConfigs]  = useState([])
+  const [loading,  setLoading]  = useState(true)
+
+  const syncLS = (rows) => {
+    // Mantiene localStorage en sync para que PoolCard.savedTrading siga funcionando
+    localStorage.setItem('hl_trading', JSON.stringify(rows))
+  }
+
+  const load = useCallback(async () => {
+    if (!userId) {
+      // Fallback a localStorage si no hay sesión
+      try { setConfigs(JSON.parse(localStorage.getItem('hl_trading') || '[]')) } catch {}
+      setLoading(false); return
+    }
+    setLoading(true)
+    const { data } = await supabase
+      .from('trading_configs')
+      .select('*')
+      .eq('user_id', userId)
+      .order('activated_at', { ascending: false })
+    const rows = (data || []).map(mapTradingRow)
+    setConfigs(rows)
+    syncLS(rows)
+    setLoading(false)
+  }, [userId])
+
+  useEffect(() => { load() }, [load])
+
+  const guardar = useCallback(async (cfg) => {
+    const newCfg = { ...cfg, id: crypto.randomUUID(), activatedAt: Date.now(), status: 'active' }
+    if (userId) {
+      const { error } = await supabase.from('trading_configs').insert({
+        user_id:         userId,
+        pool_id:         String(cfg.poolId),
+        wallet_id:       cfg.walletId ?? null,
+        coin:            cfg.coin,
+        direction:       cfg.direction ?? 'both',
+        capital:         cfg.capital ?? null,
+        leverage:        cfg.leverage ?? 1,
+        buffer:          cfg.buffer ?? 0,
+        breakout_buffer: cfg.breakoutBuffer ?? null,
+        stop_loss:       cfg.stopLoss ?? null,
+        breakeven:       cfg.breakeven ?? null,
+        trailing_stop:   cfg.trailingStop ?? false,
+        take_profit:     cfg.takeProfit ?? null,
+        auto_rearm:      cfg.autoRearm ?? false,
+        status:          'active',
+      })
+      if (!error) { load(); return { ok: true } }
+    }
+    // Fallback: solo localStorage
+    const ls = JSON.parse(localStorage.getItem('hl_trading') || '[]')
+    ls.push(newCfg)
+    localStorage.setItem('hl_trading', JSON.stringify(ls))
+    setConfigs(prev => [newCfg, ...prev])
+    return { ok: true }
+  }, [userId, load])
+
+  const desactivar = useCallback(async (poolId) => {
+    if (userId) {
+      await supabase.from('trading_configs')
+        .update({ status: 'closed' })
+        .eq('user_id', userId).eq('pool_id', String(poolId)).eq('status', 'active')
+      load()
+    }
+    const ls = JSON.parse(localStorage.getItem('hl_trading') || '[]')
+    localStorage.setItem('hl_trading', JSON.stringify(
+      ls.map(c => c.poolId === poolId ? { ...c, status: 'closed' } : c)
+    ))
+  }, [userId, load])
+
+  return { configs, loading, guardar, desactivar, reload: load }
+}
+
+function mapTradingRow(r) {
+  return {
+    id:             r.id,
+    poolId:         r.pool_id,
+    walletId:       r.wallet_id,
+    coin:           r.coin,
+    direction:      r.direction,
+    capital:        r.capital,
+    leverage:       r.leverage,
+    buffer:         r.buffer,
+    breakoutBuffer: r.breakout_buffer,
+    stopLoss:       r.stop_loss,
+    breakeven:      r.breakeven,
+    trailingStop:   r.trailing_stop,
+    takeProfit:     r.take_profit,
+    autoRearm:      r.auto_rearm,
+    status:         r.status,
+    activatedAt:    r.activated_at ? new Date(r.activated_at).getTime() : Date.now(),
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// INSIDER TRADES  (hl_insider_trades)
+//
+//   create table insider_trades (
+//     id          uuid default gen_random_uuid() primary key,
+//     user_id     uuid references auth.users(id) on delete cascade not null,
+//     pool_id     text,
+//     wallet_id   text,
+//     coin        text not null,
+//     size        text,
+//     leverage    numeric default 1,
+//     buffer      numeric default 0,
+//     stop_loss   numeric,
+//     open_price  numeric,
+//     opened_at   timestamptz default now(),
+//     closed_at   timestamptz,
+//     close_price numeric,
+//     final_pnl   numeric,
+//     status      text default 'active',
+//     sym0        text,
+//     sym1        text,
+//     chain_name  text,
+//     pool_pair   text,
+//     price_upper numeric,
+//     price_lower numeric
+//   );
+//   alter table insider_trades enable row level security;
+//   create policy "own insider_trades" on insider_trades for all
+//     using (auth.uid() = user_id) with check (auth.uid() = user_id);
+// ════════════════════════════════════════════════════════════════════
+export function useInsiderTrades(userId) {
+  const [trades,  setTrades]  = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const syncLS = (rows) => localStorage.setItem('hl_insider_trades', JSON.stringify(rows))
+
+  const load = useCallback(async () => {
+    if (!userId) {
+      try { setTrades(JSON.parse(localStorage.getItem('hl_insider_trades') || '[]')) } catch {}
+      setLoading(false); return
+    }
+    setLoading(true)
+    const { data } = await supabase
+      .from('insider_trades')
+      .select('*')
+      .eq('user_id', userId)
+      .order('opened_at', { ascending: false })
+    const rows = (data || []).map(mapInsiderRow)
+    setTrades(rows)
+    syncLS(rows)
+    setLoading(false)
+  }, [userId])
+
+  useEffect(() => { load() }, [load])
+
+  const abrir = useCallback(async (trade) => {
+    if (userId) {
+      const { error } = await supabase.from('insider_trades').insert({
+        user_id:    userId,
+        pool_id:    trade.poolId ? String(trade.poolId) : null,
+        wallet_id:  trade.walletId ?? null,
+        coin:       trade.coin,
+        size:       String(trade.size),
+        leverage:   trade.leverage ?? 1,
+        buffer:     trade.buffer ?? 0,
+        stop_loss:  trade.stopLoss ?? null,
+        open_price: trade.openPrice,
+        opened_at:  new Date().toISOString(),
+        status:     'active',
+        sym0:       trade.sym0 ?? null,
+        sym1:       trade.sym1 ?? null,
+        chain_name: trade.chainName ?? null,
+        pool_pair:  trade.poolPair ?? null,
+        price_upper: trade.priceUpper ?? null,
+        price_lower: trade.priceLower ?? null,
+      })
+      if (!error) { load(); return { ok: true } }
+    }
+    // Fallback localStorage
+    const ls = JSON.parse(localStorage.getItem('hl_insider_trades') || '[]')
+    const newT = { ...trade, id: crypto.randomUUID(), openedAt: Date.now(), status: 'active' }
+    ls.push(newT)
+    localStorage.setItem('hl_insider_trades', JSON.stringify(ls))
+    setTrades(prev => [newT, ...prev])
+    return { ok: true }
+  }, [userId, load])
+
+  const cerrar = useCallback(async (id, { closePrice, finalPnl }) => {
+    if (userId) {
+      await supabase.from('insider_trades').update({
+        status: 'closed', close_price: closePrice,
+        closed_at: new Date().toISOString(), final_pnl: finalPnl,
+      }).eq('id', id)
+      load()
+    } else {
+      const ls = JSON.parse(localStorage.getItem('hl_insider_trades') || '[]')
+      localStorage.setItem('hl_insider_trades', JSON.stringify(
+        ls.map(t => t.id === id ? { ...t, status: 'closed', closePrice, finalPnl } : t)
+      ))
+      setTrades(prev => prev.filter(t => t.id !== id))
+    }
+  }, [userId, load])
+
+  const activos = trades.filter(t => t.status === 'active')
+
+  return { trades, activos, loading, abrir, cerrar, reload: load }
+}
+
+function mapInsiderRow(r) {
+  return {
+    id:         r.id,
+    poolId:     r.pool_id,
+    walletId:   r.wallet_id,
+    coin:       r.coin,
+    size:       r.size,
+    leverage:   r.leverage,
+    buffer:     r.buffer,
+    stopLoss:   r.stop_loss,
+    openPrice:  r.open_price,
+    openedAt:   r.opened_at ? new Date(r.opened_at).getTime() : Date.now(),
+    closedAt:   r.closed_at ? new Date(r.closed_at).getTime() : null,
+    closePrice: r.close_price,
+    finalPnl:   r.final_pnl,
+    status:     r.status,
+    sym0:       r.sym0,
+    sym1:       r.sym1,
+    chainName:  r.chain_name,
+    poolPair:   r.pool_pair,
+    priceUpper: r.price_upper,
+    priceLower: r.price_lower,
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// ACTIVIDAD POOLS  (liquidity_engine_activity)
+//
+//   create table actividad_pools (
+//     id         uuid default gen_random_uuid() primary key,
+//     user_id    uuid references auth.users(id) on delete cascade not null,
+//     pool_id    text,
+//     pair       text,
+//     chain      text,
+//     action     text default 'imported',
+//     created_at timestamptz default now()
+//   );
+//   alter table actividad_pools enable row level security;
+//   create policy "own actividad_pools" on actividad_pools for all
+//     using (auth.uid() = user_id) with check (auth.uid() = user_id);
+// ════════════════════════════════════════════════════════════════════
+export function useActividadPools(userId) {
+  const [actividad, setActividad] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('liquidity_engine_activity') || '[]') } catch { return [] }
+  })
+  const [loading, setLoading] = useState(true)
+
+  const syncLS = (rows) => localStorage.setItem('liquidity_engine_activity', JSON.stringify(rows))
+
+  const load = useCallback(async () => {
+    if (!userId) { setLoading(false); return }
+    const { data } = await supabase
+      .from('actividad_pools')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(100)
+    if (data) {
+      const rows = data.map(r => ({
+        id:     r.pool_id,
+        pair:   r.pair,
+        chain:  r.chain,
+        action: r.action,
+        time:   new Date(r.created_at).toLocaleString('es-CO', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }),
+      }))
+      setActividad(rows)
+      syncLS(rows)
+    }
+    setLoading(false)
+  }, [userId])
+
+  useEffect(() => { load() }, [load])
+
+  const registrar = useCallback(async ({ poolId, pair, chain, action = 'imported' }) => {
+    const entry = {
+      id:     poolId,
+      pair,
+      chain,
+      action,
+      time:   new Date().toLocaleString('es-CO', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }),
+    }
+    // Optimistic update
+    setActividad(prev => {
+      const updated = [entry, ...prev].slice(0, 100)
+      syncLS(updated)
+      return updated
+    })
+    if (userId) {
+      await supabase.from('actividad_pools').insert({
+        user_id: userId,
+        pool_id: poolId ? String(poolId) : null,
+        pair, chain, action,
+      }).catch(console.error)
+    }
+  }, [userId])
+
+  return { actividad, loading, registrar, reload: load }
+}

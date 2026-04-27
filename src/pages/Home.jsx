@@ -598,8 +598,17 @@ export default function Home() {
     setSent(true)
   }
 
-  const scrollTo  = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-  const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
+  const HEADER_H = 104 // price bar 32 + navbar 72
+
+  const scrollTo = (id) => {
+    const el = document.getElementById(id)
+    if (!el) return
+    const top = el.getBoundingClientRect().top + window.pageYOffset - HEADER_H
+    window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+  }
+
+  const goTo = (e, id) => { e.preventDefault(); scrollTo(id) }
+  const scrollTop = (e) => { e?.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
   const TICKER_ITEMS = ['Bootcamp Crypto', '·', 'Trading de Futuros', '·', 'DeFi & Liquidity Pools', '·', 'Hyperliquid', '·', 'Uniswap V3', '·', 'Formación Profesional', '·']
 
@@ -612,22 +621,22 @@ export default function Home() {
 
       {/* ── NAVBAR (fixed top: 32px, debajo del price bar) ── */}
       <nav className="nav">
-        <a href="#" className="nav-brand" onClick={e => { e.preventDefault(); scrollTop(); }}>
+        <a href="#" className="nav-brand" onClick={scrollTop}>
           <img src={cryptoHouseLogo} alt="The Crypto House" style={{ height:38, width:'auto', objectFit:'contain' }} />
           <div>
             <div className="nav-name">The Crypto House</div>
           </div>
         </a>
         <div className="nav-links">
-          <a className="nav-link" onClick={e => { e.preventDefault(); scrollTop(); }} href="#">INICIO</a>
-          <a className="nav-link" onClick={() => scrollTo('sobre')} href="#">INSTRUCTOR</a>
-          <a className="nav-link" onClick={() => scrollTo('cursos')} href="#">FORMACIÓN</a>
-          <a className="nav-link" onClick={() => scrollTo('faq')} href="#">FAQ</a>
-          <a className="nav-link" onClick={() => scrollTo('contacto')} href="#">CONTACTO</a>
+          <a className="nav-link" onClick={scrollTop} href="#">INICIO</a>
+          <a className="nav-link" onClick={e => goTo(e, 'sobre')}    href="#">INSTRUCTOR</a>
+          <a className="nav-link" onClick={e => goTo(e, 'cursos')}   href="#">FORMACIÓN</a>
+          <a className="nav-link" onClick={e => goTo(e, 'faq')}      href="#">FAQ</a>
+          <a className="nav-link" onClick={e => goTo(e, 'contacto')} href="#">CONTACTO</a>
         </div>
         <div style={{ display:'flex', alignItems:'center' }}>
           <a className="nav-ghost" href="/app" target="_blank" rel="noreferrer">Ir al App</a>
-          <a className="nav-cta" onClick={() => scrollTo('contacto')} href="#">Hablar con Oscar →</a>
+          <a className="nav-cta" onClick={e => goTo(e, 'contacto')} href="#">Hablar con Oscar →</a>
         </div>
       </nav>
 
@@ -658,10 +667,10 @@ export default function Home() {
             práctica y acompañamiento personalizado. Sin experiencia previa necesaria.
           </p>
           <div className="hero-btns">
-            <a className="btn-primary" onClick={() => scrollTo('cursos')} href="#">
+            <a className="btn-primary" onClick={e => goTo(e, 'cursos')} href="#">
               Ver programas →
             </a>
-            <a className="btn-secondary" onClick={() => scrollTo('sobre')} href="#">
+            <a className="btn-secondary" onClick={e => goTo(e, 'sobre')} href="#">
               Conocer a Oscar
             </a>
           </div>
@@ -764,7 +773,7 @@ export default function Home() {
                 <div className="service-list">
                   {s.list.map((li, j) => <div key={j} className="service-li">{li}</div>)}
                 </div>
-                <a className="service-btn" onClick={() => scrollTo('contacto')} href="#">
+                <a className="service-btn" onClick={e => goTo(e, 'contacto')} href="#">
                   Quiero información →
                 </a>
               </div>
@@ -804,7 +813,7 @@ export default function Home() {
       <div className="band">
         <h2 className="band-title">¿Listo para transformar<br /><span>tu relación con el dinero?</span></h2>
         <p className="band-sub">Únete a más de 500 estudiantes que ya están invirtiendo con confianza.</p>
-        <a className="btn-primary" onClick={() => scrollTo('contacto')} href="#"
+        <a className="btn-primary" onClick={e => goTo(e, 'contacto')} href="#"
           style={{ fontSize:16, padding:'16px 48px' }}>
           Empezar ahora →
         </a>
@@ -953,9 +962,9 @@ export default function Home() {
             <div>
               <div className="footer-col-title">Compañía</div>
               <div className="footer-links">
-                <a className="footer-link" onClick={() => scrollTo('sobre')} href="#">Sobre Oscar</a>
-                <a className="footer-link" onClick={() => scrollTo('faq')} href="#">FAQ</a>
-                <a className="footer-link" onClick={() => scrollTo('contacto')} href="#">Contacto</a>
+                <a className="footer-link" onClick={e => goTo(e, 'sobre')}    href="#">Sobre Oscar</a>
+                <a className="footer-link" onClick={e => goTo(e, 'faq')}      href="#">FAQ</a>
+                <a className="footer-link" onClick={e => goTo(e, 'contacto')} href="#">Contacto</a>
               </div>
             </div>
             <div>

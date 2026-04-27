@@ -1,8 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "./lib/AuthContext";
-import { usePoolsSync, useWalletsSync, useNotasSync, usePreguntasSync, useUsersAdmin, useNotificaciones, insertarNotificacion } from "./lib/useSupabaseSync";
+import { usePoolsSync, useWalletsSync, useNotasSync, usePreguntasSync, useUsersAdmin, useNotificaciones, insertarNotificacion, useTradingConfigs, useActividadPools } from "./lib/useSupabaseSync";
 import { encode as msgpackEncode } from "@msgpack/msgpack";
 import cryptoHouseLogo from "./assets/cryptohouselogo.png";
+import InactivityOverlay from "./InactivityOverlay";
+import GlareCard from "./GlareCard";
+import PoolAlertDemo    from "./PoolAlertDemo";
+import HedgeTrackerTab  from "./HedgeTrackerTab";
+import InsiderTab       from "./InsiderTab";
 
 // ══════════════════════════════════════════════════════
 // ON-CHAIN RPC CONFIG
@@ -1479,8 +1484,10 @@ function calcPoolStats(pos) {
   const withdrawalsVal  = r ? parseFloat(r.withdrawals_value ?? "0") : 0;
   const netInvested     = depositsValue - withdrawalsVal;
   const pnlUsd          = r ? parseFloat(r.performance?.usd?.pnl ?? "0") : (valueUsd - netInvested);
-  const pnlPct          = r ? parseFloat(r.performance?.usd?.roi ?? "0") : (netInvested > 0 ? (pnlUsd / netInvested) * 100 : 0);
-  const aprUsd          = r ? parseFloat(r.performance?.usd?.apr ?? "0") : 0;
+  // roi/apr en performance.usd vienen en 0 desde Revert — calculamos nosotros
+  const pnlPct          = depositsValue > 0 ? (pnlUsd / depositsValue) * 100 : 0;
+  // pool_apr contiene el APR real de la posición en USD
+  const aprUsd          = r ? parseFloat(r.performance?.usd?.pool_apr ?? r.performance?.hodl?.apr ?? "0") : 0;
   const ilUsd           = r ? parseFloat(r.performance?.usd?.il  ?? "0") : 0;
 
   // ── PNL vs HODL ────────────────────────────────────────────────
@@ -1493,14 +1500,21 @@ function calcPoolStats(pos) {
 
   // ── Fees ───────────────────────────────────────────────────────
   const feesValue       = r ? parseFloat(r.fees_value ?? "0")         : (pos.collectedFeesUsd ?? 0);
-  const feesApr         = r ? parseFloat(r.performance?.usd?.fee_apr ?? "0") : 0;
+  // fee_apr real está en performance.hodl.fee_apr (performance.usd.fee_apr viene en 0 desde Revert)
+  const ageDaysRaw      = r ? parseFloat(r.age ?? "0") : 0;
+  const feesAprCalc     = (r && feesValue > 0 && depositsValue > 0 && ageDaysRaw > 0)
+    ? (feesValue / depositsValue) * (365 / ageDaysRaw) * 100
+    : 0;
+  const feesApr         = r
+    ? (parseFloat(r.performance?.hodl?.fee_apr ?? "0") || feesAprCalc)
+    : 0;
   const uncollected0    = r ? parseFloat(r.uncollected_fees0 ?? "0")  : 0;
   const uncollected1    = r ? parseFloat(r.uncollected_fees1 ?? "0")  : 0;
   const collected0      = r ? parseFloat(r.collected_fees0   ?? "0")  : 0;
   const collected1      = r ? parseFloat(r.collected_fees1   ?? "0")  : 0;
 
   // ── Age ────────────────────────────────────────────────────────
-  const ageDaysFloat    = r ? parseFloat(r.age ?? "0") : 0;
+  const ageDaysFloat    = ageDaysRaw;
   const ageFromTs       = r ? null : (pos.createdAtTimestamp ? (Date.now() - pos.createdAtTimestamp) / 1000 : 0);
   const ageDays         = r ? Math.floor(ageDaysFloat) : Math.floor((ageFromTs ?? 0) / 86400);
   const ageHours        = r ? Math.floor((ageDaysFloat % 1) * 24) : Math.floor(((ageFromTs ?? 0) % 86400) / 3600);
@@ -1519,9 +1533,9 @@ function calcPoolStats(pos) {
   const span            = priceUpper - priceLower;
   const barPct          = span > 0 ? Math.max(0, Math.min(100, (currentPrice - priceLower) / span * 100)) : 0;
 
-  // ── 24h deltas ─────────────────────────────────────────────────
-  const delta24hPnl     = r ? parseFloat(r.deltas_24h?.usd?.pnl ?? "0") : 0;
-  const delta24hApr     = r ? parseFloat(r.deltas_24h?.usd?.apr ?? "0") : 0;
+  // ── 24h deltas — Revert no los provee, se calculan por diferencia de snapshots ──
+  const delta24hPnl     = 0;
+  const delta24hApr     = 0;
 
   // ── Deposits/withdrawals ───────────────────────────────────────
   const totalDep1       = r ? parseFloat(r.total_deposits1 ?? "0") : 0;
@@ -1544,6 +1558,8 @@ function calcPoolStats(pos) {
 // TRADING MODAL — Trading Avaro (breakout automático)
 // ════════════════════════════════════════════════════════════════════
 function TradingModal({ pos, s, onClose }) {
+  const { user } = useAuth();
+  const { guardar: guardarTrading } = useTradingConfigs(user?.id);
   const sym0 = pos.token0Symbol || "ETH";
   const coin = sym0.replace("W","") + "-PERP";
 
@@ -1594,16 +1610,13 @@ function TradingModal({ pos, s, onClose }) {
     if (!canActivate) return setError(`Faltan $${(margin - walletBalance).toFixed(2)} en balance`);
     setActivating(true);
     try {
-      // Save trading config to localStorage
-      const configs = JSON.parse(localStorage.getItem("hl_trading") || "[]");
-      configs.push({
+      // Save trading config — Supabase + localStorage cache
+      await guardarTrading({
         poolId: pos.tokenId, walletId: w.id, coin, direction,
-        capital: capital.toFixed(2), leverage, buffer, breakoutBuffer,
+        capital: parseFloat(capital.toFixed(2)), leverage, buffer, breakoutBuffer,
         stopLoss: parseFloat(stopLoss), breakeven, trailingStop,
         takeProfit: takeProfit || null, autoRearm,
-        activatedAt: Date.now(), status: "active",
       });
-      localStorage.setItem("hl_trading", JSON.stringify(configs));
       setSuccess(`✓ Bot de trading activado · ${direction === "both" ? "LONG+SHORT" : direction.toUpperCase()} · ${coin}`);
     } catch(e) { setError(e.message); }
     setActivating(false);
@@ -1922,14 +1935,24 @@ function ProtectionModal({ pos, s, onClose }) {
       if (result?.status === "ok") {
         setSuccess(`✓ SHORT abierto: ${size.toFixed(4)} ${sym0} @ ~$${s.currentPrice.toFixed(2)}`);
         // Save protection config
+        const newProt = {
+          id:             crypto.randomUUID(),   // ← ID único, clave primaria
+          poolId:         pos.tokenId,
+          walletId:       w.id,
+          coin,
+          size:           size.toFixed(4),
+          leverage,       buffer,
+          stopLoss:       slPct,
+          breakeven,      tp1Pct, tp1Close, tp2Pct, tp2Close,
+          noProtectReentry,
+          openedAt:       Date.now(),
+          openPrice:      s.currentPrice,
+          sym0,           sym1:  pos.token1Symbol || "USDC",
+          chainName:      pos.chainName,
+          poolPair:       `${sym0}/${pos.token1Symbol || "USDC"}`,
+        };
         const protections = JSON.parse(localStorage.getItem("hl_protections") || "[]");
-        protections.push({
-          poolId: pos.tokenId, walletId: w.id, coin,
-          size: size.toFixed(4), leverage, buffer, stopLoss: slPct,
-          breakeven, tp1Pct, tp1Close, tp2Pct, tp2Close,
-          noProtectReentry, openedAt: Date.now(),
-          openPrice: s.currentPrice,
-        });
+        protections.push(newProt);
         localStorage.setItem("hl_protections", JSON.stringify(protections));
       } else {
         setError(JSON.stringify(result?.response || result));
@@ -1985,7 +2008,7 @@ function ProtectionModal({ pos, s, onClose }) {
           {isOor && (
             <div style={{ background:"#1a0e00",border:"1px solid #5a3a00",padding:"12px 14px",fontSize:12,color:"#ffb347",lineHeight:1.6 }}>
               <div style={{ fontWeight:700,marginBottom:6 }}>⚠ Pool fuera de rango — lee esto antes de activar</div>
-              <div>Tu posición es <strong>100% {sym0}</strong>. El SHORT se abrirá <strong>inmediatamente</strong> al precio actual (~{s.currentPrice?.toFixed(2)}).</div>
+              <div>Tu posición es <strong>100% {s.currentPrice < s.priceLower ? sym0 : sym1}</strong>. El SHORT se abrirá <strong>inmediatamente</strong> al precio actual (~{s.currentPrice?.toFixed(2)}).</div>
               <div style={{marginTop:6}}>El <strong>Stop Loss</strong> está pre-configurado a <strong>{stopLoss}%</strong> = precio del borde inferior de tu rango ({s.priceLower?.toFixed(2)}). Si {sym0} sube hasta ahí, el pool vuelve a rango y el SHORT se cierra.</div>
               <div style={{marginTop:6,color:"#ff9944"}}>Si pones un SL menor que {Math.abs(distToRange).toFixed(1)}%, cualquier rebote normal cerrará el SHORT con pérdida.</div>
             </div>
@@ -2421,8 +2444,8 @@ function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
             </div>
           </div>
 
-          {/* ── ACTION BANNER — Cobertura o Trading según mode ── */}
-          {!inRange && mode === "Cobertura" && (
+          {/* ── ACTION BANNER — solo Cobertura SHORT cuando precio está POR DEBAJO ── */}
+          {s.currentPrice < s.priceLower && mode === "Cobertura" && (
             <div style={{ marginBottom: 16 }}>
               {savedProtection ? (
                 <div style={{ background:"#001a0e",border:"1px solid #003a22",padding:"10px 14px",fontSize:12,color:"#00ff88",display:"flex",justifyContent:"space-between",alignItems:"center" }}>
@@ -2431,18 +2454,26 @@ function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
                 </div>
               ) : (
                 <>
-                  <div style={{ background:"#1a0e00",border:"1px solid #5a3a00",padding:"10px 14px",fontSize:12,color:"#ffb347",marginBottom:8 }}>
-                    ⚠ Tu posición es 100% {sym0} — máxima exposición al precio. Recomendado configurar Cobertura SHORT.
+                  <div style={{ background:"#1a0810",border:"1px solid #5a1a28",padding:"10px 14px",fontSize:12,color:"#ff6b88",marginBottom:8 }}>
+                    ⚠ Tu posición es 100% {sym0} — el precio bajó del rango. Configura un SHORT para protegerte.
                   </div>
                   <button onClick={() => setShowProtection(true)} style={{
-                    width:"100%",padding:"12px 0",background:"transparent",border:"1px solid #ffb347",color:"#ffb347",
+                    width:"100%",padding:"12px 0",background:"transparent",border:"1px solid #ff4f6e",color:"#ff4f6e",
                     fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"Outfit,sans-serif",letterSpacing:"0.5px",
                     display:"flex",alignItems:"center",justifyContent:"center",gap:8,
                   }}>
-                    🛡 Configurar Protección ({inRange ? "En Rango" : `100% expuesto a ${sym0}`})
+                    🛡 Configurar Cobertura SHORT (100% {sym0})
                   </button>
                 </>
               )}
+            </div>
+          )}
+
+          {/* ── Precio SOBRE el rango → apunta a Insider Trading ── */}
+          {s.currentPrice > s.priceUpper && mode === "Cobertura" && (
+            <div style={{ marginBottom:16, background:"#0a0820", border:"1px solid #3730a355", padding:"10px 14px", fontSize:12, color:"#a78bfa" }}>
+              📈 Tu posición es 100% {sym1} — el precio subió del rango.
+              Esta situación se gestiona desde el tab <strong style={{color:"#c4b5fd"}}>Insider (Trading)</strong> con oportunidades LONG.
             </div>
           )}
 
@@ -2579,24 +2610,7 @@ function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
             })}
           </div>
 
-          {/* 24h Delta */}
-          {r && (
-            <>
-              <div className="pc-section-title">Cambios 24h</div>
-              <div className="pc-grid4">
-                <div className="pc-metric">
-                  <div className="pc-metric-label">PNL 24h</div>
-                  <div className={`pc-metric-val ${s.delta24hPnl >= 0 ? "green" : "red"}`}>{fmtUsd(s.delta24hPnl)}</div>
-                </div>
-                <div className="pc-metric">
-                  <div className="pc-metric-label">APR 24h</div>
-                  <div className={`pc-metric-val ${s.delta24hApr >= 0 ? "green" : "red"}`}>{fmtPct(s.delta24hApr, 1)}</div>
-                </div>
-                <div className="pc-metric" />
-                <div className="pc-metric" />
-              </div>
-            </>
-          )}
+          {/* 24h Delta — Revert no provee este dato, sección oculta */}
 
           {/* Info */}
           <div className="pc-section-title">Info</div>
@@ -2620,6 +2634,15 @@ function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
         </div>
       )}
       </div>
+
+      {/* ── GLARE CARD — Vista premium (desactivada temporalmente) ──
+      <GlareCard
+        pos={pos} s={s}
+        sym0={sym0} sym1={sym1}
+        inRange={inRange} statusObj={statusObj}
+        fmtP={fmtP} fmtUsd={fmtUsd} fmtPct={fmtPct} fmtAmt={fmtAmt}
+      />
+      ── */}
     </>
   );
 }
@@ -2677,24 +2700,16 @@ async function fetchPricesFallback() {
 function CoberturaTab() {
   const { user } = useAuth()
   const { pools, setPools, loading: poolsLoading, addPool, removePool } = usePoolsSync(user?.id)
+  const { actividad: activity, registrar: registrarActividad } = useActividadPools(user?.id)
 
   const [scanOpen, setScanOpen]       = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
   const [revertLoading, setRevertLoading] = useState(false);
   const poolsRef = useRef([]);
 
-  const [activity, setActivity] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("liquidity_engine_activity") || "[]"); }
-    catch { return []; }
-  });
-
   useEffect(() => {
     poolsRef.current = pools;
   }, [pools]);
-
-  useEffect(() => {
-    try { localStorage.setItem("liquidity_engine_activity", JSON.stringify(activity)); } catch {}
-  }, [activity]);
 
   // ── Master refresh: Revert + live prices every 10s ────────────────
   const refreshAll = async () => {
@@ -2780,23 +2795,25 @@ function CoberturaTab() {
       }
     }
 
-    setActivity(prev => [
-      ...toAdd.map(p => ({
-        id:    p.tokenId,
-        pair:  `${p.token0Symbol}/${p.token1Symbol}`,
-        chain: p.chainName,
-        time:  new Date().toLocaleString("es-CO", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" }),
-      })),
-      ...prev,
-    ]);
+    // Registra cada pool importada en Supabase + localStorage
+    for (const p of toAdd) {
+      await registrarActividad({
+        poolId: p.tokenId,
+        pair:   `${p.token0Symbol}/${p.token1Symbol}`,
+        chain:  p.chainName,
+        action: 'imported',
+      });
+    }
   };
 
   const handleRemove = async (tokenId) => {
     await removePool(tokenId);
-    setActivity(prev => [
-      { id: tokenId, pair: "Pool eliminada", chain: "", time: new Date().toLocaleString("es-CO", { day:"2-digit", month:"short", hour:"2-digit", minute:"2-digit" }) },
-      ...prev,
-    ]);
+    await registrarActividad({
+      poolId: tokenId,
+      pair:   "Pool eliminada",
+      chain:  "",
+      action: 'removed',
+    });
   };
 
   // ── Derived stats — prefer Revert data ───────────────────────────
@@ -2831,6 +2848,15 @@ function CoberturaTab() {
           </div>
         ))}
       </div>
+
+      {/* ── DEMO: Feature Alertas de Rango ── */}
+      <div className="section-header" style={{ marginBottom:8 }}>
+        <div className="section-title" style={{ fontSize:13, color:'#00e5ff', letterSpacing:'1px' }}>
+          🧪 Demo — Alertas de Rango
+        </div>
+      </div>
+      <PoolAlertDemo />
+      <div style={{ margin:'24px 0 0', borderTop:'1px solid #0e2435' }} />
 
       <div className="section-header">
         <div className="section-title">Pools LP Monitoreados</div>
@@ -4005,7 +4031,7 @@ function ProgramaTab() {
 // ════════════════════════════════════════════════════════════════════
 // APP
 // ════════════════════════════════════════════════════════════════════
-const TABS = ["Wallets","Cobertura","Trading Automatizado","Insider (Trading)"];
+const TABS = ["Wallets","Cobertura","Monitor de Cobertura","Trading Automatizado","Insider (Trading)"];
 const TABS_WITH_BADGE = ["Insider (Trading)"];
 const NAV_ITEMS       = ["Dashboard","Programa","Preguntas"];
 const NAV_ITEMS_ADMIN = ["Users Admin"];
@@ -5145,7 +5171,9 @@ export default function App() {
       switch (activeLiquidityTab) {
         case "Wallets":              return <WalletsTab />;
         case "Cobertura":            return <CoberturaTab />;
+        case "Monitor de Cobertura":  return <HedgeTrackerTab />;
         case "Trading Automatizado": return <TradingTab />;
+        case "Insider (Trading)":    return <InsiderTab />;
         default:                     return <ComingSoonTab name={activeLiquidityTab} />;
       }
     }
@@ -5304,6 +5332,8 @@ export default function App() {
           <div className="content" style={activeSection === "Programa" ? { padding:0 } : {}}>{renderContent()}</div>
         </div>
       </div>
+
+      <InactivityOverlay enabled={isLiquiditySection} />
     </>
   );
 }

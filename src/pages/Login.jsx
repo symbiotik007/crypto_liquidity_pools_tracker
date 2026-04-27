@@ -558,7 +558,7 @@ function SignupModal({ onClose, onSwitch }) {
 }
 
 // ── page ──────────────────────────────────────────────────────────────
-const FEATS = ['Monitoreo de pools LP en tiempo real','Cobertura automático SHORT en Hyperliquid','Datos precisos de Revert Finance','Alertas cuando tu pool sale de rango','Dashboard futurista personalizado']
+const FEATS = ['Monitoreo de pools LP en tiempo real','Cobertura automático SHORT en Hyperliquid','Datos precisos de Revert Finance','Alertas cuando tu pool sale de rango']
 
 export default function Login() {
   const [modal, setModal] = useState(null)
