@@ -54,6 +54,7 @@ const CSS = `
     border: 1px solid #00e5ff; color: #00e5ff;
     font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700;
     cursor: pointer; letter-spacing: 0.5px; transition: all 0.15s; margin-top: 4px;
+    border-radius: 10px;
   }
   .rc-btn:hover { background: rgba(0,229,255,0.05); }
   .rc-btn:disabled { opacity: 0.4; cursor: not-allowed; }

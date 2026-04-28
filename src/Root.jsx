@@ -1,10 +1,39 @@
 // src/Root.jsx
-import { useEffect } from 'react'
+import { useEffect, Component } from 'react'
 import { useAuth } from './lib/AuthContext'
 import Login        from './pages/Login'
 import AuthCallback from './pages/AuthCallback'
 import Home         from './pages/Home'
 import App          from './App'
+
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(e) { return { error: e }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'#050a0f', fontFamily:'Outfit,sans-serif', padding:24 }}>
+          <div style={{ maxWidth:580, width:'100%', textAlign:'center' }}>
+            <div style={{ fontSize:40, marginBottom:16 }}>⚠</div>
+            <div style={{ fontSize:18, fontWeight:700, color:'#ff4f6e', marginBottom:12 }}>Error al cargar</div>
+            <div style={{ fontSize:13, color:'#4a7a96', marginBottom:20, lineHeight:1.7 }}>
+              Ocurrió un problema inesperado. Comparte este mensaje con soporte:
+            </div>
+            <div style={{ background:'#0a1520', border:'1px solid #1a3a5e', padding:16, borderRadius:8, textAlign:'left', fontSize:11, color:'#ff6b88', fontFamily:'monospace', marginBottom:24, wordBreak:'break-all', lineHeight:1.6 }}>
+              {this.state.error?.message || String(this.state.error)}
+              {this.state.error?.stack ? '\n\n' + this.state.error.stack.slice(0, 400) : ''}
+            </div>
+            <button onClick={() => window.location.reload()}
+              style={{ padding:'10px 28px', background:'#00e5ff', color:'#050a0f', border:'none', borderRadius:8, fontFamily:'Outfit,sans-serif', fontSize:14, fontWeight:700, cursor:'pointer' }}>
+              Recargar
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function PausedScreen({ signOut }) {
   return (
@@ -96,7 +125,7 @@ export default function Root() {
   if (path === '/app') {
     if (!session) return <Login />
     if (isPaused)  return <PausedScreen signOut={signOut} />
-    return <App />
+    return <ErrorBoundary><App /></ErrorBoundary>
   }
 
   return <Home />

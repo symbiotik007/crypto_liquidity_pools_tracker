@@ -12,7 +12,28 @@
       "Bash(node:*)",
       "Bash(git push *)",
       "Bash(npm run *)",
-      "Bash(taskkill //F //IM node.exe)"
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(curl -s http://localhost:5174)",
+      "Bash(curl -s \"https://api.coingecko.com/api/v3/simple/price?ids=ethereum,usd-coin,tether,wrapped-bitcoin,dai,uniswap,aave,chainlink,arbitrum,optimism,polygon,curve-dao-token,lido-dao&vs_currencies=usd\")",
+      "Bash(curl -s \"https://api.coingecko.com/api/v3/simple/price?ids=ethereum,usd-coin,tether&vs_currencies=usd\")",
+      "Bash(curl -s http://localhost:5175)",
+      "Bash(netstat -ano)",
+      "Bash(awk '{print $5}')",
+      "PowerShell(Get-Process | Where-Object { $_.ProcessName -match \"node|vite|npm\" } | Select-Object Id, ProcessName, CPU | Format-Table -AutoSize)",
+      "PowerShell(Stop-Process *)",
+      "Bash(awk 'NR>=2209 && NR<=2800' src/App.jsx)",
+      "Bash(awk 'NR>=2700 && NR<=2800' src/App.jsx)",
+      "Bash(awk -F: '$1 >= 2209 && $1 <= 2700')",
+      "Bash(dir \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\scrape_output\")",
+      "Bash(cp \"C:/Users/ASUS/Desktop/scrape_output/www.babypips.com/crypto/learn/what-is-cryptocurrency/images/bpcdn.co/images/2022/02/15201143/bitcoin-digital-currency.png\" \"C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod1-lec1/\")",
+      "Bash(cp \"C:/Users/ASUS/Desktop/scrape_output/www.babypips.com/crypto/learn/what-is-cryptocurrency/images/bpcdn.co/images/2022/02/15200642/bitcoin-decentralized-currency.png\" \"C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod1-lec1/\")",
+      "Bash(cp \"C:/Users/ASUS/Desktop/scrape_output/www.babypips.com/crypto/learn/what-is-cryptocurrency/images/bpcdn.co/images/2022/08/22221616/crypto-software.png\" \"C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod1-lec1/\")",
+      "Bash(cp \"C:/Users/ASUS/Desktop/scrape_output/www.babypips.com/crypto/learn/what-is-cryptocurrency/images/bpcdn.co/images/2022/02/15210311/cryptography-hidden-writing.png\" \"C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod1-lec1/\")",
+      "Bash(sed -n '416,657p' \"C:/Users/ASUS/Desktop/scrape_output/www.babypips.com/crypto/learn/cryptocurrencies-new-asset-class/page.html\")",
+      "Read(//tmp/**)",
+      "Bash(grep -v '^[[:space:]]*$')",
+      "Bash(cp C:/Users/ASUS/Desktop/scrape_output/www.babypips.com/crypto/learn/cryptocurrencies-new-asset-class/images/Screenshot_2.png C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod1-lec2/one-legged-deer.png)",
+      "Bash(cp 'C:/Users/ASUS/Desktop/scrape_output/www.babypips.com/crypto/learn/cryptocurrencies-new-asset-class/images/ChatGPT Image Apr 27, 2026, 10_05_51 PM.png' C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod1-lec2/asset-classes.png)"
     ]
   }
 }

@@ -156,14 +156,14 @@ export function usePoolsSync(userId) {
 // La private key se guarda en localStorage con clave por wallet_id
 // ════════════════════════════════════════════════════════════════════
 export function useWalletsSync(userId) {
-  const [wallets, setWallets]   = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [error, setError]       = useState(null)
+  const [wallets, setWallets] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState(null)
 
-  // ── Private key helpers (localStorage only) ──────────────────────
-  const getPk   = (id) => localStorage.getItem(`hl_pk_${id}`) || ''
-  const savePk  = (id, pk) => localStorage.setItem(`hl_pk_${id}`, pk)
-  const removePk = (id) => localStorage.removeItem(`hl_pk_${id}`)
+  // localStorage como cache local (para acceso offline por otros componentes)
+  const syncToLocalStorage = (wList) => {
+    localStorage.setItem('hl_wallets', JSON.stringify(wList))
+  }
 
   // ── Load wallets from Supabase ───────────────────────────────────
   const loadWallets = useCallback(async () => {
@@ -184,17 +184,23 @@ export function useWalletsSync(userId) {
         address:      row.address,
         agentAddress: row.agent_address,
         purpose:      row.purpose,
+        exchange:     row.exchange || 'hyperliquid',
         createdAt:    new Date(row.created_at).getTime(),
-        // Rehydrate private key from localStorage
-        privateKey:   getPk(row.id),
+        privateKey:   row.private_key || localStorage.getItem(`hl_pk_${row.id}`) || '',
       }))
 
       setWallets(mapped)
-      // Sync to localStorage for offline access by other components
       syncToLocalStorage(mapped)
+      // Migrar private keys de localStorage a Supabase si existen
+      for (const row of (data || [])) {
+        const localPk = localStorage.getItem(`hl_pk_${row.id}`)
+        if (localPk && !row.private_key) {
+          await supabase.from('wallets').update({ private_key: localPk }).eq('id', row.id)
+          localStorage.removeItem(`hl_pk_${row.id}`)
+        }
+      }
     } catch (e) {
       setError(e.message)
-      // Fallback to localStorage
       try {
         const cached = JSON.parse(localStorage.getItem('hl_wallets') || '[]')
         setWallets(cached)
@@ -205,13 +211,8 @@ export function useWalletsSync(userId) {
 
   useEffect(() => { loadWallets() }, [loadWallets])
 
-  // Keep hl_wallets localStorage in sync (used by CoberturaTab, TradingTab, etc.)
-  const syncToLocalStorage = (wList) => {
-    localStorage.setItem('hl_wallets', JSON.stringify(wList))
-  }
-
   // ── Add wallet ───────────────────────────────────────────────────
-  const addWallet = useCallback(async ({ label, address, agentAddress, purpose, privateKey }) => {
+  const addWallet = useCallback(async ({ label, address, agentAddress, purpose, privateKey, exchange }) => {
     if (!userId) return
 
     const { data, error } = await supabase
@@ -221,7 +222,9 @@ export function useWalletsSync(userId) {
         label,
         address,
         agent_address: agentAddress || null,
-        purpose:       purpose || 'proteccion',
+        private_key:   privateKey   || null,
+        purpose:       purpose      || 'proteccion',
+        exchange:      exchange     || 'hyperliquid',
       })
       .select()
       .single()
@@ -231,17 +234,15 @@ export function useWalletsSync(userId) {
       throw error
     }
 
-    // Save private key ONLY to localStorage, never to Supabase
-    if (privateKey) savePk(data.id, privateKey)
-
     const newWallet = {
       id:           data.id,
       label:        data.label,
       address:      data.address,
       agentAddress: data.agent_address,
       purpose:      data.purpose,
+      exchange:     data.exchange || 'hyperliquid',
       createdAt:    new Date(data.created_at).getTime(),
-      privateKey:   privateKey || '',
+      privateKey:   data.private_key || '',
     }
 
     setWallets(prev => {
@@ -256,10 +257,8 @@ export function useWalletsSync(userId) {
   // ── Remove wallet ────────────────────────────────────────────────
   const removeWallet = useCallback(async (id) => {
     if (!userId) return
-
     await supabase.from('wallets').delete().eq('id', id)
-    removePk(id)
-
+    localStorage.removeItem(`hl_pk_${id}`)
     setWallets(prev => {
       const updated = prev.filter(w => w.id !== id)
       syncToLocalStorage(updated)

@@ -1,13 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Component } from "react";
 import { useAuth } from "./lib/AuthContext";
 import { usePoolsSync, useWalletsSync, useNotasSync, usePreguntasSync, useUsersAdmin, useNotificaciones, insertarNotificacion, useTradingConfigs, useActividadPools } from "./lib/useSupabaseSync";
+import { supabase } from "./lib/supabase";
 import { encode as msgpackEncode } from "@msgpack/msgpack";
 import cryptoHouseLogo from "./assets/cryptohouselogo.png";
 import InactivityOverlay from "./InactivityOverlay";
 import GlareCard from "./GlareCard";
-import PoolAlertDemo    from "./PoolAlertDemo";
-import HedgeTrackerTab  from "./HedgeTrackerTab";
-import InsiderTab       from "./InsiderTab";
+import HedgeTrackerTab        from "./HedgeTrackerTab";
+import InsiderTab             from "./InsiderTab";
+import OutOfRangeAlertBanner  from "./OutOfRangeAlertBanner";
 
 // ══════════════════════════════════════════════════════
 // ON-CHAIN RPC CONFIG
@@ -466,6 +467,31 @@ const styles = `
   .wallet-type.selected .wallet-type-name { color: #c9a227; }
 
   /* ── POOL CARD ── */
+  /* ── View mode toggle ── */
+  .pc-toggle { display:flex; align-items:center; background:#060c12; border:1px solid #0e2435; border-radius:999px; padding:3px; gap:2px; }
+  .pc-toggle-btn { padding:4px 14px; border-radius:999px; border:none; font-family:'Outfit',sans-serif; font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; cursor:pointer; transition:all 0.18s; background:transparent; color:#2a5a72; }
+  .pc-toggle-btn.active { background:#00e5ff; color:#050a0f; }
+
+  /* ── Normal view ── */
+  .pcn-wrap { padding:20px; display:flex; flex-direction:column; gap:16px; background:#060c12; border-top:1px solid #0e2435; }
+  .pcn-card { background:#070d14; border:1px solid #0e2435; border-radius:10px; padding:18px 20px; }
+  .pcn-card-title { font-size:10px; font-weight:700; color:#2a5a72; letter-spacing:2px; text-transform:uppercase; margin-bottom:14px; }
+  .pcn-total { font-size:26px; font-weight:800; color:#c8e6f0; margin-bottom:12px; }
+  .pcn-split-bar { height:8px; border-radius:999px; overflow:hidden; display:flex; margin-bottom:12px; }
+  .pcn-split-bar-0 { background:#00e5ff; }
+  .pcn-split-bar-1 { background:#7b61ff; }
+  .pcn-tokens { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .pcn-token { display:flex; flex-direction:column; gap:3px; }
+  .pcn-token-pct { font-size:11px; font-weight:700; color:#4a7a96; }
+  .pcn-token-usd { font-size:15px; font-weight:700; color:#c8e6f0; }
+  .pcn-token-amt { font-size:12px; color:#4a7a96; }
+  .pcn-range-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  .pcn-range-item { display:flex; flex-direction:column; gap:4px; }
+  .pcn-range-label { font-size:10px; font-weight:700; color:#2a5a72; letter-spacing:1px; text-transform:uppercase; }
+  .pcn-range-val { font-size:14px; font-weight:700; color:#c8e6f0; }
+  .pcn-range-sub { font-size:10px; color:#2a5a72; }
+  .pcn-range-val.market { color:#00e5ff; }
+
   .pc-wrap { background: #070d14; border: 1px solid #0e2435; margin-bottom: 8px; }
   .pc-row { display: flex; align-items: center; gap: 12px; padding: 14px 18px; cursor: pointer; transition: background 0.15s; }
   .pc-row:hover { background: #0a1520; }
@@ -1118,10 +1144,19 @@ async function hlDeriveAddress(privateKey) {
 }
 
 const WALLET_TYPES = [
-  { id: "proteccion", icon: "🛡", name: "Protección", sub: "Cobertura",         disabled: false },
-  { id: "trading",    icon: "📊", name: "Trading",    sub: "Rango",         disabled: false },
-  { id: "insider",    icon: "🤖", name: "Insider",    sub: "Mean-rev",      disabled: false },
+  { id: "proteccion", icon: "🛡", name: "Protección", sub: "Cobertura",     disabled: false },
+  { id: "trading",    icon: "📊", name: "Trading",    sub: "Rango",         disabled: true  },
+  { id: "insider",    icon: "🤖", name: "Insider",    sub: "Mean-rev",      disabled: true  },
   { id: "copy",       icon: "📋", name: "Copy",       sub: "No disponible", disabled: true  },
+];
+
+const EXCHANGES = [
+  { id: "hyperliquid", name: "Hyperliquid", color: "#7b61ff", bg: "rgba(123,97,255,0.12)", border: "rgba(123,97,255,0.4)",  hasPassphrase: false, isCex: false },
+  { id: "binance",     name: "Binance",     color: "#F0B90B", bg: "rgba(240,185,11,0.1)",  border: "rgba(240,185,11,0.35)", hasPassphrase: false, isCex: true  },
+  { id: "bybit",       name: "Bybit",       color: "#F7A600", bg: "rgba(247,166,0,0.1)",   border: "rgba(247,166,0,0.35)",  hasPassphrase: false, isCex: true  },
+  { id: "okx",         name: "OKX",         color: "#e0e0e0", bg: "rgba(224,224,224,0.07)",border: "rgba(224,224,224,0.25)",hasPassphrase: true,  isCex: true  },
+  { id: "bitget",      name: "Bitget",      color: "#00F0FF", bg: "rgba(0,240,255,0.08)",  border: "rgba(0,240,255,0.3)",   hasPassphrase: true,  isCex: true  },
+  { id: "kucoin",      name: "KuCoin",      color: "#23AF91", bg: "rgba(35,175,145,0.1)",  border: "rgba(35,175,145,0.3)",  hasPassphrase: true,  isCex: true  },
 ];
 
 // ════════════════════════════════════════════════════════════════════
@@ -1133,10 +1168,16 @@ function WalletsTab() {
 
   const [modalOpen, setModalOpen]       = useState(false);
   const [selectedType, setSelectedType] = useState("proteccion");
+  const [selectedExchange, setSelectedExchange] = useState("hyperliquid");
   const [walletName, setWalletName]     = useState("");
+  // HL fields
   const [address, setAddress]           = useState("");
   const [apiKey, setApiKey]             = useState("");
   const [agentWallet, setAgentWallet]   = useState("");
+  // CEX fields
+  const [cexApiKey, setCexApiKey]       = useState("");
+  const [cexSecret, setCexSecret]       = useState("");
+  const [cexPassphrase, setCexPassphrase] = useState("");
   const [saving, setSaving]             = useState(false);
   const [saveError, setSaveError]       = useState("");
 
@@ -1184,47 +1225,40 @@ function WalletsTab() {
 
   const resetForm = () => {
     setWalletName(""); setAddress(""); setApiKey(""); setAgentWallet("");
-    setSelectedType("proteccion"); setSaveError("");
+    setCexApiKey(""); setCexSecret(""); setCexPassphrase("");
+    setSelectedType("proteccion"); setSelectedExchange("hyperliquid"); setSaveError("");
   };
+
+  const exchDef = EXCHANGES.find(e => e.id === selectedExchange);
 
   const handleAdd = async () => {
     if (!walletName.trim()) return setSaveError("Nombre requerido");
-    if (!address.match(/^0x[0-9a-fA-F]{40}$/)) return setSaveError("Dirección de cuenta principal inválida (debe ser 0x + 40 hex)");
-    const cleanKey = apiKey.startsWith("0x") ? apiKey.slice(2) : apiKey;
-    if (!/^[0-9a-fA-F]{64}$/.test(cleanKey)) return setSaveError("API Key debe ser 64 caracteres hex válidos");
     setSaving(true); setSaveError("");
     try {
-      // Derive agent address
-      let derivedAgent = agentWallet;
-      if (!derivedAgent && window.ethers) {
-        try {
-          const w = new window.ethers.Wallet("0x" + cleanKey);
-          derivedAgent = w.address;
-        } catch {}
+      if (!exchDef.isCex) {
+        // ── Hyperliquid ──────────────────────────────────────────
+        if (!address.match(/^0x[0-9a-fA-F]{40}$/)) { setSaving(false); return setSaveError("Dirección inválida (0x + 40 hex)"); }
+        const cleanKey = apiKey.startsWith("0x") ? apiKey.slice(2) : apiKey;
+        if (!/^[0-9a-fA-F]{64}$/.test(cleanKey)) { setSaving(false); return setSaveError("Private Key debe ser 64 caracteres hex"); }
+        let derivedAgent = agentWallet;
+        if (!derivedAgent && window.ethers) {
+          try { const w = new window.ethers.Wallet("0x" + cleanKey); derivedAgent = w.address; } catch {}
+        }
+        const data = await hlGetPositions(address);
+        await addWallet({ label: walletName, address, agentAddress: derivedAgent, purpose: selectedType, privateKey: "0x" + cleanKey, exchange: "hyperliquid" });
+        setBalances(prev => ({ ...prev, [address]: data.balance }));
+        setPositions(prev => ({ ...prev, [address]: { positions: data.positions, spotBalances: data.spotBalances, spotTotal: data.spotTotal, perpEquity: data.perpEquity } }));
+      } else {
+        // ── CEX ──────────────────────────────────────────────────
+        if (!cexApiKey.trim()) { setSaving(false); return setSaveError("API Key requerida"); }
+        if (!cexSecret.trim()) { setSaving(false); return setSaveError("Secret Key requerida"); }
+        if (exchDef.hasPassphrase && !cexPassphrase.trim()) { setSaving(false); return setSaveError("Passphrase requerida para " + exchDef.name); }
+        const credentials = JSON.stringify({ apiKey: cexApiKey.trim(), secret: cexSecret.trim(), passphrase: cexPassphrase.trim() || undefined });
+        await addWallet({ label: walletName, address: cexApiKey.trim().slice(0, 8) + "...", agentAddress: null, purpose: selectedType, privateKey: credentials, exchange: selectedExchange });
       }
-
-      // Verify main account exists on HL
-      const data = await hlGetPositions(address);
-
-      // Save to Supabase (private key stays in localStorage via hook)
-      await addWallet({
-        label:        walletName,
-        address,
-        agentAddress: derivedAgent,
-        purpose:      selectedType,
-        privateKey:   "0x" + cleanKey,
-      });
-
-      setBalances(prev => ({ ...prev, [address]: data.balance }));
-      setPositions(prev => ({ ...prev, [address]: {
-        positions:    data.positions,
-        spotBalances: data.spotBalances,
-        spotTotal:    data.spotTotal,
-        perpEquity:   data.perpEquity,
-      }}));
       setModalOpen(false); resetForm();
     } catch (e) {
-      setSaveError(e.message || "Error al guardar wallet");
+      setSaveError(e.message || "Error al guardar");
     }
     setSaving(false);
   };
@@ -1237,12 +1271,13 @@ function WalletsTab() {
 
   const purposeColor = { proteccion: "#00e5ff", trading: "#00ff88", insider: "#ffb347", copy: "#888" };
   const purposeLabel = { proteccion: "Protección", trading: "Trading", insider: "Insider", copy: "Copy" };
+  const exchColor = (id) => EXCHANGES.find(e => e.id === id)?.color || "#4a7a96";
+  const exchName  = (id) => EXCHANGES.find(e => e.id === id)?.name  || id;
 
   return (
     <>
       <div className="info-box">
         Conecta tus wallets de Hyperliquid para monitorear balances y posiciones en tiempo real.
-        <span style={{ color:"#ffb347" }}> ⚠ Las API Keys se guardan localmente en tu browser (localStorage). Usa solo en tu dispositivo personal.</span>
       </div>
 
       <div className="wallets-section">
@@ -1278,9 +1313,20 @@ function WalletsTab() {
 
                     {/* Label + address */}
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, color: "#c8e6f0", fontSize: 14 }}>{w.label}</div>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
+                        <div style={{ fontWeight: 700, color: "#c8e6f0", fontSize: 14 }}>{w.label}</div>
+                        <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:4,
+                          color: exchColor(w.exchange), border:`1px solid ${exchColor(w.exchange)}44`,
+                          background:`${exchColor(w.exchange)}11`, letterSpacing:0.5 }}>
+                          {exchName(w.exchange || "hyperliquid")}
+                        </span>
+                        <span style={{ fontSize:10, color: purposeColor[w.purpose] || "#4a7a96",
+                          border:`1px solid ${purposeColor[w.purpose] || "#4a7a96"}44`, padding:"2px 8px", borderRadius:4 }}>
+                          {purposeLabel[w.purpose] || w.purpose}
+                        </span>
+                      </div>
                       <div style={{ fontSize: 11, color: "#2a5a72", fontFamily: "monospace" }}>
-                        {w.address.slice(0,8)}...{w.address.slice(-6)}
+                        {w.address?.slice(0,10)}...{w.address?.slice(-6)}
                       </div>
                     </div>
 
@@ -1367,21 +1413,46 @@ function WalletsTab() {
 
       {/* ── ADD WALLET MODAL ── */}
       <div className={`modal-overlay ${modalOpen ? "open" : ""}`}
-        onClick={(e) => e.target.classList.contains("modal-overlay") && (setModalOpen(false), resetForm())}>
+        onClick={() => {}}>
         <div className="wallet-modal">
           <div className="modal-header">
-            <div><div className="modal-title">Añadir Wallet Hyperliquid</div></div>
+            <div>
+              <div className="modal-title">Conectar Exchange</div>
+              <div style={{ fontSize:12, color:"#4a7a96", marginTop:2 }}>Añade tus credenciales API para operar</div>
+            </div>
             <button className="modal-close" onClick={() => { setModalOpen(false); resetForm(); }}>✕</button>
           </div>
           <div className="modal-body">
+
+            {/* ── Exchange selector ── */}
+            <div className="form-group">
+              <label className="form-label">Exchange</label>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                {EXCHANGES.map(ex => (
+                  <button key={ex.id} onClick={() => { setSelectedExchange(ex.id); setSaveError(""); }}
+                    style={{
+                      padding:"8px 16px", border:`1px solid ${selectedExchange === ex.id ? ex.border : "#1a3a5e"}`,
+                      background: selectedExchange === ex.id ? ex.bg : "transparent",
+                      color: selectedExchange === ex.id ? ex.color : "#4a7a96",
+                      fontFamily:"Outfit,sans-serif", fontSize:13, fontWeight:700,
+                      cursor:"pointer", borderRadius:6, transition:"all 0.15s",
+                    }}>
+                    {ex.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ── Nombre ── */}
             <div className="form-group">
               <label className="form-label">Nombre / Etiqueta</label>
-              <input className="form-input" placeholder="Ej: Wallet Principal HL"
+              <input className="form-input" placeholder={`Ej: Mi ${exchDef?.name} Principal`}
                 value={walletName} onChange={e => setWalletName(e.target.value)} />
             </div>
 
+            {/* ── Tipo ── */}
             <div className="form-group">
-              <label className="form-label">Tipo de Wallet</label>
+              <label className="form-label">Propósito</label>
               <div className="wallet-types">
                 {WALLET_TYPES.map(t => (
                   <div key={t.id}
@@ -1395,69 +1466,66 @@ function WalletsTab() {
               </div>
             </div>
 
-            {/* Visual guide */}
-            <div style={{ background:"#0a1520",border:"1px solid #1a3a5e",padding:"12px 14px",fontSize:12,lineHeight:1.8,color:"#4a7a96" }}>
-              <div style={{ color:"#00e5ff",fontWeight:700,marginBottom:6,fontSize:11,letterSpacing:1,textTransform:"uppercase" }}>
-                ⚡ Arquitectura de Hyperliquid — 2 addresses
-              </div>
-              <div style={{ display:"flex",flexDirection:"column",gap:4 }}>
-                <div><span style={{ color:"#ffb347" }}>① Cuenta Principal</span> — donde están tus fondos USDC. La que ves en MetaMask/Rabby. <span style={{ color:"#ffb347" }}>← LA QUE DEBES PEGAR ABAJO</span></div>
-                <div style={{ color:"#2a5a72",marginLeft:16 }}>↓ autoriza a →</div>
-                <div><span style={{ color:"#7ab8d4" }}>② API Wallet (Agent)</span> — firma las órdenes. Se deriva de tu API Key. <span style={{ color:"#7ab8d4" }}>← Solo pon la private key abajo</span></div>
-              </div>
-              <div style={{ marginTop:8,padding:"6px 10px",background:"#050a0f",border:"1px solid #0e2435",color:"#2a5a72",fontSize:11 }}>
-                En Hyperliquid → Portfolio → tu address arriba a la derecha → esa es tu Cuenta Principal ✓
-              </div>
-            </div>
+            {/* ── Campos Hyperliquid ── */}
+            {!exchDef?.isCex && (
+              <>
+                <div style={{ background:"#0a1520", border:"1px solid #1a3a5e", padding:"12px 14px", fontSize:12, lineHeight:1.8, color:"#4a7a96" }}>
+                  <div style={{ color:"#7b61ff", fontWeight:700, marginBottom:6, fontSize:11, letterSpacing:1, textTransform:"uppercase" }}>⚡ Hyperliquid — 2 direcciones</div>
+                  <div><span style={{ color:"#ffb347" }}>① Cuenta Principal</span> — donde están tus fondos USDC (MetaMask/Rabby)</div>
+                  <div><span style={{ color:"#7ab8d4" }}>② Private Key</span> — del API Wallet que firma las órdenes (no puede retirar fondos)</div>
+                  <div style={{ marginTop:6, fontSize:11, color:"#2a5a72" }}>En HL: Portfolio → tu address arriba derecha = Cuenta Principal ✓</div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label" style={{ color:"#ffb347" }}>① Dirección Cuenta Principal <span style={{ color:"#ff4f6e" }}>*</span></label>
+                  <input className="form-input" placeholder="0x476e... (cuenta con fondos USDC)"
+                    value={address} onChange={e => setAddress(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" style={{ color:"#7ab8d4" }}>② Private Key del API Wallet <span style={{ color:"#ff4f6e" }}>*</span></label>
+                  <input className="form-input" type="password" placeholder="0x6e6b... (Trade → API → Show Secret)"
+                    value={apiKey} onChange={e => handleApiKeyChange(e.target.value)} />
+                  {agentWallet && (
+                    <div style={{ fontSize:11, color:"#00ff88", marginTop:4 }}>✓ Agent: {agentWallet.slice(0,10)}...{agentWallet.slice(-6)}</div>
+                  )}
+                </div>
+              </>
+            )}
 
-            <div className="form-group">
-              <label className="form-label" style={{ color:"#ffb347" }}>
-                ① Dirección Cuenta Principal <span style={{ color:"#ff4f6e" }}>*</span>
-              </label>
-              <input className="form-input" placeholder="0x476e... (tu cuenta con los fondos USDC)"
-                value={address} onChange={e => setAddress(e.target.value)} />
-              <div className="form-sub">
-                Esta dirección tiene tus fondos. Se usa para consultar balance y posiciones.
-                <br/>En HL: haz click en tu avatar arriba a la derecha → copia la dirección larga.
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" style={{ color:"#7ab8d4" }}>
-                ② API Key Secret (Private Key del Agent Wallet) <span style={{ color:"#ff4f6e" }}>*</span>
-              </label>
-              <input className="form-input" type="password"
-                placeholder="0x6e6b... (private key de tu API Wallet en HL)"
-                value={apiKey} onChange={e => handleApiKeyChange(e.target.value)} />
-              <div className="form-sub">
-                En HL: <strong style={{ color:"#7ab8d4" }}>Trade → API → tu API Wallet → Show Secret</strong>.
-                Esta key firma las órdenes pero NO puede retirar fondos.
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Agent Wallet (derivada automáticamente)</label>
-              <input className="form-input" readOnly
-                placeholder="Se deriva automáticamente de la API Key..."
-                value={agentWallet}
-                style={{ opacity: agentWallet ? 1 : 0.4, color: agentWallet ? "#00ff88" : undefined }} />
-              <div className="form-sub" style={{ color: agentWallet ? "#00ff88" : "#2a5a72" }}>
-                {agentWallet
-                  ? `✓ Agent: ${agentWallet} — esta dirección debe estar autorizada en HL → API`
-                  : "Pega tu API Key arriba para derivar el agent address automáticamente."}
-              </div>
-            </div>
+            {/* ── Campos CEX ── */}
+            {exchDef?.isCex && (
+              <>
+                <div style={{ background:"#0a1520", border:`1px solid ${exchDef.border}`, padding:"12px 14px", fontSize:12, lineHeight:1.8, color:"#4a7a96" }}>
+                  <div style={{ color: exchDef.color, fontWeight:700, marginBottom:4, fontSize:11, letterSpacing:1, textTransform:"uppercase" }}>🔑 {exchDef.name} — API Keys</div>
+                  <div>Crea una API Key en {exchDef.name} con permisos de <strong style={{ color: exchDef.color }}>Futures/Perp Trading</strong>. No actives permisos de retiro.</div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">API Key <span style={{ color:"#ff4f6e" }}>*</span></label>
+                  <input className="form-input" placeholder={`Tu API Key de ${exchDef.name}`}
+                    value={cexApiKey} onChange={e => setCexApiKey(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Secret Key <span style={{ color:"#ff4f6e" }}>*</span></label>
+                  <input className="form-input" type="password" placeholder="Secret Key"
+                    value={cexSecret} onChange={e => setCexSecret(e.target.value)} />
+                </div>
+                {exchDef.hasPassphrase && (
+                  <div className="form-group">
+                    <label className="form-label">Passphrase <span style={{ color:"#ff4f6e" }}>*</span></label>
+                    <input className="form-input" type="password" placeholder={`Passphrase de ${exchDef.name}`}
+                      value={cexPassphrase} onChange={e => setCexPassphrase(e.target.value)} />
+                  </div>
+                )}
+              </>
+            )}
 
             {saveError && (
-              <div style={{ color: "#ff4f6e", fontSize: 12, padding: "8px 0", borderTop: "1px solid #5a1a28" }}>
-                ⚠ {saveError}
-              </div>
+              <div style={{ color:"#ff4f6e", fontSize:12, padding:"8px 0", borderTop:"1px solid #5a1a28" }}>⚠ {saveError}</div>
             )}
           </div>
           <div className="modal-footer">
             <button className="btn btn-ghost" onClick={() => { setModalOpen(false); resetForm(); }}>Cancelar</button>
             <button className="btn btn-gold" onClick={handleAdd} disabled={saving}>
-              {saving ? "Verificando..." : "Añadir Wallet"}
+              {saving ? "Guardando..." : `Conectar ${exchDef?.name}`}
             </button>
           </div>
         </div>
@@ -1476,17 +1544,15 @@ function WalletsTab() {
 // POOL CARD COMPONENT — powered by Revert Finance API
 // ════════════════════════════════════════════════════════════════════
 function calcPoolStats(pos) {
-  const r = pos.revert; // Revert API data if available
+  const r = pos.revert ?? null;
 
   // ── Value & PNL ────────────────────────────────────────────────
-  const valueUsd        = r ? parseFloat(r.underlying_value) : (pos.valueUsd ?? 0);
-  const depositsValue   = r ? parseFloat(r.deposits_value)   : (pos.valueAtCreation ?? 0);
+  const valueUsd        = r ? parseFloat(r.underlying_value)         : (pos.valueUsd ?? 0);
+  const depositsValue   = r ? parseFloat(r.deposits_value)           : (pos.valueAtCreation ?? 0);
   const withdrawalsVal  = r ? parseFloat(r.withdrawals_value ?? "0") : 0;
   const netInvested     = depositsValue - withdrawalsVal;
   const pnlUsd          = r ? parseFloat(r.performance?.usd?.pnl ?? "0") : (valueUsd - netInvested);
-  // roi/apr en performance.usd vienen en 0 desde Revert — calculamos nosotros
   const pnlPct          = depositsValue > 0 ? (pnlUsd / depositsValue) * 100 : 0;
-  // pool_apr contiene el APR real de la posición en USD
   const aprUsd          = r ? parseFloat(r.performance?.usd?.pool_apr ?? r.performance?.hodl?.apr ?? "0") : 0;
   const ilUsd           = r ? parseFloat(r.performance?.usd?.il  ?? "0") : 0;
 
@@ -1500,14 +1566,10 @@ function calcPoolStats(pos) {
 
   // ── Fees ───────────────────────────────────────────────────────
   const feesValue       = r ? parseFloat(r.fees_value ?? "0")         : (pos.collectedFeesUsd ?? 0);
-  // fee_apr real está en performance.hodl.fee_apr (performance.usd.fee_apr viene en 0 desde Revert)
-  const ageDaysRaw      = r ? parseFloat(r.age ?? "0") : 0;
+  const ageDaysRaw      = r ? parseFloat(r.age ?? "0")                : 0;
   const feesAprCalc     = (r && feesValue > 0 && depositsValue > 0 && ageDaysRaw > 0)
-    ? (feesValue / depositsValue) * (365 / ageDaysRaw) * 100
-    : 0;
-  const feesApr         = r
-    ? (parseFloat(r.performance?.hodl?.fee_apr ?? "0") || feesAprCalc)
-    : 0;
+    ? (feesValue / depositsValue) * (365 / ageDaysRaw) * 100 : 0;
+  const feesApr         = r ? (parseFloat(r.performance?.hodl?.fee_apr ?? "0") || feesAprCalc) : 0;
   const uncollected0    = r ? parseFloat(r.uncollected_fees0 ?? "0")  : 0;
   const uncollected1    = r ? parseFloat(r.uncollected_fees1 ?? "0")  : 0;
   const collected0      = r ? parseFloat(r.collected_fees0   ?? "0")  : 0;
@@ -1524,21 +1586,21 @@ function calcPoolStats(pos) {
   const amount1         = r ? parseFloat(r.current_amount1 ?? "0") : parseFloat(pos.amount1 ?? "0");
 
   // ── Price & range ──────────────────────────────────────────────
-  const currentPrice    = r ? parseFloat(r.pool_price ?? "0") : (pos.currentPrice ?? 0);
-  const priceLower      = r ? parseFloat(r.price_lower ?? "0") : (pos.priceLower ?? 0);
-  const priceUpper      = r ? parseFloat(r.price_upper ?? "0") : (pos.priceUpper ?? 0);
+  const currentPrice    = r ? parseFloat(r.pool_price ?? "0")     : (pos.currentPrice ?? 0);
+  const priceLower      = r ? parseFloat(r.price_lower ?? "0")    : (pos.priceLower ?? 0);
+  const priceUpper      = r ? parseFloat(r.price_upper ?? "0")    : (pos.priceUpper ?? 0);
   const entryPrice      = pos.priceAtCreation ?? currentPrice;
 
   // ── Range bar ──────────────────────────────────────────────────
   const span            = priceUpper - priceLower;
   const barPct          = span > 0 ? Math.max(0, Math.min(100, (currentPrice - priceLower) / span * 100)) : 0;
 
-  // ── 24h deltas — Revert no los provee, se calculan por diferencia de snapshots ──
+  // ── 24h deltas ─────────────────────────────────────────────────
   const delta24hPnl     = 0;
   const delta24hApr     = 0;
 
   // ── Deposits/withdrawals ───────────────────────────────────────
-  const totalDep1       = r ? parseFloat(r.total_deposits1 ?? "0") : 0;
+  const totalDep1       = r ? parseFloat(r.total_deposits1  ?? "0") : 0;
   const totalWit1       = r ? parseFloat(r.total_withdrawn1 ?? "0") : 0;
 
   return {
@@ -2216,12 +2278,72 @@ function ProtectionModal({ pos, s, onClose }) {
   );
 }
 
+const OOR_COOLDOWN_MS = 30 * 60 * 1000; // 30 minutos
+
+async function sendOorAlert({ userId, userEmail, pair, direction, currentPrice, priceLower, priceUpper, tokenId }) {
+  // ① Notificación en panel (campana)
+  const dir  = direction === "below" ? "por debajo del mínimo" : "por encima del máximo";
+  const icon = direction === "below" ? "⬇" : "⬆";
+  await insertarNotificacion(
+    userId,
+    "oor_alert",
+    `${icon} Pool ${pair} fuera de rango`,
+    `Tu posición salió de rango (${dir}). Precio actual: ${currentPrice.toFixed(2)}.`,
+  );
+
+  // ② Email vía Supabase Edge Function + Resend
+  try {
+    await supabase.functions.invoke("send-oor-alert", {
+      body: { userId, userEmail, pair, direction, currentPrice, priceLower, priceUpper, tokenId },
+    });
+  } catch (e) {
+    console.warn("Edge Function OOR email:", e?.message);
+  }
+}
+
 function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
+  const { user } = useAuth();
   const [expanded, setExpanded]             = useState(false);
   const [showProtection, setShowProtection] = useState(false);
   const [showTrading, setShowTrading]       = useState(false);
+  const [viewMode, setViewMode]             = useState("normal");
+  const [showBanner, setShowBanner]         = useState(false);
+  const prevStatusRef                       = useRef(null);
   const s = calcPoolStats(pos);
-  const r = pos.revert;
+
+  // ── Detecta transición En Rango → Fuera y dispara el flujo de alertas ──
+  useEffect(() => {
+    const currentLabel = pos.status?.label;
+    const prevLabel    = prevStatusRef.current;
+    prevStatusRef.current = currentLabel;
+
+    // Solo actúa en transición real de "En Rango" → fuera
+    if (prevLabel === "En Rango" && currentLabel && currentLabel !== "En Rango") {
+      setShowBanner(true);
+
+      // Cooldown anti-spam por pool
+      const cooldownKey = `oor_alert_${pos.tokenId}_last`;
+      const lastSent    = parseInt(localStorage.getItem(cooldownKey) || "0", 10);
+      const now         = Date.now();
+
+      if (now - lastSent >= OOR_COOLDOWN_MS && user?.id) {
+        localStorage.setItem(cooldownKey, String(now));
+        const direction = currentLabel === "Fuera (Abajo)" ? "below" : "above";
+        sendOorAlert({
+          userId:       user.id,
+          userEmail:    user.email || "",
+          pair:         `${pos.token0Symbol}/${pos.token1Symbol}`,
+          direction,
+          currentPrice: s.currentPrice,
+          priceLower:   s.priceLower,
+          priceUpper:   s.priceUpper,
+          tokenId:      pos.tokenId,
+        });
+      }
+    }
+
+    if (currentLabel === "En Rango") setShowBanner(false);
+  }, [pos.status?.label]); // eslint-disable-line
 
   const fmtUsd  = (v, decimals = 2) => `${v >= 0 ? "+" : ""}$${Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
   const fmtPct  = (v, decimals = 2) => `${v >= 0 ? "+" : ""}${parseFloat(v).toFixed(decimals)}%`;
@@ -2232,8 +2354,8 @@ function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
   const poolUrl = `https://app.uniswap.org/positions/v3/${pos.chainName?.toLowerCase()}/${pos.tokenId}`;
   const revertUrl = `https://revert.finance/#/uniswap-position/arbitrum/${pos.tokenId}`;
 
-  // Status from revert or local
-  const inRange   = r ? r.in_range : pos.status?.label === "En Rango";
+  // Status from live price
+  const inRange   = pos.status?.label === "En Rango";
   const statusObj = inRange
     ? { label: "En Rango",        color: "#00ff88", bg: "#001a0e", border: "#003a22" }
     : s.currentPrice < s.priceLower
@@ -2244,7 +2366,7 @@ function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
   const savedProtection = (() => {
     try {
       const all = JSON.parse(localStorage.getItem("hl_protections") || "[]");
-      return all.find(p => p.poolId === pos.tokenId) || null;
+      return all.find(p => String(p.poolId) === String(pos.tokenId)) || null;
     } catch { return null; }
   })();
 
@@ -2278,7 +2400,6 @@ function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
             {statusObj.label}
           </span>
           <span className="pc-chain">{pos.chainName}</span>
-          {r && <span className="pc-revert-badge">R</span>}
         </div>
         <div className="pc-stats">
           <div className="pc-stat">
@@ -2307,11 +2428,130 @@ function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
           </div>
         </div>
         <div className={`pc-chevron ${expanded ? "open" : ""}`}>›</div>
+        {/* Toggle — stop propagation so no expand/collapse */}
+        <div className="pc-toggle" onClick={e => e.stopPropagation()}>
+          <button className={`pc-toggle-btn ${viewMode === "normal" ? "active" : ""}`} onClick={() => { setViewMode("normal"); setExpanded(true); }}>Normal</button>
+          <button className={`pc-toggle-btn ${viewMode === "pro" ? "active" : ""}`} onClick={() => { setViewMode("pro"); setExpanded(true); }}>Pro</button>
+        </div>
       </div>
 
-      {/* ── EXPANDED PANEL ── */}
-      {expanded && (
+      {/* ── NORMAL VIEW ── */}
+      {expanded && viewMode === "normal" && (() => {
+        const val0 = s.amount0 * s.currentPrice;
+        const val1 = s.amount1;
+        const totalVal = val0 + val1 || s.valueUsd || 1;
+        const pct0 = Math.round((val0 / totalVal) * 100);
+        const pct1 = 100 - pct0;
+        const sym0d = sym0.replace("WETH","ETH");
+        const sym1d = sym1;
+        return (
+          <div className="pcn-wrap">
+            {/* Banner OOR en vista Normal */}
+            {showBanner && pos.status?.label !== "En Rango" && (
+              <OutOfRangeAlertBanner
+                direction={pos.status?.label === "Fuera (Abajo)" ? "below" : "above"}
+                pair={`${sym0d}/${sym1d}`}
+                onDismiss={() => setShowBanner(false)}
+              />
+            )}
+
+            {/* Position */}
+            <div className="pcn-card">
+              <div className="pcn-card-title">Posición</div>
+              <div className="pcn-total">${fmtP(s.valueUsd)}</div>
+              <div className="pcn-split-bar">
+                <div className="pcn-split-bar-0" style={{ width:`${pct0}%` }} />
+                <div className="pcn-split-bar-1" style={{ width:`${pct1}%` }} />
+              </div>
+              <div className="pcn-tokens">
+                <div className="pcn-token">
+                  <div className="pcn-token-pct">{pct0}% — {sym0d}</div>
+                  <div className="pcn-token-usd">${fmtP(val0)}</div>
+                  <div className="pcn-token-amt">{fmtAmt(s.amount0, 4)} {sym0d}</div>
+                </div>
+                <div className="pcn-token">
+                  <div className="pcn-token-pct">{pct1}% — {sym1d}</div>
+                  <div className="pcn-token-usd">${fmtP(val1)}</div>
+                  <div className="pcn-token-amt">{fmtAmt(s.amount1, 2)} {sym1d}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Fees sin recolectar */}
+            {(() => {
+              const unc0usd = s.uncollected0 * s.currentPrice;
+              const unc1usd = s.uncollected1;
+              const totalUnc = unc0usd + unc1usd || 0.01;
+              const pctUnc0 = Math.round((unc0usd / totalUnc) * 100);
+              const pctUnc1 = 100 - pctUnc0;
+              return (
+                <div className="pcn-card">
+                  <div className="pcn-card-title">Fees sin recolectar</div>
+                  <div className="pcn-total">${fmtP(unc0usd + unc1usd)}</div>
+                  <div className="pcn-split-bar">
+                    <div className="pcn-split-bar-0" style={{ width:`${pctUnc0}%` }} />
+                    <div className="pcn-split-bar-1" style={{ width:`${pctUnc1}%` }} />
+                  </div>
+                  <div className="pcn-tokens">
+                    <div className="pcn-token">
+                      <div className="pcn-token-pct">{pctUnc0}% — {sym0d}</div>
+                      <div className="pcn-token-usd">${fmtP(unc0usd)}</div>
+                      <div className="pcn-token-amt">{fmtAmt(s.uncollected0, 6)} {sym0d}</div>
+                    </div>
+                    <div className="pcn-token">
+                      <div className="pcn-token-pct">{pctUnc1}% — {sym1d}</div>
+                      <div className="pcn-token-usd">${fmtP(unc1usd)}</div>
+                      <div className="pcn-token-amt">{fmtAmt(s.uncollected1, 2)} {sym1d}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Price Range */}
+            <div className="pcn-card">
+              <div className="pcn-card-title">Rango de precio</div>
+              <div className="pcn-range-grid">
+                <div className="pcn-range-item">
+                  <div className="pcn-range-label">Precio mín.</div>
+                  <div className="pcn-range-val">{fmtP(s.priceLower)}</div>
+                  <div className="pcn-range-sub">{sym1d} = 1 {sym0d}</div>
+                </div>
+                <div className="pcn-range-item">
+                  <div className="pcn-range-label">Precio máx.</div>
+                  <div className="pcn-range-val">{fmtP(s.priceUpper)}</div>
+                  <div className="pcn-range-sub">{sym1d} = 1 {sym0d}</div>
+                </div>
+                <div className="pcn-range-item">
+                  <div className="pcn-range-label">Precio mercado</div>
+                  <div className="pcn-range-val market">{fmtP(s.currentPrice)}</div>
+                  <div className="pcn-range-sub">{sym1d} = 1 {sym0d}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="pc-actions">
+              <a href={poolUrl} target="_blank" rel="noreferrer" className="pc-btn-link">🔗 Uniswap</a>
+              <button className="pc-btn-close" onClick={() => setExpanded(false)}>Cerrar</button>
+              <button className="pc-btn-remove" onClick={() => onRemove(pos.tokenId)}>🗑 Eliminar</button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── EXPANDED PANEL (PRO) ── */}
+      {expanded && viewMode === "pro" && (
         <div className="pc-panel">
+
+          {/* ── Banner OOR ── */}
+          {showBanner && pos.status?.label !== "En Rango" && (
+            <OutOfRangeAlertBanner
+              direction={pos.status?.label === "Fuera (Abajo)" ? "below" : "above"}
+              pair={`${sym0}/${sym1}`}
+              onDismiss={() => setShowBanner(false)}
+            />
+          )}
 
           {/* Price + range bar */}
           <div className="pc-price-section">
@@ -2621,7 +2861,6 @@ function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
             <span>DEX: uniswap_v3</span>
             <span>Fee: {((pos.fee || 500) / 10000).toFixed(2)}%</span>
             <span>Pool: <span className="pc-addr">{pos.poolAddress ? pos.poolAddress.slice(0,8)+"..."+pos.poolAddress.slice(-4) : "—"}</span></span>
-            {r && <span style={{color:"#00ff88",fontSize:11}}>✓ Datos Revert</span>}
           </div>
 
           {/* Footer actions */}
@@ -2681,45 +2920,35 @@ function buildPriceMapFromRevert(revertMap) {
   return map;
 }
 
-// Fallback: CoinGecko API pública sin auth si no hay datos Revert
-async function fetchPricesFallback() {
-  try {
-    const res  = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=ethereum,usd-coin,tether&vs_currencies=usd"
-    );
-    const data = await res.json();
-    return {
-      ETH:  data?.ethereum?.usd  ?? 0,
-      USDC: data?.["usd-coin"]?.usd ?? 1,
-      USDT: data?.tether?.usd    ?? 1,
-    };
-  } catch { return {}; }
-}
-
 async function enrichPoolsWithMarketData(pools) {
+  // Revert Finance es la fuente de verdad
   const wallets = [...new Set(pools.map(p => p.og_owner || p.walletAddress).filter(Boolean))];
   const revertMaps = await Promise.all(wallets.map(w => fetchRevertPositions(w)));
-  const revertAll = Object.assign({}, ...revertMaps);
+  const revertAll  = Object.assign({}, ...revertMaps);
+
+  // Si Revert no devolvió nada, usar precios del mapa interno de Revert o 0
   const priceMap = Object.keys(revertAll).length > 0
     ? buildPriceMapFromRevert(revertAll)
-    : await fetchPricesFallback();
+    : {};
 
   return pools.map(pos => {
-    const r = revertAll[String(pos.tokenId)] ?? pos.revert ?? null;
+    const r   = revertAll[String(pos.tokenId)] ?? pos.revert ?? null;
     const sym0 = (pos.token0Symbol || "").toUpperCase().replace("WETH", "ETH");
     const sym1 = (pos.token1Symbol || "").toUpperCase();
-    const isStable1 = sym1.includes("USD") || ["USDC", "USDT", "DAI"].includes(sym1);
+    const isStable1 = sym1.includes("USD") || ["USDC","USDT","DAI"].includes(sym1);
+
     const livePrice = r
       ? parseFloat(r.pool_price ?? pos.currentPrice ?? 0)
-      : (isStable1 ? (priceMap[sym0] ?? pos.currentPrice ?? 0) : (pos.currentPrice ?? 0));
+      : (priceMap[sym0] ?? pos.currentPrice ?? 0);
+
     const inRange = r ? r.in_range : (livePrice >= pos.priceLower && livePrice <= pos.priceUpper);
     let status;
-    if (inRange) status = { label: "En Rango", color: "#00ff88", bg: "#001a0e", border: "#003a22" };
-    else if (livePrice < pos.priceLower) status = { label: "Fuera (Abajo)", color: "#ff4f6e", bg: "#1a0810", border: "#5a1a28" };
-    else status = { label: "Fuera (Arriba)", color: "#ffb347", bg: "#1a0e00", border: "#5a3a00" };
+    if (inRange)                          status = { label: "En Rango",       color: "#00ff88", bg: "#001a0e", border: "#003a22" };
+    else if (livePrice < pos.priceLower)  status = { label: "Fuera (Abajo)", color: "#ff4f6e", bg: "#1a0810", border: "#5a1a28" };
+    else                                  status = { label: "Fuera (Arriba)",color: "#ffb347", bg: "#1a0e00", border: "#5a3a00" };
 
-    const amount0 = r ? parseFloat(r.current_amount0 ?? pos.amount0 ?? "0") : parseFloat(pos.amount0 ?? "0");
-    const amount1 = r ? parseFloat(r.current_amount1 ?? pos.amount1 ?? "0") : parseFloat(pos.amount1 ?? "0");
+    const amount0  = r ? parseFloat(r.current_amount0 ?? pos.amount0 ?? "0") : parseFloat(pos.amount0 ?? "0");
+    const amount1  = r ? parseFloat(r.current_amount1 ?? pos.amount1 ?? "0") : parseFloat(pos.amount1 ?? "0");
     const valueUsd = r
       ? parseFloat(r.underlying_value ?? "0")
       : (amount0 * (priceMap[sym0] ?? livePrice ?? 0) + amount1 * (isStable1 ? 1 : (priceMap[sym1] ?? 0)));
@@ -2746,26 +2975,35 @@ function CoberturaTab() {
   const [scanOpen, setScanOpen]       = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
   const [revertLoading, setRevertLoading] = useState(false);
-  const poolsRef = useRef([]);
+  const poolsRef          = useRef([]);
+  const initialDoneRef    = useRef(false);
 
   useEffect(() => {
     poolsRef.current = pools;
   }, [pools]);
 
-  // ── Master refresh: Revert + live prices every 10s ────────────────
+  // ── Master refresh: Revert Finance data every 30s ────────────────
   const refreshAll = async () => {
+    if (poolsRef.current.length === 0) return;
     setRevertLoading(true);
     const enriched = await enrichPoolsWithMarketData(poolsRef.current);
     setPools(enriched);
     localStorage.setItem("liquidity_engine_pools", JSON.stringify(enriched));
-
     setLastRefresh(new Date());
     setRevertLoading(false);
   };
 
+  // Dispara el primer refresh tan pronto como Supabase entregue los pools
   useEffect(() => {
-    if (poolsRef.current.length > 0) refreshAll();
-    const interval = setInterval(refreshAll, 10000);
+    if (pools.length > 0 && !initialDoneRef.current && !poolsLoading) {
+      initialDoneRef.current = true;
+      refreshAll();
+    }
+  }, [pools.length, poolsLoading]); // eslint-disable-line
+
+  // Refresh periódico cada 30s
+  useEffect(() => {
+    const interval = setInterval(refreshAll, 30000);
     return () => clearInterval(interval);
   }, []); // eslint-disable-line
 
@@ -2862,14 +3100,6 @@ function CoberturaTab() {
         ))}
       </div>
 
-      {/* ── DEMO: Feature Alertas de Rango ── */}
-      <div className="section-header" style={{ marginBottom:8 }}>
-        <div className="section-title" style={{ fontSize:13, color:'#00e5ff', letterSpacing:'1px' }}>
-          🧪 Demo — Alertas de Rango
-        </div>
-      </div>
-      <PoolAlertDemo />
-      <div style={{ margin:'24px 0 0', borderTop:'1px solid #0e2435' }} />
 
       <div className="section-header">
         <div className="section-title">Pools LP Monitoreados</div>
@@ -3324,7 +3554,7 @@ function TradingTab() {
   }, []) // eslint-disable-line
 
   useEffect(() => {
-    if (pools.length > 0 && !pools.some(p => p.revert)) refreshTradingPools()
+    if (pools.length > 0) refreshTradingPools()
   }, [pools.length]) // eslint-disable-line
 
   const handleRemove = async (tokenId) => {
@@ -3385,6 +3615,233 @@ function TradingTab() {
         ))
       )}
     </>
+  );
+}
+
+function TradingViewOperableTab() {
+  const openTV = () => {
+    window.open("https://www.tradingview.com/chart/", "_blank", "width=1400,height=900,menubar=no,toolbar=no,location=no,status=no");
+  };
+
+  return (
+    <div style={{ position:"relative", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", overflow:"hidden", textAlign:"center" }}>
+
+      {/* ── Fondo futurista ── */}
+      <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse 80% 60% at 50% 40%, rgba(0,229,255,0.06) 0%, rgba(123,97,255,0.04) 40%, transparent 70%)", pointerEvents:"none" }} />
+      <div style={{ position:"absolute", inset:0, backgroundImage:"linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px)", backgroundSize:"48px 48px", pointerEvents:"none" }} />
+      <div style={{ position:"absolute", top:"15%", left:"10%", width:320, height:320, borderRadius:"50%", background:"radial-gradient(circle, rgba(123,97,255,0.08) 0%, transparent 70%)", filter:"blur(40px)", pointerEvents:"none" }} />
+      <div style={{ position:"absolute", bottom:"10%", right:"8%", width:260, height:260, borderRadius:"50%", background:"radial-gradient(circle, rgba(0,229,255,0.07) 0%, transparent 70%)", filter:"blur(40px)", pointerEvents:"none" }} />
+
+      {/* ── Astronauta flotante ── */}
+      <style>{`@keyframes tvFloat{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-18px) rotate(-3deg)}} @keyframes tvRotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
+      <div style={{ position:"absolute", right:"6%", top:"50%", transform:"translateY(-50%)", opacity:0.18, pointerEvents:"none", animation:"tvFloat 6s ease-in-out infinite" }}>
+        <svg width="220" height="280" viewBox="0 0 220 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Glow behind */}
+          <ellipse cx="110" cy="200" rx="60" ry="20" fill="#00e5ff" opacity="0.15" filter="url(#glow)"/>
+          <defs>
+            <filter id="glow"><feGaussianBlur stdDeviation="8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <linearGradient id="suit" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#7b61ff"/><stop offset="1" stopColor="#00e5ff"/></linearGradient>
+            <linearGradient id="visor" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#00e5ff" stopOpacity="0.9"/><stop offset="1" stopColor="#7b61ff" stopOpacity="0.7"/></linearGradient>
+          </defs>
+          {/* Body */}
+          <rect x="60" y="120" width="100" height="110" rx="30" fill="url(#suit)" opacity="0.9"/>
+          {/* Head/Helmet */}
+          <circle cx="110" cy="90" r="52" fill="url(#suit)" opacity="0.85"/>
+          {/* Visor */}
+          <ellipse cx="110" cy="88" rx="34" ry="30" fill="url(#visor)" opacity="0.9"/>
+          <ellipse cx="100" cy="80" rx="10" ry="7" fill="white" opacity="0.25"/>
+          {/* Left arm */}
+          <rect x="22" y="130" width="40" height="22" rx="11" fill="url(#suit)" opacity="0.85" transform="rotate(-20 42 141)"/>
+          <circle cx="18" cy="148" r="12" fill="url(#suit)" opacity="0.8"/>
+          {/* Right arm */}
+          <rect x="158" y="130" width="40" height="22" rx="11" fill="url(#suit)" opacity="0.85" transform="rotate(20 178 141)"/>
+          <circle cx="202" cy="148" r="12" fill="url(#suit)" opacity="0.8"/>
+          {/* Left leg */}
+          <rect x="72" y="220" width="32" height="50" rx="14" fill="url(#suit)" opacity="0.85"/>
+          <ellipse cx="88" cy="272" rx="18" ry="10" fill="url(#suit)" opacity="0.8"/>
+          {/* Right leg */}
+          <rect x="116" y="220" width="32" height="50" rx="14" fill="url(#suit)" opacity="0.85"/>
+          <ellipse cx="132" cy="272" rx="18" ry="10" fill="url(#suit)" opacity="0.8"/>
+          {/* Chest detail */}
+          <rect x="85" y="145" width="50" height="32" rx="8" fill="#050a0f" opacity="0.4"/>
+          <circle cx="100" cy="161" r="5" fill="#00ff88" opacity="0.8"/>
+          <circle cx="115" cy="161" r="5" fill="#ffb347" opacity="0.8"/>
+          <circle cx="130" cy="161" r="5" fill="#00e5ff" opacity="0.8"/>
+          {/* Helmet ring */}
+          <circle cx="110" cy="90" r="52" fill="none" stroke="#00e5ff" strokeWidth="2" opacity="0.4"/>
+          {/* Antenna */}
+          <line x1="110" y1="38" x2="110" y2="22" stroke="#00e5ff" strokeWidth="2.5" opacity="0.7" strokeLinecap="round"/>
+          <circle cx="110" cy="18" r="5" fill="#00e5ff" opacity="0.9"/>
+          {/* Stars around */}
+          {[[30,40],[180,30],[200,180],[25,200],[150,260]].map(([x,y],i)=>(
+            <circle key={i} cx={x} cy={y} r={2} fill="#00e5ff" opacity={0.5}/>
+          ))}
+        </svg>
+      </div>
+
+      {/* ── Contenido ── */}
+      <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", padding:"40px 24px", maxWidth:640, width:"100%" }}>
+
+        {/* Badge */}
+        <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"5px 16px", border:"1px solid rgba(0,229,255,0.25)", background:"rgba(0,229,255,0.05)", borderRadius:999, fontSize:10, fontWeight:700, color:"#00e5ff", letterSpacing:2, textTransform:"uppercase", marginBottom:28 }}>
+          <div style={{ width:6, height:6, borderRadius:"50%", background:"#00e5ff", boxShadow:"0 0 8px #00e5ff", animation:"tvPulse 2s infinite" }} />
+          TradingView Operable
+        </div>
+        <style>{`@keyframes tvPulse{0%,100%{opacity:1;box-shadow:0 0 8px #00e5ff}50%{opacity:0.4;box-shadow:0 0 2px #00e5ff}} @keyframes tvGlare{0%{left:-60%;opacity:0}15%{opacity:1}45%{left:130%;opacity:0}100%{left:130%;opacity:0}}`}</style>
+
+        <h2 style={{ fontSize:"clamp(26px,3vw,40px)", fontWeight:900, color:"#fff", marginBottom:16, lineHeight:1.1, letterSpacing:-0.5 }}>
+          Opera desde tu cuenta<br /><span style={{ color:"#00e5ff" }}>de TradingView</span>
+        </h2>
+        <p style={{ fontSize:15, color:"#4a7a96", lineHeight:1.8, marginBottom:8 }}>
+          Abre TradingView con un clic e inicia sesión con tu cuenta para analizar el mercado
+          y ejecutar operaciones en tiempo real, con todas tus herramientas y configuraciones guardadas.
+        </p>
+        <p style={{ fontSize:12, color:"#2a5a72", marginBottom:40 }}>Tu sesión se mantiene activa entre aperturas.</p>
+
+        {/* CTA */}
+        <button onClick={openTV} style={{
+          position:"relative", overflow:"hidden",
+          padding:"16px 52px", borderRadius:10,
+          background:"linear-gradient(135deg, #0c1e2e 0%, #071830 50%, #0a0f20 100%)",
+          border:"1px solid rgba(0,229,255,0.35)",
+          color:"#00e5ff", fontFamily:"Outfit,sans-serif", fontSize:16, fontWeight:800,
+          cursor:"pointer", letterSpacing:0.5,
+          boxShadow:"0 0 40px rgba(0,229,255,0.15), 0 0 0 1px rgba(0,229,255,0.06), 0 8px 32px rgba(0,0,0,0.6)",
+          transition:"all 0.25s",
+        }}
+          onMouseEnter={e => { e.currentTarget.style.boxShadow="0 0 60px rgba(0,229,255,0.3), 0 0 0 1px rgba(0,229,255,0.1), 0 12px 40px rgba(0,0,0,0.7)"; e.currentTarget.style.borderColor="rgba(0,229,255,0.6)"; e.currentTarget.style.color="#fff"; }}
+          onMouseLeave={e => { e.currentTarget.style.boxShadow="0 0 40px rgba(0,229,255,0.15), 0 0 0 1px rgba(0,229,255,0.06), 0 8px 32px rgba(0,0,0,0.6)"; e.currentTarget.style.borderColor="rgba(0,229,255,0.35)"; e.currentTarget.style.color="#00e5ff"; }}
+        >
+          <span style={{ position:"absolute", top:0, left:"-60%", width:"35%", height:"100%", background:"linear-gradient(120deg,transparent,rgba(255,255,255,0.12),transparent)", transform:"skewX(-20deg)", animation:"tvGlare 4s ease-in-out infinite" }} />
+          Abrir TradingView →
+        </button>
+
+        {/* Info cards */}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginTop:48, width:"100%" }}>
+          {[
+            { icon:"🔐", title:"Login seguro",      desc:"Inicia sesión con tu cuenta TradingView directamente",        color:"#7b61ff" },
+            { icon:"📊", title:"Charts completos",   desc:"Todos tus indicadores, alertas y configuraciones guardadas",   color:"#00e5ff" },
+            { icon:"⚡", title:"Operaciones reales", desc:"Ejecuta trades con tu broker conectado a TradingView",        color:"#00ff88" },
+          ].map((c,i) => (
+            <div key={i} style={{ background:"rgba(7,13,20,0.8)", border:`1px solid ${c.color}1a`, borderRadius:10, padding:"20px 16px", backdropFilter:"blur(4px)", position:"relative", overflow:"hidden" }}>
+              <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:`linear-gradient(90deg, transparent, ${c.color}66, transparent)` }} />
+              <div style={{ fontSize:26, marginBottom:10 }}>{c.icon}</div>
+              <div style={{ fontSize:13, fontWeight:700, color:c.color, marginBottom:6 }}>{c.title}</div>
+              <div style={{ fontSize:11, color:"#4a7a96", lineHeight:1.6 }}>{c.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TradingViewTab() {
+  const [symbol, setSymbol] = useState("BINANCE:ETHUSD");
+  const [interval, setInterval] = useState("60");
+  const [theme] = useState("dark");
+  const containerId = "tv_chart_container";
+
+  const SYMBOLS = [
+    { label: "ETH/USD",  value: "BINANCE:ETHUSD" },
+    { label: "BTC/USD",  value: "BINANCE:BTCUSD" },
+    { label: "ARB/USD",  value: "BINANCE:ARBUSDT" },
+    { label: "UNI/USD",  value: "BINANCE:UNIUSDT" },
+    { label: "LINK/USD", value: "BINANCE:LINKUSDT" },
+    { label: "SOL/USD",  value: "BINANCE:SOLUSDT" },
+    { label: "BNB/USD",  value: "BINANCE:BNBUSDT" },
+  ];
+
+  const INTERVALS = [
+    { label: "1m",  value: "1" },
+    { label: "5m",  value: "5" },
+    { label: "15m", value: "15" },
+    { label: "1h",  value: "60" },
+    { label: "4h",  value: "240" },
+    { label: "1D",  value: "D" },
+    { label: "1W",  value: "W" },
+  ];
+
+  useEffect(() => {
+    const existing = document.getElementById(containerId);
+    if (existing) existing.innerHTML = "";
+
+    const script = document.createElement("script");
+    script.src = "https://s3.tradingview.com/tv.js";
+    script.async = true;
+    script.onload = () => {
+      if (window.TradingView) {
+        new window.TradingView.widget({
+          container_id: containerId,
+          symbol,
+          interval,
+          timezone: "America/Bogota",
+          theme,
+          style: "1",
+          locale: "es",
+          toolbar_bg: "#0a1520",
+          enable_publishing: false,
+          hide_top_toolbar: false,
+          hide_legend: false,
+          save_image: true,
+          studies: ["RSI@tv-basicstudies", "MACD@tv-basicstudies"],
+          width: "100%",
+          height: "100%",
+          autosize: true,
+          backgroundColor: "#050a0f",
+          gridColor: "rgba(14,36,53,0.6)",
+        });
+      }
+    };
+
+    const container = document.getElementById(containerId);
+    if (container) container.appendChild(script);
+
+    return () => {
+      if (container) container.innerHTML = "";
+    };
+  }, [symbol, interval]);
+
+  const btnStyle = (active) => ({
+    padding: "5px 12px", fontSize: 12, fontWeight: 600, fontFamily: "Outfit, sans-serif",
+    cursor: "pointer", border: "1px solid", borderRadius: 6,
+    background: active ? "rgba(0,229,255,0.12)" : "transparent",
+    borderColor: active ? "#00e5ff" : "#1a3a5e",
+    color: active ? "#00e5ff" : "#4a7a96",
+    transition: "all 0.15s",
+  });
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", height:"100%", gap:0 }}>
+      {/* Toolbar */}
+      <div style={{ display:"flex", alignItems:"center", gap:8, padding:"10px 0 12px", flexWrap:"wrap" }}>
+        <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
+          {SYMBOLS.map(s => (
+            <button key={s.value} style={btnStyle(symbol === s.value)} onClick={() => setSymbol(s.value)}>
+              {s.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ width:1, height:20, background:"#1a3a5e", margin:"0 4px", flexShrink:0 }} />
+        <div style={{ display:"flex", gap:4 }}>
+          {INTERVALS.map(iv => (
+            <button key={iv.value} style={btnStyle(interval === iv.value)} onClick={() => setInterval(iv.value)}>
+              {iv.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div
+        id={containerId}
+        style={{
+          flex: 1, minHeight: 0, borderRadius: 8,
+          border: "1px solid #0e2435", overflow: "hidden",
+          background: "#050a0f",
+        }}
+      />
+    </div>
   );
 }
 
@@ -3641,91 +4098,169 @@ const CRYPTO_BOOTCAMP = [
     {
       id:"crypto-01-1",
       titulo:"¿Qué es una criptomoneda?",
-      resumen:"Qué es una criptomoneda, en qué se diferencia de las monedas tradicionales y qué la hace especial.",
-      estado:"Contenido cargado",
+      resumen:"Una criptomoneda es un nuevo tipo de dinero digital que funciona sin bancos ni gobiernos, usando criptografía y software descentralizado. En esta lección entiendes qué las hace únicas y por qué están cambiando el sistema financiero.",
+      estado:"Contenido completo",
       sourceUrl:"https://www.babypips.com/crypto/learn/what-is-cryptocurrency",
       contenido:[
         {
-          titulo:"Idea central",
-          texto:"Una criptomoneda es una forma de dinero digital que combina software, redes distribuidas y criptografía para funcionar sin depender de bancos centrales, gobiernos o intermediarios tradicionales.",
+          titulo:"¿Qué es una criptomoneda?",
+          texto:"Una criptomoneda (o \"cripto\") es un término general para un nuevo tipo de \"dinero digital\" que depende de una combinación de tecnologías que le permiten existir fuera del control de autoridades centrales como gobiernos y bancos.\n\nLas criptomonedas se han vuelto extremadamente populares en los últimos años. Probablemente has visto comerciales de televisión sobre criptomonedas como \"la próxima gran cosa\", y quizás incluso a tu actor o atleta favorito promoviéndolas. Pero ¿qué son realmente? ¿En qué se diferencian de las monedas tradicionales?",
         },
         {
-          titulo:"Características principales",
+          titulo:"Las criptomonedas son digitales",
+          texto:"Las criptomonedas no tienen forma física. No hay billetes de papel ni monedas metálicas. Son completamente digitales, lo que significa que literalmente son solo líneas de código de computadora. Todo se hace desde teléfonos y computadoras.",
+          imagen:{ src:"/bootcamp/mod1-lec1/bitcoin-digital-currency.png", alt:"Bitcoin como moneda digital" },
+        },
+        {
+          titulo:"Las criptomonedas son sin fronteras",
+          texto:"Sin importar dónde vivas o quién seas, puedes enviarlas casi instantáneamente a otras personas en cualquier parte del mundo, sin preocuparte por distancias geográficas ni fronteras nacionales. Todo lo que necesitas es un dispositivo, como un teléfono o computadora, conectado a internet.",
+        },
+        {
+          titulo:"Las criptomonedas no requieren permiso",
+          texto:"Cualquier persona puede enviar y recibir criptomonedas. No necesitas registrar una cuenta ni llenar una solicitud. Ni siquiera necesitas dar tu nombre.\n\nEn lugar de nombres y números de cuenta, todo lo que necesitas proporcionar es una cadena de letras y números generada por computadora conocida como una \"dirección\". Esta dirección no está inherentemente vinculada a ninguna de tu información personal, por lo que teóricamente puedes enviar criptomonedas a otras personas sin que nunca conozcan tu identidad real.",
+        },
+        {
+          titulo:"Las criptomonedas están descentralizadas",
+          texto:"A diferencia de las monedas tradicionales (conocidas como monedas \"fiat\"), como el dólar estadounidense, las criptomonedas no están conectadas a ningún gobierno ni banco central.\n\nEl dólar estadounidense es emitido y controlado por la Reserva Federal (\"Fed\"), el euro por el Banco Central Europeo (BCE), y el yen japonés por el Banco de Japón (BOJ). Las criptomonedas no tienen este tipo de control central. Esta característica definitoria se conoce como descentralización.\n\nSi ningún banco central o gobierno emite criptomonedas, ¿entonces quién las crea? Las unidades se generan según reglas predeterminadas escritas en código, ejecutadas por software.",
+          imagen:{ src:"/bootcamp/mod1-lec1/bitcoin-decentralized-currency.png", alt:"Bitcoin como moneda descentralizada" },
+        },
+        {
+          titulo:"Suministro: finito vs infinito",
+          texto:"Dependiendo de las reglas escritas en el código del software, las criptomonedas pueden crearse y destruirse. Algunas criptomonedas tienen un suministro total finito o fijo, lo que significa que existe un número máximo de unidades que jamás estarán en circulación, creando escasez.\n\nOtras se lanzan con un suministro total infinito, lo que significa que no hay un límite máximo. Aunque puede haber un límite en el número de nuevas unidades que pueden crearse dentro de un cierto período de tiempo.",
+          imagen:{ src:"/bootcamp/mod1-lec1/crypto-software.png", alt:"Las criptomonedas son creadas por software" },
+        },
+        {
+          titulo:"Las criptomonedas son difíciles de falsificar",
+          texto:"Las criptomonedas también están diseñadas para ser imposibles de falsificar. Aquí es donde entra la criptografía y cómo se utiliza para registrar y almacenar transacciones de forma segura.\n\nEn criptografía, el prefijo \"cripto\" significa \"oculto\" y el sufijo \"grafía\" significa \"escritura\". Incluso Julio César usaba criptografía para comunicarse con sus generales. En la era moderna, la criptografía está asociada con la protección de información informática mediante matemáticas avanzadas. De ahí viene el \"cripto\" en \"criptomonedas\".",
+          imagen:{ src:"/bootcamp/mod1-lec1/cryptography-hidden-writing.png", alt:"Criptografía: escritura oculta" },
+        },
+        {
+          titulo:"¿Qué hace especiales a las criptomonedas?",
           puntos:[
-            "Digital: no existe en billetes ni monedas físicas; vive como información registrada por software.",
-            "Global: puede enviarse por internet entre personas ubicadas en cualquier país.",
-            "Sin permiso: no necesitas aprobación de un banco para enviar, recibir o mantener criptoactivos.",
-            "Descentralizada: no hay una sola institución controlando la emisión o validación de la red.",
-            "Difícil de falsificar: usa criptografía para proteger transacciones y registros.",
+            "Son digitales. No tienen forma física; todo se hace desde teléfonos y computadoras.",
+            "Son sin fronteras. Cualquier persona con conexión a internet puede enviar y recibirlas a cualquier parte del mundo, generalmente con comisiones menores y más rápido que las transferencias de dinero tradicionales.",
+            "No requieren permiso y están disponibles para todos. No necesitas aprobación bancaria ni cuenta bancaria para usar criptomonedas.",
+            "Proporcionan cierto grado de privacidad: puedes hacer transacciones sin usar tu nombre.",
+            "Son descentralizadas: los gobiernos no pueden interferir ni controlarlas. Ninguna persona o entidad las posee o controla.",
+            "Son creadas por software. El suministro de una criptomoneda NO está determinado por ningún banco central, sino por reglas predefinidas escritas en código de software.",
+            "Son difíciles de falsificar, gracias a la forma en que la información de transacciones se registra y almacena.",
           ],
         },
         {
-          titulo:"Por qué importa",
-          texto:"Estas propiedades permiten que una persona tenga mayor control sobre su dinero y pueda interactuar directamente con otras personas o aplicaciones. Ese potencial es poderoso, pero todavía depende de adopción, educación y una buena gestión del riesgo.",
+          titulo:"Conclusión",
+          texto:"Debido a estas características especiales, las criptomonedas ofrecen el potencial de dar a las personas control total sobre su dinero sin ninguna intervención de terceros.\n\nSi la cripto puede cumplir este potencial aún está por verse. Su popularidad en el mundo financiero está creciendo y ahora se considera una clase de activo emergente.",
         },
       ],
-      imagenes:[
-        { alt:"Bitcoin es una criptomoneda", src:"https://www.babypips.com/crypto/learn/what-is-cryptocurrency" },
-      ],
+      imagenes:[],
     },
     {
       id:"crypto-01-2",
       titulo:"Cripto como nueva clase de activo",
-      resumen:"Las criptomonedas ya son vistas como activos financieros que pueden mantenerse como inversiones alternativas.",
-      estado:"Contenido cargado",
+      resumen:"Las criptomonedas no son solo dinero digital — son una nueva clase de activo financiero en la que se puede invertir y especular. Pero ese mismo mercado también está lleno de proyectos inútiles y estafas. Aprende a distinguir.",
+      estado:"Contenido completo",
       sourceUrl:"https://www.babypips.com/crypto/learn/cryptocurrencies-new-asset-class",
       contenido:[
         {
-          titulo:"Más que dinero digital",
-          texto:"Además de servir como medio de pago, muchas criptomonedas se usan como activos financieros para especular, invertir, diversificar portafolios o participar en nuevos ecosistemas digitales.",
+          titulo:"Cripto como activo financiero",
+          texto:"Además de funcionar como un nuevo tipo de \"dinero digital\" para pagar bienes y servicios, las criptomonedas se usan más frecuentemente como activos financieros que las personas intercambian o en los que invierten.\n\nLa industria financiera tradicional (\"TradFi\") sigue dividida sobre si las criptomonedas deben considerarse un \"activo financiero\". El argumento popular es que es imposible valorarlas porque no tienen ganancias ni dividendos, pero también existen activos financieros con problemas similares como el oro y otras materias primas.",
         },
         {
-          titulo:"Nueva categoría de inversión",
+          titulo:"Una nueva clase de activo",
+          texto:"Las clases de activos son categorías de inversiones que tienen características similares y se comportan de manera parecida: acciones, bonos, materias primas, bienes raíces y efectivo (monedas fiat).\n\nY ahora... ¡cripto! La cripto representa la primera clase de activo verdaderamente nueva en décadas.",
+          imagen:{ src:"/bootcamp/mod1-lec2/asset-classes.png", alt:"Ejemplos de clases de activos" },
+        },
+        {
+          titulo:"Mercado cripto vs. Forex",
+          texto:"Similar al mercado forex (el mercado financiero para monedas fiat), ahora existe un mercado cripto donde tanto traders como inversores pueden ganar dinero.\n\nPero mientras el mercado forex está abierto 24 horas al día, 5.5 días a la semana, ¡el mercado cripto está abierto 24 horas al día, los 7 días de la semana. Nunca cierra!\n\nIncluso Jerome Powell, el jefe de la Reserva Federal, ha dicho: \"La gente usa Bitcoin como activo especulativo. Es como el oro, solo que virtual, digital.\"",
+        },
+        {
+          titulo:"Traders e Inversores",
+          texto:"Los traders apuestan (\"especulan\") sobre la dirección del precio a corto plazo, mientras que los inversores compran y mantienen con la esperanza de que ciertas criptomonedas ganen mayor adopción y aumenten de valor a largo plazo.\n\nAgregar cripto ayuda a los inversores a diversificar sus carteras. Y los inversores cripto más experimentados incluso generan ingresos pasivos de diferentes criptomonedas que mantienen.\n\nDado que las criptomonedas son activos financieros en los que puedes invertir o hacer trading, también se les llama \"activos digitales\", \"criptoactivos\" o \"crypto assets\".",
+        },
+        {
+          titulo:"Ejemplos de criptomonedas",
+          texto:"La primera criptomoneda fue Bitcoin, y sigue siendo la más grande y conocida. También hay otras criptomonedas bien conocidas como Ether, XRP, Cardano, Solana, Dogecoin, Polkadot, Litecoin y muchas otras.",
+          imagen:{ src:"/bootcamp/mod1-lec2/other-cryptocurrencies.png", alt:"Criptomonedas populares" },
+        },
+        {
+          titulo:"Miles de criptomonedas — ojo con las estafas",
+          texto:"Hoy en día existen MILES de criptomonedas, cada una intentando ofrecer nuevas funcionalidades o servir a un propósito diferente.\n\nDesafortunadamente, muchas son inútiles o, peor aún, estafas directas. Pero mucha gente las sigue comprando de todas formas.\n\n⚠ Importante: El término \"criptomoneda\" es en realidad engañoso porque, a diferencia de Bitcoin, la mayoría de las criptomonedas no funcionan como monedas reales.",
+        },
+        {
+          titulo:"El FOMO y las monedas basura",
+          texto:"Los principiantes crédulos que entran al mundo cripto escuchan sobre \"Una moneda que no solo cambiará el mundo, ¡sino también la galaxia!\". Piensan: \"¡Debo comprar esta Galaticoin!\" — compran la moneda dudosa sin entender la tecnología subyacente. Y la criptomoneda termina siendo inútil.",
+          imagen:{ src:"/bootcamp/mod1-lec2/galaticoin.png", alt:"Galaticoin — ejemplo de cripto dudosa" },
+        },
+        {
+          titulo:"No seas el ciervo de una pata",
+          texto:"Algunas personas entran al mercado cripto con la mentalidad equivocada: creen que es una apuesta segura y que el dinero que ponen crecerá automáticamente.\n\nCon esta mentalidad, no es sorprendente que un estafador vea el mercado cripto actual como un tigre ve a un grupo de ciervos con una pata: muchas deliciosas oportunidades.",
+          imagen:{ src:"/bootcamp/mod1-lec2/one-legged-deer.png", alt:"No seas vulnerable — no seas el ciervo de una pata" },
+        },
+        {
+          titulo:"La misión del curso",
           puntos:[
-            "Cripto comparte rasgos con otros activos financieros, pero opera en mercados 24/7.",
-            "Bitcoin sigue siendo el activo cripto más reconocido, pero existen miles de otros proyectos.",
-            "El mercado puede ofrecer oportunidades, aunque también contiene proyectos débiles, inútiles o directamente fraudulentos.",
-            "La volatilidad es alta, por lo que entrar sin entender el activo aumenta el riesgo de pérdidas fuertes.",
+            "No dejes que te conviertan en un \"ciervo de una pata\".",
+            "Estudia antes de invertir. No todo token tiene valor real.",
+            "El mercado cripto es altamente volátil — más que las acciones.",
+            "Entiende qué compras, cómo funciona y qué puede salir mal.",
+            "La educación es tu mejor defensa contra estafas, FOMO y decisiones impulsivas.",
           ],
         },
-        {
-          titulo:"Mentalidad correcta",
-          texto:"La lección enfatiza que cripto debe estudiarse antes de invertir. No todo token tiene valor real, y la narrativa de “hacerse rico rápido” suele atraer a quienes no entienden el riesgo.",
-        },
       ],
-      imagenes:[
-        { alt:"Ejemplos de clases de activos", src:"https://www.babypips.com/crypto/learn/cryptocurrencies-new-asset-class" },
-      ],
+      imagenes:[],
     },
     {
       id:"crypto-01-3",
-      titulo:"Conoce a Toshi Moshi",
-      resumen:"Presentación de Toshi Moshi, el guía amigable para empezar el recorrido por el mundo cripto.",
-      estado:"Contenido cargado",
+      titulo:"Conoce a Cryptoshi",
+      resumen:"Cryptoshi es la mascota de The Crypto House, tu guía en este viaje por el mundo cripto. En esta lección conoces su misión: ayudarte a entender el mercado antes de arriesgar un solo peso.",
+      estado:"Contenido completo",
       sourceUrl:"https://www.babypips.com/crypto/learn/meet-toshi-moshi",
       contenido:[
         {
-          titulo:"Propósito del curso",
-          texto:"Toshi Moshi presenta el curso como una guía para principiantes que quieren entender Bitcoin, altcoins, tokens y el mercado cripto sin caer en exceso de jerga ni promesas irreales.",
+          titulo:"¡Hola! Soy Cryptoshi",
+          texto:"¡Bienvenido a la Escuela de Cripto de The Crypto House! Soy Cryptoshi, tu guía amigable en este recorrido.\n\nSi eres nuevo en las criptomonedas, llegaste al lugar correcto. Creé este curso para que los principiantes entiendan el mercado cripto de forma clara y práctica: Bitcoin, altcoins, tokens y cómo funciona todo esto.",
+          imagen:{ src:"/bootcamp/mod1-lec3/cryptoshi-welcome.png", alt:"Cryptoshi da la bienvenida" },
         },
         {
-          titulo:"Advertencia de riesgo",
+          titulo:"El boom del cripto y sus peligros",
+          texto:"La conciencia sobre cripto ha ido ganando impulso masivamente. Cada día más personas se suben al tren, ya sea por pasión genuina por el potencial de la tecnología o simplemente por FOMO (miedo a quedarse fuera).\n\nPero junto con ese mayor interés, también han llegado consejos cuestionables y desinformación. Cada día aparecen más estafadores, shillers y personajes turbios que buscan aprovecharse de quienes no saben lo que están comprando.",
+          imagen:{ src:"/bootcamp/mod1-lec3/shady-coin-homeless.png", alt:"Cuidado con las estafas cripto" },
+        },
+        {
+          titulo:"El error más común: querer enriquecerse rápido",
+          texto:"Muchos nuevos inversores cometen el error de querer entrar lo más rápido posible, esperando ganancias inmediatas. Es asombroso ver cuánta gente apuesta su dinero sin entender nada — en TikTok, Twitter y Reddit abundan los que buscan comprarse un lambo.\n\nEn The Crypto House defendemos un enfoque diferente. Nunca vas a escuchar mensajes de \"hazte rico rápido\" de nuestra parte. Te animamos a ser conservador y a destinar solo una pequeña porción de tu capital total.",
+        },
+        {
+          titulo:"Cryptoshi te advierte: sé cauteloso",
+          texto:"No es exageración decir que las criptomonedas son extremadamente especulativas. Si no gestionas bien tu riesgo, la probabilidad de perder mucho (si no todo) tu dinero es alta.\n\nNo caigas en el típico discurso de ventas fáciles:\n\"¡No te preocupes si no lo entiendes. Los que sí lo entienden dicen que va a ser enorme. ¡Es la próxima gran cosa!\"\n\nNo estoy de acuerdo. TÚ sí necesitas entenderlo.",
+          imagen:{ src:"/bootcamp/mod1-lec3/cryptoshi-caution.png", alt:"Cryptoshi advierte sobre el riesgo" },
+        },
+        {
+          titulo:"La historia que no quieres contarle a tus nietos",
+          texto:"En el futuro, cuando tus nietos te visiten, ¿cuál de estas dos historias quieres contarles?\n\n1. \"Perdí la oportunidad del cripto.\"\n2. \"Aposté los ahorros de mi vida en cripto, lo perdí todo porque no entendía lo que compraba y me engañó un estafador carismático.\"\n\n¡Ojalá no tengas que contar ninguna de las dos!",
+          imagen:{ src:"/bootcamp/mod1-lec3/old-crypto-trader.png", alt:"El trader arruinado: una historia de advertencia" },
+        },
+        {
+          titulo:"La misión de Cryptoshi",
+          texto:"Quiero evitar que te conviertas en una víctima. Es fundamental tener al menos una comprensión básica de la tecnología y los conceptos de las criptomonedas antes de poner cualquier cantidad de dinero.\n\nEspero que este curso sirva como base sólida para quienes comienzan su viaje en el mundo cripto. Al final, podrás decidir si este mundo es para ti.",
+          imagen:{ src:"/bootcamp/mod1-lec3/cryptoshi-welcome-aboard.png", alt:"Cryptoshi da la bienvenida al curso" },
+        },
+        {
+          titulo:"Lo que vas a aprender",
           puntos:[
-            "El interés en cripto ha crecido, pero también la desinformación y los malos consejos.",
-            "La lección rechaza la idea de cripto como fórmula para hacerse rico rápido.",
-            "Antes de arriesgar capital, hay que entender qué se compra, cómo funciona y qué puede salir mal.",
-            "La educación es presentada como defensa contra estafas, FOMO y decisiones impulsivas.",
+            "Cómo funciona realmente el mercado cripto, más allá del hype.",
+            "Qué es Bitcoin, qué son las altcoins y en qué se diferencian.",
+            "Cómo tomar decisiones informadas sobre qué comprar y cuándo.",
+            "Cómo identificar estafas, proyectos sin valor y señales de alerta.",
+            "Cómo gestionar el riesgo correctamente para proteger tu capital.",
           ],
         },
         {
-          titulo:"Objetivo",
-          texto:"La meta es que el estudiante pase de sentirse perdido a tomar decisiones más informadas, entendiendo conceptos básicos y gestionando el riesgo con prudencia.",
+          titulo:"💡 Clave del éxito",
+          texto:"Educarte es la clave del éxito al hacer trading o invertir en cripto. Puede ser la diferencia entre generar riqueza y perderlo todo.",
         },
       ],
-      imagenes:[
-        { alt:"Bienvenida de Toshi Moshi", src:"https://www.babypips.com/crypto/learn/meet-toshi-moshi" },
-        { alt:"Riesgo de quedar atrapado en cripto sin entender", src:"https://bpcdn.co/images/2022/07/21110412/old-crypto-trader.png" },
-      ],
+      imagenes:[],
     },
     {
       id:"crypto-01-4",
@@ -4459,10 +4994,23 @@ function CryptoBootcampTab() {
               clase.contenido.map((bloque, i) => (
                 <div key={i} style={S.contentBlock}>
                   <div style={S.contentTitle}>{bloque.titulo}</div>
-                  {bloque.texto && <div style={S.contentText}>{bloque.texto}</div>}
+                  {bloque.imagen && (
+                    <img
+                      src={bloque.imagen.src}
+                      alt={bloque.imagen.alt}
+                      style={{ width:"100%", maxWidth:520, display:"block", margin:"12px 0 14px", border:"1px solid #0e2435", borderRadius:6 }}
+                    />
+                  )}
+                  {bloque.texto && (
+                    <div style={S.contentText}>
+                      {bloque.texto.split("\n\n").map((p, idx) => (
+                        <p key={idx} style={{ marginBottom: idx < bloque.texto.split("\n\n").length - 1 ? 12 : 0 }}>{p}</p>
+                      ))}
+                    </div>
+                  )}
                   {bloque.puntos && (
                     <ul style={S.contentList}>
-                      {bloque.puntos.map((p, idx) => <li key={idx}>{p}</li>)}
+                      {bloque.puntos.map((p, idx) => <li key={idx} style={{ marginBottom:6 }}>{p}</li>)}
                     </ul>
                   )}
                 </div>
@@ -4520,8 +5068,13 @@ function CryptoBootcampTab() {
 // ════════════════════════════════════════════════════════════════════
 // APP
 // ════════════════════════════════════════════════════════════════════
-const TABS = ["Wallets","Cobertura","Monitor de Cobertura","Trading Automatizado","Insider (Trading)"];
-const TABS_WITH_BADGE = ["Insider (Trading)"];
+const TABS = [
+  { id: "Wallets",              label: "Wallets",              available: true  },
+  { id: "Cobertura",            label: "Cobertura",            available: true  },
+  { id: "Monitor de Cobertura", label: "Monitor de Cobertura", available: true  },
+  { id: "Trading Automatizado", label: "Trading Automatizado", available: false },
+  { id: "Insider (Trading)",    label: "Insider (Trading)",    available: false },
+];
 const NAV_ITEMS       = ["Dashboard","Programa","Crypto Bootcamp","Preguntas"];
 const NAV_ITEMS_ADMIN = ["Users Admin"];
 
@@ -5072,10 +5625,10 @@ function PreguntasTab() {
 
       {/* ── Header ── */}
       <div>
-        <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", letterSpacing:3, textTransform:"uppercase", marginBottom:8 }}>Comunidad</div>
+        <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", letterSpacing:3, textTransform:"uppercase", marginBottom:8 }}>Preguntas</div>
         <h2 style={{ fontSize:26, fontWeight:800, color:"#fff", marginBottom:6 }}>Preguntas & Respuestas</h2>
         <p style={{ fontSize:14, color:"#4a7a96" }}>
-          {isAdmin ? `Panel de administración — ${pendientes.length} pregunta${pendientes.length !== 1 ? "s" : ""} pendiente${pendientes.length !== 1 ? "s" : ""}` : "Envía tu pregunta y Oscar te responderá. Las respuestas útiles se publican en el FAQ de la comunidad."}
+          {isAdmin ? `Panel de administración — ${pendientes.length} pregunta${pendientes.length !== 1 ? "s" : ""} pendiente${pendientes.length !== 1 ? "s" : ""}` : "Envía tu pregunta y Oscar te responderá directamente."}
         </p>
       </div>
 
@@ -5128,7 +5681,7 @@ function PreguntasTab() {
                         onChange={e => setPublicas(prev => ({...prev, [p.id]: e.target.checked}))}
                         style={{ accentColor:"#00e5ff" }}
                       />
-                      Publicar en FAQ de la comunidad
+                      Publicar en FAQ
                     </label>
                     <button
                       onClick={() => handleResponder(p.id)}
@@ -5253,9 +5806,9 @@ function PreguntasTab() {
             </div>
           </div>
 
-          {/* Columna derecha — FAQ comunidad */}
+          {/* Columna derecha — FAQ */}
           <div style={{ background:"#070d14", border:"1px solid #1a3a5e", padding:"24px" }}>
-            <div style={{ fontSize:13, fontWeight:700, color:"#c8e6f0", marginBottom:4 }}>FAQ de la comunidad</div>
+            <div style={{ fontSize:13, fontWeight:700, color:"#c8e6f0", marginBottom:4 }}>Preguntas frecuentes</div>
             <div style={{ fontSize:12, color:"#2a5a72", marginBottom:20 }}>Preguntas respondidas por Oscar</div>
             {loading && <div style={{ fontSize:13, color:"#2a5a72" }}>Cargando...</div>}
             {!loading && faqPublica.length === 0 && (
@@ -5309,9 +5862,6 @@ function DashboardTab() {
   const { wallets } = useWalletsSync(user?.id)
   const { notas }   = useNotasSync(user?.id)
 
-  const [prices, setPrices]         = useState({ btc: null, eth: null })
-  const [fng, setFng]               = useState(null)
-  const [loadingMkt, setLoadingMkt] = useState(true)
 
   // ── course progress ──
   const completadas = (() => { try { return JSON.parse(localStorage.getItem("crypto_edu_completadas") || "[]") } catch { return [] } })()
@@ -5319,10 +5869,13 @@ function DashboardTab() {
   const progreso       = Math.round((completadas.length / totalLecciones) * 100)
   const notasCount     = Object.values(notas).filter(n => n?.trim()).length
 
-  // ── pool stats ──
-  const poolsInRange  = pools.filter(p => p.status?.label === "En rango").length
-  const poolsOutRange = pools.filter(p => p.status?.label === "Fuera de rango").length
-  const totalValueUsd = pools.reduce((a, p) => a + (p.valueUsd || 0), 0)
+  // ── pool stats — merge Supabase list with LS runtime data (valueUsd set by Liquidity Engine refresh) ──
+  const lsEnriched = (() => { try { return JSON.parse(localStorage.getItem("liquidity_engine_pools") || "[]") } catch { return [] } })()
+  const lsByToken  = Object.fromEntries(lsEnriched.map(p => [String(p.tokenId), p]))
+  const poolsMerged   = pools.map(p => ({ ...p, ...(lsByToken[String(p.tokenId)] || {}) }))
+  const poolsInRange  = poolsMerged.filter(p => ["En Rango","En rango"].includes(p.status?.label)).length
+  const poolsOutRange = poolsMerged.filter(p => p.status?.label && !["En Rango","En rango","Cargando..."].includes(p.status?.label)).length
+  const totalValueUsd = poolsMerged.reduce((a, p) => a + (p.valueUsd || 0), 0)
 
   // ── activity ──
   const activity = (() => { try { return JSON.parse(localStorage.getItem("liquidity_engine_activity") || "[]") } catch { return [] } })()
@@ -5333,29 +5886,13 @@ function DashboardTab() {
     : null
 
   // ── market data ──
-  useEffect(() => {
-    Promise.all([
-      fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true").then(r => r.json()).catch(() => null),
-      fetch("https://api.alternative.me/fng/?limit=1").then(r => r.json()).catch(() => null),
-    ]).then(([pd, fd]) => {
-      if (pd) setPrices({
-        btc: { price: pd?.bitcoin?.usd, change: pd?.bitcoin?.usd_24h_change },
-        eth: { price: pd?.ethereum?.usd, change: pd?.ethereum?.usd_24h_change },
-      })
-      if (fd) setFng(fd?.data?.[0])
-      setLoadingMkt(false)
-    })
-  }, [])
 
   const dashUserName  = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0]
   const dashUserEmail = user?.email
   const waUrl         = buildWaUpgradeUrl(dashUserName, dashUserEmail)
 
   const fmtPrice  = (v) => !v ? "—" : v >= 1000 ? "$" + v.toLocaleString("en-US", { maximumFractionDigits:0 }) : "$" + v.toFixed(2)
-  const fmtChange = (c) => !c && c !== 0 ? "" : (c >= 0 ? "+" : "") + c.toFixed(2) + "%"
   const fmtUsd    = (v) => !v ? "$0" : v >= 1000 ? "$" + (v/1000).toFixed(1) + "K" : "$" + v.toFixed(0)
-  const fngColor  = (v) => { const n = parseInt(v||0); if(n<=25) return "#ff4f6e"; if(n<=45) return "#ffb347"; if(n<=55) return "#f0e68c"; if(n<=75) return "#00ff88"; return "#00e5ff" }
-  const fngLabel  = (v) => { const n = parseInt(v||0); if(n<=25) return "Miedo Extremo"; if(n<=45) return "Miedo"; if(n<=55) return "Neutral"; if(n<=75) return "Codicia"; return "Codicia Extrema" }
 
   const card = (val, label, sub, color="#00e5ff", locked=false) => (
     <div style={{ background:"#070d14", border:`1px solid ${locked?"#0e2435":"#1a3a5e"}`, padding:"20px 24px", flex:1, minWidth:0, position:"relative", overflow:"hidden" }}>
@@ -5410,41 +5947,6 @@ function DashboardTab() {
         {card(isPaid ? fmtUsd(totalValueUsd) : "—", "Valor en pools", isPaid ? `${wallets.length} wallet${wallets.length !== 1 ? "s" : ""} conectada${wallets.length !== 1 ? "s" : ""}` : "Plan pago requerido", "#00ff88", !isPaid)}
       </div>
 
-      {/* ── Market strip ── */}
-      <div style={{ background:"#070d14", border:"1px solid #1a3a5e", padding:"16px 24px" }}>
-        <div style={{ fontSize:11, fontWeight:700, color:"#2a5a72", letterSpacing:2, textTransform:"uppercase", marginBottom:14 }}>Mercado en tiempo real</div>
-        {loadingMkt ? (
-          <div style={{ fontSize:13, color:"#2a5a72" }}>Cargando precios...</div>
-        ) : (
-          <div style={{ display:"flex", gap:32, flexWrap:"wrap", alignItems:"center" }}>
-            {[
-              { label:"BTC", data:prices.btc, color:"#f7931a" },
-              { label:"ETH", data:prices.eth, color:"#627eea" },
-            ].map(({ label, data, color }) => (
-              <div key={label} style={{ display:"flex", alignItems:"center", gap:12 }}>
-                <div style={{ width:32, height:32, background:color+"18", border:`1px solid ${color}33`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:800, color }}>{label}</div>
-                <div>
-                  <div style={{ fontSize:18, fontWeight:800, color:"#fff" }}>{fmtPrice(data?.price)}</div>
-                  <div style={{ fontSize:11, fontWeight:700, color: data?.change >= 0 ? "#00ff88" : "#ff4f6e" }}>
-                    {data?.change >= 0 ? "▲" : "▼"} {fmtChange(data?.change)}
-                  </div>
-                </div>
-              </div>
-            ))}
-            <div style={{ width:1, height:40, background:"#0e2435" }} />
-            {fng && (
-              <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-                <div style={{ width:32, height:32, background:fngColor(fng.value)+"18", border:`1px solid ${fngColor(fng.value)}33`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:900, color:fngColor(fng.value) }}>{fng.value}</div>
-                <div>
-                  <div style={{ fontSize:15, fontWeight:700, color:fngColor(fng.value) }}>{fngLabel(fng.value)}</div>
-                  <div style={{ fontSize:11, color:"#2a5a72" }}>Fear & Greed Index</div>
-                </div>
-              </div>
-            )}
-            <div style={{ marginLeft:"auto", fontSize:11, color:"#1a3a5e" }}>↻ CoinGecko · alternative.me</div>
-          </div>
-        )}
-      </div>
 
       {/* ── Two columns ── */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
@@ -5488,17 +5990,17 @@ function DashboardTab() {
             <div style={{ fontSize:13, fontWeight:700, color:"#c8e6f0", marginBottom:16 }}>Accesos rápidos</div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
               {[
-                { icon:"🛡", label:"Cobertura",       section:"liquidity", tab:"Cobertura",            paid:true },
-                { icon:"🤖", label:"Trading Auto",    section:"liquidity", tab:"Trading Automatizado", paid:true },
-                { icon:"📚", label:"Programa",         section:"Programa",  tab:null,                  paid:true },
-                { icon:"💬", label:"Contactar Oscar",  href:"https://wa.me/573215646716", paid:false },
+                { icon:"🛡", label:"Cobertura",      section:"liquidity", tab:"Cobertura",            paid:true },
+                { icon:"🤖", label:"Trading Auto",   section:"liquidity", tab:"Trading Automatizado", paid:true },
+                { icon:"📚", label:"Programa",        section:"Programa",  tab:null,                  paid:true },
+                { icon:"📈", label:"TradingView",     section:"TradingView", tab:null,                paid:false },
               ].map((a, i) => {
                 const locked = a.paid && !isPaid
                 return (
                   <div key={i}
                     onClick={() => {
-                      if (locked || !a.section) return
-                      // navigate handled by parent — use custom event pattern
+                      if (locked) return
+                      window.dispatchEvent(new CustomEvent("dash-navigate", { detail: { section: a.section, tab: a.tab } }))
                     }}
                     style={{
                       padding:"12px 14px", background:"#0a1520",
@@ -5507,11 +6009,9 @@ function DashboardTab() {
                       cursor: locked ? "not-allowed" : "pointer",
                       opacity: locked ? 0.5 : 1,
                       transition:"border-color 0.15s",
-                      textDecoration:"none", color:"inherit",
                     }}
                     onMouseEnter={e => { if(!locked) e.currentTarget.style.borderColor="#00e5ff" }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = locked ? "#0e2435" : "#1a3a5e" }}
-                    {...(a.href ? { as:"a", href:a.href, target:"_blank", rel:"noreferrer" } : {})}
                   >
                     <span style={{ fontSize:18 }}>{a.icon}</span>
                     <span style={{ fontSize:13, color: locked ? "#2a5a72" : "#7ab8d4", fontWeight:600 }}>{a.label}</span>
@@ -5519,6 +6019,18 @@ function DashboardTab() {
                   </div>
                 )
               })}
+              <a href="https://wa.me/573215646716" target="_blank" rel="noreferrer"
+                style={{
+                  padding:"12px 14px", background:"#0a1520", border:"1px solid #1a3a5e",
+                  display:"flex", alignItems:"center", gap:10, cursor:"pointer",
+                  textDecoration:"none", transition:"border-color 0.15s", gridColumn:"1 / -1",
+                }}
+                onMouseEnter={e => e.currentTarget.style.borderColor="#00e5ff"}
+                onMouseLeave={e => e.currentTarget.style.borderColor="#1a3a5e"}
+              >
+                <span style={{ fontSize:18 }}>💬</span>
+                <span style={{ fontSize:13, color:"#7ab8d4", fontWeight:600 }}>Contactar a Oscar</span>
+              </a>
             </div>
             {/* WhatsApp separately since it needs href */}
           </div>
@@ -5630,6 +6142,36 @@ function LockedTab({ tabName }) {
   );
 }
 
+class AppErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#050a0f", fontFamily:"Outfit,sans-serif", padding:24 }}>
+          <div style={{ maxWidth:600, width:"100%", textAlign:"center" }}>
+            <div style={{ fontSize:40, marginBottom:16 }}>⚠</div>
+            <div style={{ fontSize:18, fontWeight:700, color:"#ff4f6e", marginBottom:12 }}>Algo salió mal</div>
+            <div style={{ fontSize:13, color:"#4a7a96", marginBottom:24, lineHeight:1.6 }}>
+              Hubo un error al cargar la aplicación. Copia el mensaje de abajo y envíalo a soporte.
+            </div>
+            <div style={{ background:"#0a1520", border:"1px solid #1a3a5e", padding:"16px", borderRadius:8, textAlign:"left", fontSize:11, color:"#ff6b88", fontFamily:"monospace", marginBottom:24, wordBreak:"break-all" }}>
+              {this.state.error?.message || String(this.state.error)}
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              style={{ padding:"10px 28px", background:"#00e5ff", color:"#050a0f", border:"none", borderRadius:8, fontFamily:"Outfit,sans-serif", fontSize:14, fontWeight:700, cursor:"pointer" }}
+            >
+              Recargar página
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const { user, profile, signOut, isPaid, planLabel, isAdmin } = useAuth();
 
@@ -5643,6 +6185,17 @@ export default function App() {
   const [hlTestOpen, setHlTestOpen]   = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
 
+  // Escucha navegación desde accesos rápidos del Dashboard
+  useEffect(() => {
+    const handler = (e) => {
+      const { section, tab } = e.detail;
+      if (section) setActiveSection(section);
+      if (tab)     setActiveLiquidityTab(tab);
+    };
+    window.addEventListener("dash-navigate", handler);
+    return () => window.removeEventListener("dash-navigate", handler);
+  }, []);
+
   const isLiquiditySection = activeSection === "liquidity";
 
   // Dynamic user info from Google/Supabase
@@ -5652,7 +6205,7 @@ export default function App() {
   const initials  = userName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   const waUpgradeUrl = buildWaUpgradeUrl(userName !== "Usuario" ? userName : null, userEmail || null);
 
-  const SECTION_TITLES = { liquidity:"Liquidity Engine", Dashboard:"Dashboard", Programa:"Programa", "Crypto Bootcamp":"Crypto Bootcamp", Preguntas:"Preguntas", "Users Admin":"Users Admin" };
+  const SECTION_TITLES = { liquidity:"Liquidity Engine", Dashboard:"Dashboard", Programa:"Programa", "Crypto Bootcamp":"Crypto Bootcamp", TradingView:"TradingView", TradingViewOperable:"TradingView Operable", Preguntas:"Preguntas", "Users Admin":"Users Admin" };
 
   const renderContent = () => {
     if (isLiquiditySection) {
@@ -5661,20 +6214,22 @@ export default function App() {
         case "Wallets":              return <WalletsTab />;
         case "Cobertura":            return <CoberturaTab />;
         case "Monitor de Cobertura":  return <HedgeTrackerTab />;
-        case "Trading Automatizado": return <TradingTab />;
-        case "Insider (Trading)":    return <InsiderTab />;
+        case "Trading Automatizado":
+        case "Insider (Trading)":
         default:                     return <ComingSoonTab name={activeLiquidityTab} />;
       }
     }
     // Secciones del sidebar
     if (!isPaid && PAID_TABS.includes(activeSection)) return <LockedTab tabName={activeSection} />;
     switch (activeSection) {
-      case "Dashboard":    return <DashboardTab />;
-      case "Programa":     return <ProgramaTab />;
+      case "Dashboard":       return <DashboardTab />;
+      case "Programa":        return <ProgramaTab />;
       case "Crypto Bootcamp": return <CryptoBootcampTab />;
-      case "Preguntas":    return <PreguntasTab />;
-      case "Users Admin":  return <UsersAdminTab />;
-      default:             return <ComingSoonTab name={activeSection} />;
+      case "TradingView":          return <TradingViewTab />;
+      case "TradingViewOperable":  return <TradingViewOperableTab />;
+      case "Preguntas":       return <PreguntasTab />;
+      case "Users Admin":     return <UsersAdminTab />;
+      default:                return <ComingSoonTab name={activeSection} />;
     }
   };
 
@@ -5716,6 +6271,18 @@ export default function App() {
               onClick={() => { setActiveSection("liquidity"); closeSidebar(); }}
             >
               Liquidity Engine <span className="badge">BETA</span>
+            </div>
+            <div
+              className={`nav-item ${activeSection === "TradingView" ? 'active' : ''}`}
+              onClick={() => { setActiveSection("TradingView"); closeSidebar(); }}
+            >
+              📈 TradingView
+            </div>
+            <div
+              className={`nav-item ${activeSection === "TradingViewOperable" ? 'active' : ''}`}
+              onClick={() => { setActiveSection("TradingViewOperable"); closeSidebar(); }}
+            >
+              🖥️ TV Operable
             </div>
           </div>
           <div className="nav-section">
@@ -5811,9 +6378,15 @@ export default function App() {
             {isLiquiditySection && (
               <div className="tabs">
                 {TABS.map(tab => (
-                  <button key={tab} className={`tab ${activeLiquidityTab === tab ? "active" : ""}`} onClick={() => setActiveLiquidityTab(tab)}>
-                    {tab}
-                    {TABS_WITH_BADGE.includes(tab) && <span className="tab-badge">ONLINE+</span>}
+                  <button
+                    key={tab.id}
+                    className={`tab ${activeLiquidityTab === tab.id ? "active" : ""} ${!tab.available ? "tab-disabled" : ""}`}
+                    onClick={() => tab.available && setActiveLiquidityTab(tab.id)}
+                    style={{ opacity: tab.available ? 1 : 0.4, cursor: tab.available ? "pointer" : "not-allowed" }}
+                    title={!tab.available ? "Próximamente" : undefined}
+                  >
+                    {tab.label}
+                    {!tab.available && <span style={{ fontSize:9, marginLeft:4, color:"#2a5a72", letterSpacing:0.5 }}>pronto</span>}
                   </button>
                 ))}
               </div>

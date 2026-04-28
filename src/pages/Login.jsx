@@ -103,31 +103,47 @@ const CSS = `
   body{font-family:'Outfit',sans-serif;background:#050a0f;color:#c8d8e8;min-height:100vh}
   .lp-root{min-height:100vh;display:flex;flex-direction:column;background-image:url('/bg-hero.png');background-size:cover;background-position:center;position:relative;overflow:hidden}
   .lp-root::before{content:'';position:absolute;inset:0;background:rgba(5,10,15,0.80);z-index:0}
-  .lp-nav{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:24px 60px;border-bottom:1px solid rgba(0,229,255,0.06)}
-  .lp-brand{display:flex;align-items:center;gap:14px}
-  .lp-icon{width:44px;height:44px;background:#00e5ff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#050a0f;letter-spacing:-1px}
-  .lp-name{font-size:13px;font-weight:700;color:#7ab8d4;letter-spacing:2px;text-transform:uppercase}
-  .lp-sub{font-size:11px;color:#2a5a72;letter-spacing:1px;text-transform:uppercase}
-  .lp-nav-btns{display:flex;gap:12px}
-  .btn-ghost{padding:9px 24px;background:transparent;border:1px solid #1a3a5e;color:#7ab8d4;font-family:'Outfit',sans-serif;font-size:14px;cursor:pointer;transition:all 0.15s}
-  .btn-ghost:hover{border-color:#00e5ff;color:#00e5ff}
-  .btn-cyan{padding:9px 24px;background:transparent;border:1px solid #00e5ff;color:#00e5ff;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s}
-  .btn-cyan:hover{background:rgba(0,229,255,0.06)}
+  .lp-nav-wrap{position:fixed;top:20px;left:0;right:0;z-index:200;display:flex;justify-content:center;pointer-events:none}
+  .lp-nav{pointer-events:all;display:flex;align-items:center;gap:2px;padding:5px 5px 5px 18px;background:rgba(7,13,20,0.82);border:1px solid rgba(0,229,255,0.12);border-radius:999px;backdrop-filter:blur(20px);box-shadow:0 0 0 1px rgba(255,255,255,0.04) inset,0 8px 40px rgba(0,0,0,0.5),0 0 24px rgba(0,229,255,0.05)}
+  .lp-brand{display:flex;align-items:center;gap:10px;text-decoration:none;padding-right:16px;border-right:1px solid rgba(0,229,255,0.1);margin-right:6px}
+  .lp-icon{width:30px;height:30px;background:#00e5ff;display:flex;align-items:center;justify-content:center;border-radius:6px;flex-shrink:0}
+  .lp-name{font-size:12px;font-weight:700;color:rgba(200,230,240,0.85);letter-spacing:1.5px;text-transform:uppercase}
+  .lp-sep{width:1px;height:20px;background:rgba(0,229,255,0.1);margin:0 6px;flex-shrink:0}
+  .btn-ghost{padding:7px 16px;background:transparent;border:none;color:rgba(200,230,240,0.55);font-family:'Outfit',sans-serif;font-size:12.5px;font-weight:600;cursor:pointer;border-radius:999px;transition:background 0.15s,color 0.15s;white-space:nowrap}
+  .btn-ghost:hover{background:rgba(0,229,255,0.07);color:#c8e6f0}
+  .btn-cyan{position:relative;overflow:hidden;padding:8px 20px;border-radius:999px;font-family:'Outfit',sans-serif;font-size:12.5px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;cursor:pointer;color:#050a0f;background:linear-gradient(90deg,#00e5ff,#7b61ff,#ff4f6e,#ffb347,#00ff88,#00e5ff);background-size:280% 100%;border:none;transition:background-position 0.55s ease,box-shadow 0.3s ease;box-shadow:0 0 12px rgba(0,229,255,0.3);white-space:nowrap}
+  .btn-cyan:hover{background-position:100% 0;box-shadow:0 0 20px rgba(123,97,255,0.55),0 0 36px rgba(0,229,255,0.3);color:#050a0f}
+  .btn-cyan::after{content:'';position:absolute;inset:0;border-radius:999px;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,0.22) 50%,transparent 70%);transform:translateX(-100%);transition:transform 0.4s ease}
+  .btn-cyan:hover::after{transform:translateX(100%)}
   .btn-cyan:disabled{opacity:0.45;cursor:not-allowed}
-  .lp-hero{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;padding:80px 60px}
-  .lp-title{font-size:58px;font-weight:800;line-height:1.1;margin-bottom:20px;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,0.8);max-width:640px}
-  .lp-title span{color:#00e5ff;text-shadow:0 0 30px rgba(0,229,255,0.35)}
-  .lp-desc{font-size:17px;color:#7ab8d4;line-height:1.7;max-width:500px;margin-bottom:40px;text-shadow:0 1px 8px rgba(0,0,0,0.6)}
-  .lp-feats{display:flex;flex-direction:column;gap:10px;margin-bottom:40px}
+  .lp-hero{position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;padding:80px 24px;text-align:center}
+  .lp-hero-inner{max-width:680px;display:flex;flex-direction:column;align-items:center}
+  .lp-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border:1px solid rgba(0,229,255,0.25);background:rgba(0,229,255,0.05);border-radius:999px;font-size:11px;font-weight:700;color:#00e5ff;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:28px}
+  .lp-badge-dot{width:6px;height:6px;background:#00e5ff;border-radius:50%;animation:lpPulse 2s infinite}
+  @keyframes lpPulse{0%,100%{opacity:1;box-shadow:0 0 6px #00e5ff}50%{opacity:0.4;box-shadow:none}}
+  .lp-title{font-size:clamp(38px,6vw,64px);font-weight:900;line-height:1.08;margin-bottom:20px;color:#fff;text-shadow:0 2px 24px rgba(0,0,0,0.8);letter-spacing:-1px}
+  .lp-title span{color:#00e5ff;text-shadow:0 0 32px rgba(0,229,255,0.4)}
+  .lp-desc{font-size:17px;color:#7ab8d4;line-height:1.75;max-width:520px;margin-bottom:36px;text-shadow:0 1px 8px rgba(0,0,0,0.6)}
+  .lp-feats{display:flex;flex-direction:column;gap:10px;margin-bottom:32px;text-align:left;align-self:flex-start;width:100%}
   .lp-feat{display:flex;align-items:center;gap:12px;font-size:14px;color:#7ab8d4}
   .lp-dot{width:7px;height:7px;background:#00e5ff;border-radius:50%;flex-shrink:0;box-shadow:0 0 8px rgba(0,229,255,0.5)}
-  .lp-cta{display:flex;gap:12px;margin-bottom:40px}
+  .lp-exchanges{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:40px;justify-content:center}
+  .lp-ex{padding:4px 12px;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.18);border-radius:999px;font-size:11px;font-weight:700;color:#7ab8d4;letter-spacing:1px;text-transform:uppercase}
+  .lp-ex-label{font-size:10px;color:#2a5a72;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;text-align:center;width:100%}
+  .lp-cta{display:flex;flex-direction:column;align-items:center;gap:16px;margin-bottom:0}
+  .lp-cta-primary{position:relative;overflow:hidden;padding:16px 48px;border-radius:999px;font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;letter-spacing:0.5px;cursor:pointer;color:#050a0f;background:linear-gradient(90deg,#00e5ff,#7b61ff,#ff4f6e,#ffb347,#00ff88,#00e5ff);background-size:280% 100%;border:none;transition:background-position 0.55s ease,box-shadow 0.3s ease;box-shadow:0 0 24px rgba(0,229,255,0.4),0 4px 20px rgba(0,0,0,0.4)}
+  .lp-cta-primary:hover{background-position:100% 0;box-shadow:0 0 36px rgba(123,97,255,0.6),0 0 48px rgba(0,229,255,0.35)}
+  .lp-cta-primary::after{content:'';position:absolute;inset:0;border-radius:999px;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,0.25) 50%,transparent 70%);transform:translateX(-100%);transition:transform 0.4s ease}
+  .lp-cta-primary:hover::after{transform:translateX(100%)}
+  .lp-cta-secondary{background:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:14px;color:#4a7a96;transition:color 0.15s;padding:0}
+  .lp-cta-secondary span{color:#7ab8d4;font-weight:600;text-decoration:underline;text-underline-offset:3px;transition:color 0.15s}
+  .lp-cta-secondary:hover span{color:#00e5ff}
   .lp-plans{display:flex;gap:10px}
   .lp-plan{padding:6px 16px;border:1px solid #0e2435;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#2a5a72}
   .lp-plan.on{border-color:#00e5ff;color:#00e5ff;background:rgba(0,229,255,0.05)}
   .m-overlay{position:fixed;inset:0;background:rgba(5,10,15,0.75);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(8px);animation:mFade 0.2s ease}
   @keyframes mFade{from{opacity:0}to{opacity:1}}
-  .m-box{background:#070d14;border:1px solid #1a3a5e;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;animation:mUp 0.2s ease}
+  .m-box{background:#070d14;border:1px solid #1a3a5e;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;animation:mUp 0.2s ease;border-radius:16px}
   @keyframes mUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
   .m-head{padding:28px 32px 0;display:flex;align-items:flex-start;justify-content:space-between}
   .m-title{font-size:22px;font-weight:700;color:#c8e6f0;margin-bottom:4px}
@@ -135,7 +151,7 @@ const CSS = `
   .m-close{background:none;border:none;color:#2a5a72;font-size:20px;cursor:pointer;padding:0;line-height:1;transition:color 0.15s}
   .m-close:hover{color:#ff4f6e}
   .m-body{padding:24px 32px 32px;display:flex;flex-direction:column;gap:16px}
-  .m-google{width:100%;padding:12px;background:transparent;border:1px solid #1a3a5e;color:#c8e6f0;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.15s}
+  .m-google{width:100%;padding:12px;background:transparent;border:1px solid #1a3a5e;color:#c8e6f0;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.15s;border-radius:10px}
   .m-google:hover{border-color:#00e5ff;color:#00e5ff}
   .m-google:disabled{opacity:0.5;cursor:not-allowed}
   .m-div{display:flex;align-items:center;gap:14px;font-size:11px;color:#2a5a72;letter-spacing:1px;text-transform:uppercase}
@@ -161,7 +177,7 @@ const CSS = `
   .str-chk{font-size:11px;display:flex;align-items:center;gap:4px}
   .str-chk.ok{color:#00ff88}
   .str-chk.no{color:#2a5a72}
-  .m-submit{width:100%;padding:13px;background:transparent;border:1px solid #00e5ff;color:#00e5ff;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.5px;transition:all 0.15s;margin-top:4px}
+  .m-submit{width:100%;padding:13px;background:transparent;border:1px solid #00e5ff;color:#00e5ff;font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.5px;transition:all 0.15s;margin-top:4px;border-radius:10px}
   .m-submit:hover{background:rgba(0,229,255,0.05)}
   .m-submit:disabled{opacity:0.4;cursor:not-allowed}
   .m-err{background:#1a0810;border:1px solid #5a1a28;padding:10px 14px;font-size:13px;color:#ff6b88}
@@ -558,7 +574,14 @@ function SignupModal({ onClose, onSwitch }) {
 }
 
 // ── page ──────────────────────────────────────────────────────────────
-const FEATS = ['Monitoreo de pools LP en tiempo real','Cobertura automático SHORT en Hyperliquid','Datos precisos de Revert Finance','Alertas cuando tu pool sale de rango']
+const FEATS = [
+  'Múltiples pools de Uniswap en un solo dashboard',
+  'Seguimiento en tiempo real del precio y estado del rango',
+  'Seteo de posición en SHORT apalancada vía API en los 5 mejores exchanges del mundo',
+  'Detecta al instante cuando tu pool sale de rango y te notifica via WhatsApp o E-mail',
+]
+
+const EXCHANGES = ['Binance','Bybit','OKX','Bitget','KuCoin']
 
 export default function Login() {
   const [modal, setModal] = useState(null)
@@ -566,25 +589,38 @@ export default function Login() {
     <>
       <style>{CSS}</style>
       <div className="lp-root">
-        <nav className="lp-nav">
-          <div className="lp-brand">
-            <div className="lp-icon" style={{ background:"#00e5ff", padding:4 }}>
-              <img src={cryptoHouseLogo} alt="The Crypto House" style={{ width:"100%", height:"100%", objectFit:"contain", display:"block" }} />
+        <div className="lp-nav-wrap">
+          <nav className="lp-nav">
+            <div className="lp-brand">
+              <div className="lp-icon">
+                <img src={cryptoHouseLogo} alt="The Crypto House" style={{ width:'22px', height:'22px', objectFit:'contain', display:'block' }} />
+              </div>
+              <div className="lp-name">The Crypto House</div>
             </div>
-            <div><div className="lp-name">The Crypto House</div><div className="lp-sub">Liquidity Engine</div></div>
-          </div>
-          <div className="lp-nav-btns">
+            <div className="lp-sep" />
             <button className="btn-ghost" onClick={()=>setModal('login')}>Iniciar sesión</button>
-            <button className="btn-cyan" onClick={()=>setModal('signup')}>Registrarse gratis</button>
-          </div>
-        </nav>
+            <button className="btn-cyan" onClick={()=>setModal('signup')}>Registrarse →</button>
+          </nav>
+        </div>
         <div className="lp-hero">
-          <h1 className="lp-title">Protege tu<br/>liquidez con<br/><span>inteligencia.</span></h1>
-          <p className="lp-desc">Monitorea tus pools de Uniswap V3, activa Coberturas automáticos en Hyperliquid y gestiona tu exposición en tiempo real.</p>
-          <div className="lp-feats">{FEATS.map((f,i)=><div key={i} className="lp-feat"><div className="lp-dot"/>{f}</div>)}</div>
-          <div className="lp-cta">
-            <button className="btn-cyan" style={{fontSize:16,padding:'13px 32px',fontWeight:700}} onClick={()=>setModal('signup')}>Empezar gratis</button>
-            <button className="btn-ghost" style={{fontSize:15,padding:'13px 24px'}} onClick={()=>setModal('login')}>Ya tengo cuenta</button>
+          <div className="lp-hero-inner">
+            <div className="lp-badge">
+              <div className="lp-badge-dot" />
+              Liquidity Engine · Beta
+            </div>
+            <h1 className="lp-title">Tu liquidez DeFi,<br/>bajo control<br/><span>en todo momento.</span></h1>
+            <p className="lp-desc">Gestiona tus pools de Uniswap, monitorea precios en tiempo real y activa coberturas SHORT automáticas para proteger tu capital.</p>
+            <div className="lp-feats">{FEATS.map((f,i)=><div key={i} className="lp-feat"><div className="lp-dot"/>{f}</div>)}</div>
+            <div className="lp-ex-label">Compatible con</div>
+            <div className="lp-exchanges">{EXCHANGES.map((ex,i)=><span key={i} className="lp-ex">{ex}</span>)}</div>
+            <div className="lp-cta">
+              <button className="lp-cta-primary" onClick={()=>setModal('signup')}>
+                Acceder al Liquidity Engine →
+              </button>
+              <button className="lp-cta-secondary" onClick={()=>setModal('login')}>
+                ¿Ya tienes cuenta? <span>Iniciar sesión</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
