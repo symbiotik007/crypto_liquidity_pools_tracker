@@ -679,21 +679,28 @@ const CSS = `
   .ticker-sep { color: rgba(5,10,15,0.4); }
 
   /* ── RESPONSIVE ── */
+  .ticker-top { margin-top: 96px; }
+
   @media (max-width: 900px) {
-    .nav-wrap { top: 10px; }
+    .nav-wrap { top: 36px; }
     .nav { padding: 5px 5px 5px 14px; }
     .nav-links, .nav-sep, .nav-cta { display: none; }
-    section { padding: 70px 24px; }
+    .ticker-top { margin-top: 88px; }
+    section { padding: 70px 20px; }
     .about-inner, .contact-inner { grid-template-columns: 1fr; gap: 40px; }
     .services-grid, .why-grid, .testimonials-grid { grid-template-columns: 1fr; }
     .footer-top { grid-template-columns: 1fr 1fr; }
     .form-row { grid-template-columns: 1fr; }
-    .hero { padding: 56px 24px 60px; }
-    .band { padding: 60px 24px; }
-    .footer { padding: 48px 24px 24px; }
+    .hero { padding: 48px 20px 60px; }
+    .band { padding: 60px 20px; }
+    .band-card { padding: 40px 24px; }
+    .footer { padding: 48px 20px 24px; }
     .hero-stats { gap: 28px; }
-    .hero-title { font-size: clamp(36px, 8vw, 56px); }
-    .section-title { font-size: clamp(28px, 6vw, 40px); }
+    .hero-title { font-size: clamp(34px, 8vw, 56px); }
+    .section-title { font-size: clamp(26px, 6vw, 40px); }
+    .about-name { font-size: 36px; }
+    .why-grid { gap: 24px; }
+    .nav-app { padding: 7px 14px; font-size: 11.5px; }
   }
 `
 
@@ -950,12 +957,12 @@ export default function Home() {
             <a className="nav-link" onClick={e => goTo(e, 'contacto')} href="#">Contacto</a>
           </div>
           <div className="nav-sep" />
-          <a className="nav-app" href="/app" target="_blank" rel="noreferrer">Ir al App →</a>
+          <a className="nav-app" href="/app">Ir al App →</a>
         </nav>
       </div>
 
-      {/* TICKER — debajo del nav pill (price bar 32 + gap 8 + pill ~46 + gap 8 = 94) */}
-      <div className="ticker" style={{ marginTop: 96 }}>
+      {/* TICKER — debajo del nav pill */}
+      <div className="ticker ticker-top">
         <div className="ticker-track">
           {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
             <span key={i} className="ticker-item">{item}</span>
