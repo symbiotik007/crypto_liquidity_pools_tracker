@@ -1,5 +1,5 @@
 // src/Root.jsx
-import { useEffect, Component } from 'react'
+import { useEffect, useState, Component } from 'react'
 import { useAuth } from './lib/AuthContext'
 import Login        from './pages/Login'
 import AuthCallback from './pages/AuthCallback'
