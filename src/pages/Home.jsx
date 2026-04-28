@@ -957,7 +957,7 @@ export default function Home() {
             <a className="nav-link" onClick={e => goTo(e, 'contacto')} href="#">Contacto</a>
           </div>
           <div className="nav-sep" />
-          <a className="nav-app" href="/app">Ir al App →</a>
+          <a className="nav-app" href="/#app">Ir al App →</a>
         </nav>
       </div>
 
@@ -1298,7 +1298,7 @@ export default function Home() {
             <div>
               <div className="footer-col-title">Herramientas</div>
               <div className="footer-links">
-                <a className="footer-link" href="/app" target="_blank" rel="noreferrer">Liquidity Engine App</a>
+                <a className="footer-link" href="/#app">Liquidity Engine App</a>
                 <a className="footer-link" href="https://app.hyperliquid.xyz" target="_blank" rel="noreferrer">Hyperliquid</a>
                 <a className="footer-link" href="https://app.uniswap.org" target="_blank" rel="noreferrer">Uniswap</a>
               </div>

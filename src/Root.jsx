@@ -99,11 +99,20 @@ function PausedScreen({ signOut }) {
 
 export default function Root() {
   const { session, loading, isPaused, signOut } = useAuth()
+  const [, forceUpdate] = useState(0)
+
   const path = window.location.pathname
+  const isAppRoute = path === '/app' || window.location.hash === '#app'
 
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [path])
+    const handler = () => forceUpdate(n => n + 1)
+    window.addEventListener('hashchange', handler)
+    return () => window.removeEventListener('hashchange', handler)
+  }, [])
+
+  useEffect(() => {
+    if (!isAppRoute) window.scrollTo(0, 0)
+  }, [isAppRoute])
 
   if (loading) {
     return (
@@ -122,7 +131,7 @@ export default function Root() {
 
   if (path === '/auth/callback') return <AuthCallback />
 
-  if (path === '/app') {
+  if (isAppRoute) {
     if (!session) return <Login />
     if (isPaused)  return <PausedScreen signOut={signOut} />
     return <ErrorBoundary><App /></ErrorBoundary>
