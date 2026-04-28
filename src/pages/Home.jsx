@@ -1,118 +1,8 @@
 // src/pages/Home.jsx
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import oscarImg from '../assets/OscarB1.jpg'
 import cryptoHouseLogo from '../assets/cryptohouselogo.png'
-
-// ── Top 15 CoinGecko IDs ──────────────────────────────────────────
-const COIN_IDS = [
-  'bitcoin','ethereum','tether','binancecoin','solana',
-  'ripple','usd-coin','dogecoin','cardano','tron',
-  'avalanche-2','chainlink','shiba-inu','polkadot','bitcoin-cash',
-]
-const COIN_META = {
-  bitcoin:        { symbol:'BTC' },
-  ethereum:       { symbol:'ETH' },
-  tether:         { symbol:'USDT' },
-  binancecoin:    { symbol:'BNB' },
-  solana:         { symbol:'SOL' },
-  ripple:         { symbol:'XRP' },
-  'usd-coin':     { symbol:'USDC' },
-  dogecoin:       { symbol:'DOGE' },
-  cardano:        { symbol:'ADA' },
-  tron:           { symbol:'TRX' },
-  'avalanche-2':  { symbol:'AVAX' },
-  chainlink:      { symbol:'LINK' },
-  'shiba-inu':    { symbol:'SHIB' },
-  polkadot:       { symbol:'DOT' },
-  'bitcoin-cash': { symbol:'BCH' },
-}
-
-function fmtPrice(p) {
-  if (!p && p !== 0) return '—'
-  if (p >= 1000) return '$' + p.toLocaleString('en-US', { maximumFractionDigits: 0 })
-  if (p >= 1)    return '$' + p.toFixed(2)
-  if (p >= 0.01) return '$' + p.toFixed(4)
-  return '$' + p.toFixed(8)
-}
-
-function CryptoPriceBar() {
-  const [coins, setCoins]           = useState([])
-  const [globalData, setGlobalData] = useState(null)
-  const [lastUpdate, setLastUpdate] = useState(null)
-
-  const fetchAll = async () => {
-    try {
-      const [pRes, gRes] = await Promise.all([
-        fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${COIN_IDS.join(',')}&order=market_cap_desc&per_page=15&page=1&sparkline=false&price_change_percentage=24h`),
-        fetch('https://api.coingecko.com/api/v3/global'),
-      ])
-      if (pRes.ok) { setCoins(await pRes.json()); setLastUpdate(new Date()) }
-      if (gRes.ok) { const g = await gRes.json(); setGlobalData(g.data) }
-    } catch {}
-  }
-
-  useEffect(() => {
-    fetchAll()
-    const t = setInterval(fetchAll, 60000)
-    return () => clearInterval(t)
-  }, [])
-
-  const btcDom    = globalData?.market_cap_percentage?.btc?.toFixed(1)
-  const ethDom    = globalData?.market_cap_percentage?.eth?.toFixed(1)
-  const totalMcap = globalData?.total_market_cap?.usd
-  const fmtMcap   = (v) => !v ? '—' : v >= 1e12 ? '$'+(v/1e12).toFixed(2)+'T' : '$'+(v/1e9).toFixed(0)+'B'
-
-  const items  = coins.map(c => ({ ...c, symbol: COIN_META[c.id]?.symbol || c.symbol?.toUpperCase(), change: c.price_change_percentage_24h || 0 }))
-  const doubled = [...items, ...items]
-
-  const pill = { display:'flex', alignItems:'center', gap:5, padding:'0 12px', height:'100%', flexShrink:0, borderRight:'1px solid rgba(0,229,255,0.08)' }
-
-  return (
-    <div style={{ position:'fixed', top:0, left:0, right:0, zIndex:200, background:'#020810', borderBottom:'1px solid rgba(0,229,255,0.12)', height:32, overflow:'hidden', display:'flex', alignItems:'center', fontFamily:"'Outfit',sans-serif" }}>
-
-      {/* LIVE badge */}
-      <div style={{ ...pill, background:'rgba(0,229,255,0.04)', borderRight:'1px solid rgba(0,229,255,0.2)', gap:7 }}>
-        <div style={{ width:5, height:5, borderRadius:'50%', background:'#00e5ff', boxShadow:'0 0 6px #00e5ff', animation:'livePulse 2s infinite' }} />
-        <span style={{ fontSize:9, fontWeight:800, color:'#00e5ff', letterSpacing:2, textTransform:'uppercase' }}>CRYPTO LIVE</span>
-      </div>
-
-      {/* Global indicators */}
-      {btcDom && <div style={pill}><span style={{ fontSize:9, color:'#2a5a72', letterSpacing:1, textTransform:'uppercase' }}>BTC DOM</span><span style={{ fontSize:11, fontWeight:700, color:'#f7931a' }}>{btcDom}%</span></div>}
-      {ethDom && <div style={pill}><span style={{ fontSize:9, color:'#2a5a72', letterSpacing:1, textTransform:'uppercase' }}>ETH DOM</span><span style={{ fontSize:11, fontWeight:700, color:'#627eea' }}>{ethDom}%</span></div>}
-      {totalMcap && <div style={pill}><span style={{ fontSize:9, color:'#2a5a72', letterSpacing:1, textTransform:'uppercase' }}>MKT CAP</span><span style={{ fontSize:11, fontWeight:700, color:'#c8e6f0' }}>{fmtMcap(totalMcap)}</span></div>}
-
-      {/* Scrolling coins */}
-      <div style={{ flex:1, overflow:'hidden', height:'100%' }}>
-        {items.length === 0 ? (
-          <div style={{ display:'flex', alignItems:'center', height:'100%', paddingLeft:16, fontSize:10, color:'#2a5a72' }}>Cargando precios...</div>
-        ) : (
-          <div style={{ display:'flex', alignItems:'center', height:'100%', whiteSpace:'nowrap', animation:'priceScroll 90s linear infinite' }}>
-            {doubled.map((c, i) => (
-              <div key={i} style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'0 16px', height:'100%', borderRight:'1px solid rgba(0,229,255,0.05)' }}>
-                <span style={{ fontSize:11, fontWeight:700, color:'#e0f4ff' }}>{c.symbol}</span>
-                <span style={{ fontSize:11, color:'#7ab8d4' }}>{fmtPrice(c.current_price)}</span>
-                <span style={{ fontSize:10, fontWeight:700, color: c.change >= 0 ? '#00ff88' : '#ff4f6e' }}>
-                  {c.change >= 0 ? '▲' : '▼'} {Math.abs(c.change).toFixed(2)}%
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {lastUpdate && (
-        <div style={{ padding:'0 10px', flexShrink:0, fontSize:9, color:'#1a3a5e', borderLeft:'1px solid rgba(0,229,255,0.08)', whiteSpace:'nowrap' }}>
-          ↻ {lastUpdate.toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' })}
-        </div>
-      )}
-
-      <style>{`
-        @keyframes priceScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-        @keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 6px #00e5ff} 50%{opacity:0.4;box-shadow:0 0 2px #00e5ff} }
-      `}</style>
-    </div>
-  )
-}
+import CryptoPriceBar from '../components/CryptoPriceBar'
 
 // ─────────────────────────────────────────────────────────────────
 
@@ -187,6 +77,35 @@ const CSS = `
     white-space: nowrap;
   }
   .nav-cta:hover { background: rgba(0,229,255,0.07); color: #c8e6f0; }
+
+  /* ── DROPDOWN Formación ── */
+  .nav-dropdown { position: relative; }
+  .nav-dropdown-btn {
+    font-size: 12.5px; color: rgba(200,230,240,0.55); font-weight: 500;
+    letter-spacing: 0.4px; cursor: pointer; padding: 7px 14px; border-radius: 999px;
+    display: flex; align-items: center; gap: 4px;
+    transition: background 0.15s, color 0.15s;
+    background: none; border: none; font-family: 'Outfit', sans-serif; white-space: nowrap;
+  }
+  .nav-dropdown-btn:hover, .nav-dropdown-btn.open { background: rgba(0,229,255,0.08); color: #c8e6f0; }
+  .nav-dropdown-menu {
+    position: absolute; top: calc(100% + 6px); left: 50%;
+    transform: translateX(-50%);
+    background: rgba(7,13,20,0.97); border: 1px solid rgba(0,229,255,0.18);
+    border-radius: 12px; padding: 6px; min-width: 210px;
+    transition: opacity 0.15s, transform 0.15s;
+    backdrop-filter: blur(24px); z-index: 1000;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03) inset;
+  }
+  .nav-dropdown-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    border-radius: 8px; color: rgba(200,230,240,0.75); font-size: 13px; font-weight: 500;
+    text-decoration: none; transition: all 0.12s; cursor: pointer;
+    white-space: nowrap; background: none; border: none;
+    font-family: 'Outfit', sans-serif; width: 100%; text-align: left;
+  }
+  .nav-dropdown-item:hover { background: rgba(0,229,255,0.08); color: var(--cyan); }
+  .nav-dropdown-sep { height: 1px; background: rgba(0,229,255,0.08); margin: 4px 6px; }
 
   /* ── Rainbow App button — pill shape ── */
   .nav-app {
@@ -756,11 +675,11 @@ const SERVICES = [
     desc: 'Nuestra plataforma exclusiva para gestionar tus posiciones de liquidez en Uniswap V3. Seguimiento en tiempo real, múltiples pools y cobertura de riesgo programable en los 5 mejores exchanges de criptomonedas del mundo.',
     list: ['Múltiples pools en un solo lugar', 'Seguimiento en tiempo real', 'SHORT apalancado vía API en futuros', 'Acceso exclusivo para estudiantes'],
     exchanges: [
-      { name: 'Binance',  color: '#F0B90B', bg: 'rgba(240,185,11,0.1)',  border: 'rgba(240,185,11,0.3)' },
-      { name: 'Bybit',    color: '#F7A600', bg: 'rgba(247,166,0,0.1)',   border: 'rgba(247,166,0,0.3)' },
-      { name: 'OKX',      color: '#e0e0e0', bg: 'rgba(224,224,224,0.07)',border: 'rgba(224,224,224,0.2)' },
-      { name: 'Bitget',   color: '#00F0FF', bg: 'rgba(0,240,255,0.08)',  border: 'rgba(0,240,255,0.25)' },
-      { name: 'KuCoin',   color: '#23AF91', bg: 'rgba(35,175,145,0.1)',  border: 'rgba(35,175,145,0.3)' },
+      { name: 'Binance', color: '#F0B90B', bg: 'rgba(240,185,11,0.1)', border: 'rgba(240,185,11,0.3)' },
+      { name: 'Bybit', color: '#F7A600', bg: 'rgba(247,166,0,0.1)', border: 'rgba(247,166,0,0.3)' },
+      { name: 'OKX', color: '#e0e0e0', bg: 'rgba(224,224,224,0.07)', border: 'rgba(224,224,224,0.2)' },
+      { name: 'Bitget', color: '#00F0FF', bg: 'rgba(0,240,255,0.08)', border: 'rgba(0,240,255,0.25)' },
+      { name: 'KuCoin', color: '#23AF91', bg: 'rgba(35,175,145,0.1)', border: 'rgba(35,175,145,0.3)' },
     ],
   },
 ]
@@ -793,15 +712,15 @@ const WHY = [
 ]
 
 function InfoModal({ program, onClose }) {
-  const [name,  setName]  = useState('')
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [done,  setDone]  = useState(false)
-  const [errs,  setErrs]  = useState({})
+  const [done, setDone] = useState(false)
+  const [errs, setErrs] = useState({})
 
   const validate = () => {
     const e = {}
-    if (!name.trim())  e.name  = true
+    if (!name.trim()) e.name = true
     if (!phone.trim()) e.phone = true
     return e
   }
@@ -831,9 +750,9 @@ function InfoModal({ program, onClose }) {
             <div className="info-ok-sub">
               Oscar responde en menos de 2 horas.<br />
               Si no se abrió automáticamente,<br />
-              escríbenos al <strong style={{color:'#00e5ff'}}>+57 321 564 6716</strong>
+              escríbenos al <strong style={{ color: '#00e5ff' }}>+57 321 564 6716</strong>
             </div>
-            <button className="info-submit" style={{marginTop:24,width:'auto',padding:'12px 32px'}} onClick={onClose}>
+            <button className="info-submit" style={{ marginTop: 24, width: 'auto', padding: '12px 32px' }} onClick={onClose}>
               Cerrar
             </button>
           </div>
@@ -856,7 +775,7 @@ function InfoModal({ program, onClose }) {
                   className={`info-inp${errs.name ? ' err' : ''}`}
                   placeholder="Tu nombre"
                   value={name}
-                  onChange={e => { setName(e.target.value); setErrs(v => ({...v, name:false})) }}
+                  onChange={e => { setName(e.target.value); setErrs(v => ({ ...v, name: false })) }}
                   autoFocus
                 />
               </div>
@@ -876,7 +795,7 @@ function InfoModal({ program, onClose }) {
                   className={`info-inp${errs.phone ? ' err' : ''}`}
                   placeholder="+57 300 000 0000"
                   value={phone}
-                  onChange={e => { setPhone(e.target.value); setErrs(v => ({...v, phone:false})) }}
+                  onChange={e => { setPhone(e.target.value); setErrs(v => ({ ...v, phone: false })) }}
                 />
               </div>
               <button className="info-submit" type="submit">
@@ -908,15 +827,19 @@ function FAQItem({ q, a }) {
 }
 
 export default function Home() {
-  const [formData, setFormData] = useState({ name:'', email:'', msg:'' })
+  const [formData, setFormData] = useState({ name: '', email: '', msg: '' })
   const [sent, setSent] = useState(false)
   const [infoProgram, setInfoProgram] = useState(null)
+  const [dropOpen, setDropOpen] = useState(false)
+  const dropTimer = useRef(null)
+  const openDrop  = () => { clearTimeout(dropTimer.current); setDropOpen(true) }
+  const closeDrop = () => { dropTimer.current = setTimeout(() => setDropOpen(false), 220) }
 
   const handleContact = (e) => {
     e.preventDefault()
     if (!formData.name || !formData.msg) return
     const subject = encodeURIComponent(`The Crypto House — Mensaje de ${formData.name}`)
-    const body    = encodeURIComponent(`Nombre: ${formData.name}\nEmail: ${formData.email}\n\n${formData.msg}`)
+    const body = encodeURIComponent(`Nombre: ${formData.name}\nEmail: ${formData.email}\n\n${formData.msg}`)
     window.location.href = `mailto:profeoscarbol@gmail.com?subject=${subject}&body=${body}`
     setSent(true)
   }
@@ -933,31 +856,59 @@ export default function Home() {
   const goTo = (e, id) => { e.preventDefault(); scrollTo(id) }
   const scrollTop = (e) => { e?.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }
 
+  // Handle pending scroll from sub-pages (e.g. when navigating back from Programas/LE)
+  useEffect(() => {
+    const target = sessionStorage.getItem('pendingScroll')
+    if (target) {
+      sessionStorage.removeItem('pendingScroll')
+      setTimeout(() => scrollTo(target), 150)
+    }
+  }, [])
+
   const TICKER_ITEMS = ['Bootcamp Crypto', '·', 'Trading de Futuros', '·', 'DeFi & Liquidity Pools', '·', 'Hyperliquid', '·', 'Uniswap V3', '·', 'Formación Profesional', '·']
 
   return (
     <>
       <style>{CSS}</style>
 
-      {/* ── CRYPTO PRICE BAR (fixed top: 0) ── */}
+      {/* ── CRYPTO PRICE BAR (fixed top: 0) — shared component ── */}
       <CryptoPriceBar />
 
       {/* ── NAVBAR pill flotante ── */}
       <div className="nav-wrap">
         <nav className="nav">
           <a href="#" className="nav-brand" onClick={scrollTop}>
-            <img src={cryptoHouseLogo} alt="The Crypto House" style={{ height:30, width:'auto', objectFit:'contain' }} />
+            <img src={cryptoHouseLogo} alt="The Crypto House" style={{ height: 30, width: 'auto', objectFit: 'contain' }} />
             <div className="nav-name">The Crypto House</div>
           </a>
           <div className="nav-links">
             <a className="nav-link" onClick={scrollTop} href="#">Inicio</a>
-            <a className="nav-link" onClick={e => goTo(e, 'sobre')}    href="#">Instructor</a>
-            <a className="nav-link" onClick={e => goTo(e, 'cursos')}   href="#">Formación</a>
-            <a className="nav-link" onClick={e => goTo(e, 'faq')}      href="#">FAQ</a>
+            <a className="nav-link" onClick={e => goTo(e, 'sobre')} href="#">Instructor</a>
+            <div className="nav-dropdown" onMouseEnter={openDrop} onMouseLeave={closeDrop}>
+              <button
+                className={`nav-dropdown-btn${dropOpen ? ' open' : ''}`}
+                onClick={() => { window.location.hash = '#programas' }}
+              >
+                Formación ▾
+              </button>
+              {dropOpen && (
+                <div className="nav-dropdown-menu">
+                  <button className="nav-dropdown-item" onClick={() => { window.location.hash = '#programas' }}>
+                    <span>₿</span> Bootcamp Crypto
+                  </button>
+                  <div className="nav-dropdown-sep" />
+                  <button className="nav-dropdown-item" onClick={() => { window.location.hash = '#programas' }}>
+                    <span>📊</span> Express Trading
+                  </button>
+                </div>
+              )}
+            </div>
+            <a className="nav-link" onClick={e => { e.preventDefault(); window.location.hash = '#liquidity-engine' }} href="#">Liquidity Engine</a>
+            <a className="nav-link" onClick={e => goTo(e, 'faq')} href="#">FAQ</a>
             <a className="nav-link" onClick={e => goTo(e, 'contacto')} href="#">Contacto</a>
           </div>
           <div className="nav-sep" />
-          <a className="nav-app" href="/#app">Ir al App →</a>
+          <a className="nav-app" href="/#app">Acceder al Ecosistema</a>
         </nav>
       </div>
 
@@ -976,16 +927,16 @@ export default function Home() {
         <div className="hero-content">
           <div className="hero-badge">
             <div className="hero-badge-dot" />
-            Formación de Trading Profesional · Colombia
+            Bienvenido aFormación de Trading Profesional · Colombia
           </div>
           <h1 className="hero-title">
             Domina <span>Crypto</span>, Futuros<br />
-            y DeFi desde cero.
+            y DeFi con una estrategia profesional.
           </h1>
           <p className="hero-sub">
-            Aprende trading de criptomonedas con una estrategia comprobada, acompañamiento 1 a 1 y resultados medibles. Incluso si empiezas desde cero.
-<br />
-            
+            Aprende a operar con disciplina, gestión de riesgo y una metodología diseñada para resultados consistentes.
+            <br />
+
           </p>
           <div className="hero-btns">
             <a className="btn-glare" onClick={e => goTo(e, 'cursos')} href="#">
@@ -1015,7 +966,7 @@ export default function Home() {
         <div className="about-inner">
           <div className="about-img-wrap">
             <div className="about-img-box">
-              <img src={oscarImg} alt="Oscar Bolaños" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+              <img src={oscarImg} alt="Oscar Bolaños" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
           </div>
           <div className="about-content">
@@ -1023,21 +974,18 @@ export default function Home() {
             <div className="about-name">Oscar Bolaños</div>
             <div className="about-role">Trader profesional & Mentor de inversiones</div>
             <p className="about-text">
-              Soy Oscar, trader profesional especializado en criptomonedas, DeFi y trading de futuros.
-              Llevo años operando los mercados y formando a cientos de personas para que logren
-              independencia financiera a través de las inversiones.
+              Soy Oscar, operador de criptomonedas VIP en Bybit y con experiencia en Prop Firms, brokers y estructuras de inversión enfocadas en DeFi, futuros y gestión de liquidez. Durante más de 4 años he trabajado en la ejecución, análisis y desarrollo de estrategias aplicadas a mercados reales, con enfoque en consistencia, control de riesgo y toma de decisiones basada en datos.
             </p>
             <p className="about-text">
               Creé The Crypto House con una misión clara: democratizar el acceso a la educación
               financiera de calidad. Mi metodología combina teoría sólida con práctica real,
-              acompañamiento cercano y herramientas tecnológicas propias como el Liquidity Engine.
+              acompañamiento cercano y herramientas tecnológicas propias como el Liquidity Engine para operaciones descentralizadas.
             </p>
             <div className="about-highlights">
               {[
-                'Especialista en Uniswap V3 y Liquidity Mining',
-                'Desarrollador del Liquidity Engine — herramienta DeFi propia',
-                'Formación personalizada en Colombia y Latam',
-                'Acompañamiento 1 a 1 garantizado en todos los programas',
+                'Exchanges, Prop Firms, brokers y estructuras de inversión privadas.',
+                'Estrategias avanzadas de Liquidity Mining DEX and CEX.',
+                'Desarrollador del Liquidity Engine — herramienta de monitoreo y cobertura de capital DeFi propia. 🤖'
               ].map((h, i) => (
                 <div key={i} className="about-hl">
                   <div className="about-hl-dot" />
@@ -1051,7 +999,7 @@ export default function Home() {
 
       {/* TICKER 2 */}
       <div className="ticker">
-        <div className="ticker-track" style={{ animationDirection:'reverse' }}>
+        <div className="ticker-track" style={{ animationDirection: 'reverse' }}>
           {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
             <span key={i} className="ticker-item">{item}</span>
           ))}
@@ -1072,7 +1020,7 @@ export default function Home() {
           <div className="services-grid">
             {SERVICES.map((s, i) => (
               <div key={i} className={`service-card${i === 0 ? ' featured' : ''}`}>
-                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div className="service-icon">{s.icon}</div>
                   <div className="service-badge">{s.badge}</div>
                 </div>
@@ -1098,8 +1046,11 @@ export default function Home() {
                     </div>
                   </div>
                 )}
-                <button className="service-btn" onClick={() => setInfoProgram(s)}>
-                  Quiero más información →
+                <button className="service-btn" onClick={() => {
+                  if (i === 2) window.location.hash = '#liquidity-engine'
+                  else window.location.hash = '#programas'
+                }}>
+                  {i === 2 ? 'Explorar Liquidity Engine →' : 'Ver programa completo →'}
                 </button>
               </div>
             ))}
@@ -1110,12 +1061,12 @@ export default function Home() {
       {/* WHY US */}
       <section className="why">
         <div className="why-inner">
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:60, alignItems:'center', marginBottom:60 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'center', marginBottom: 60 }}>
             <div>
               <div className="section-label">Por qué elegirnos</div>
               <h2 className="section-title">No somos otro<br /><span>curso de internet.</span></h2>
             </div>
-            <p className="section-desc" style={{ alignSelf:'end' }}>
+            <p className="section-desc" style={{ alignSelf: 'end' }}>
               Oscar trabaja directamente contigo — sin intermediarios, sin grupos masivos.
               Nuestro diferencial está en el acompañamiento 1 a 1, la tecnología propia
               y la metodología práctica que funciona desde el primer mes.
@@ -1140,7 +1091,7 @@ export default function Home() {
           <div className="band-glare" />
           <h2 className="band-title">El momento de empezar<br />es <span>ahora.</span></h2>
           <p className="band-sub">Sé de los primeros en formarse directamente con Oscar.<br />Plazas limitadas para garantizar acompañamiento 1 a 1.</p>
-          <a className="btn-glare" onClick={e => goTo(e, 'contacto')} href="#" style={{ fontSize:15, padding:'15px 44px', position:'relative', zIndex:1 }}>
+          <a className="btn-glare" onClick={e => goTo(e, 'contacto')} href="#" style={{ fontSize: 15, padding: '15px 44px', position: 'relative', zIndex: 1 }}>
             <span className="btn-glare-shine" />
             Empezar ahora →
           </a>
@@ -1175,7 +1126,7 @@ export default function Home() {
       {/* FAQ */}
       <section className="faq" id="faq">
         <div className="faq-inner">
-          <div className="center" style={{ marginBottom:0 }}>
+          <div className="center" style={{ marginBottom: 0 }}>
             <div className="section-label">FAQ</div>
             <h2 className="section-title">Preguntas<br /><span>frecuentes</span></h2>
           </div>
@@ -1191,7 +1142,7 @@ export default function Home() {
           <div>
             <div className="section-label">Contacto</div>
             <h2 className="section-title">Hablemos<br /><span>hoy mismo.</span></h2>
-            <p className="section-desc" style={{ marginTop:12 }}>
+            <p className="section-desc" style={{ marginTop: 12 }}>
               ¿Tienes dudas sobre algún programa? Escríbenos directamente.
               Respondemos en menos de 2 horas.
             </p>
@@ -1224,7 +1175,7 @@ export default function Home() {
           </div>
 
           <div>
-            <div style={{ fontSize:18, fontWeight:700, color:'#fff', marginBottom:24 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 24 }}>
               Envíanos un mensaje
             </div>
             {sent ? (
@@ -1237,19 +1188,19 @@ export default function Home() {
                   <div className="form-group">
                     <label className="form-label">Nombre *</label>
                     <input className="form-input" placeholder="Tu nombre"
-                      value={formData.name} onChange={e => setFormData(p => ({...p, name:e.target.value}))} />
+                      value={formData.name} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))} />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Email</label>
                     <input className="form-input" type="email" placeholder="tu@email.com"
-                      value={formData.email} onChange={e => setFormData(p => ({...p, email:e.target.value}))} />
+                      value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} />
                   </div>
                 </div>
                 <div className="form-group">
                   <label className="form-label">¿En qué programa estás interesado? *</label>
                   <textarea className="form-textarea" rows={5}
                     placeholder="Cuéntame sobre tu experiencia actual y qué programa te interesa..."
-                    value={formData.msg} onChange={e => setFormData(p => ({...p, msg:e.target.value}))} />
+                    value={formData.msg} onChange={e => setFormData(p => ({ ...p, msg: e.target.value }))} />
                 </div>
                 <button className="form-submit" type="submit">
                   Enviar mensaje →
@@ -1265,8 +1216,8 @@ export default function Home() {
         <div className="footer-inner">
           <div className="footer-top">
             <div>
-              <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:4 }}>
-                <img src={cryptoHouseLogo} alt="The Crypto House" style={{ height:38, width:'auto', objectFit:'contain' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+                <img src={cryptoHouseLogo} alt="The Crypto House" style={{ height: 38, width: 'auto', objectFit: 'contain' }} />
                 <div className="nav-name">The Crypto House</div>
               </div>
               <p className="footer-brand-desc">
@@ -1290,8 +1241,8 @@ export default function Home() {
             <div>
               <div className="footer-col-title">Compañía</div>
               <div className="footer-links">
-                <a className="footer-link" onClick={e => goTo(e, 'sobre')}    href="#">Sobre Oscar</a>
-                <a className="footer-link" onClick={e => goTo(e, 'faq')}      href="#">FAQ</a>
+                <a className="footer-link" onClick={e => goTo(e, 'sobre')} href="#">Sobre Oscar</a>
+                <a className="footer-link" onClick={e => goTo(e, 'faq')} href="#">FAQ</a>
                 <a className="footer-link" onClick={e => goTo(e, 'contacto')} href="#">Contacto</a>
               </div>
             </div>

@@ -4516,11 +4516,33 @@ function ProgramaTab() {
       <div style={S.sidebar}>
         {/* Instructor */}
         <div style={S.instrHero}>
-          <div style={S.avatar}>OB</div>
-          <div style={S.instrNombre}>Oscar Bolaños</div>
-          <div style={S.instrTitulo}>Instructor · The Crypto House</div>
-          <div style={{ marginTop:10, fontSize:12, color:"#2a5a72", lineHeight:1.6 }}>
-            Especulación en mercados cripto con enfoque en gestión del riesgo y pools de liquidez.
+          <div style={{ fontSize:9, letterSpacing:2.2, textTransform:"uppercase", color:"#00e5ff", fontWeight:800, marginBottom:10 }}>
+            Fundador · The Crypto House
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
+            <div style={S.avatar}>OB</div>
+            <div>
+              <div style={S.instrNombre}>Oscar Bolaños</div>
+              <div style={{ fontSize:11, color:"#4a7a96", lineHeight:1.5 }}>
+                Operador de mercados cripto<br/>Mentor de inversión estratégica
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize:12, color:"#5a8aa0", lineHeight:1.7, marginBottom:12 }}>
+            Operador con más de 4 años en Prop Firms, brokers y estructuras DeFi. Fundé The Crypto House para elevar el nivel de formación, alejándome de la teoría vacía y enfocándome en metodologías prácticas aplicadas a mercados reales.
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {[
+              "Especialista en Uniswap V3 y Liquidity Mining",
+              "Creador de Liquidity Engine",
+              "Prop Firms, brokers y estructuras privadas",
+              "Formación 1 a 1 · Colombia y Latinoamérica",
+            ].map((item, i) => (
+              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:7, fontSize:11, color:"#4a7a96", lineHeight:1.5 }}>
+                <span style={{ color:"#00e5ff", fontWeight:900, marginTop:1, flexShrink:0 }}>▪</span>
+                <span>{item}</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -4804,6 +4826,18 @@ function CryptoBootcampTab() {
     try { return JSON.parse(localStorage.getItem("crypto_bootcamp_completadas") || "[]"); }
     catch { return []; }
   });
+  const [winW, setWinW] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const onResize = () => setWinW(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+  const isMobile = winW < 768;
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+
+  // Keep sidebarOpen in sync when crossing breakpoint
+  useEffect(() => { setSidebarOpen(!isMobile); }, [isMobile]);
+
   const totalClases = CRYPTO_BOOTCAMP.reduce((acc, mod) => acc + mod.clases.length, 0);
   const progreso = Math.round((completadas.length / totalClases) * 100);
   const modulo = CRYPTO_BOOTCAMP[moduloActivo];
@@ -4823,6 +4857,7 @@ function CryptoBootcampTab() {
     setModuloActivo(mi);
     setClaseActiva(ci);
     setAbiertos(prev => new Set([...prev, CRYPTO_BOOTCAMP[mi].id]));
+    if (isMobile) setSidebarOpen(false);
   };
 
   const toggleCompletada = (id) => {
@@ -4849,17 +4884,21 @@ function CryptoBootcampTab() {
   };
 
   const S = {
-    wrap:{ display:"flex", gap:0, height:"100%", minHeight:0 },
-    sidebar:{ width:340, minWidth:280, maxWidth:380, borderRight:"1px solid #0e2435", overflowY:"auto", paddingBottom:16, flexShrink:0 },
-    content:{ flex:1, minWidth:0, overflowY:"auto", padding:"28px 32px 40px" },
+    wrap:{ display:"flex", flexDirection: isMobile ? "column" : "row", gap:0, height:"100%", minHeight:0, position:"relative" },
+    // Mobile toggle bar
+    mobileBar:{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"10px 14px", borderBottom:"1px solid #0e2435", background:"#070d14", flexShrink:0 },
+    mobileBarTitle:{ fontSize:13, fontWeight:800, color:"#e0f4ff", letterSpacing:0.5 },
+    mobileBarMeta:{ fontSize:11, color:"#4a7a96" },
+    toggleBtn:{ display:"flex", alignItems:"center", gap:6, padding:"7px 12px", background:"rgba(0,229,255,0.07)", border:"1px solid #1a3a5e", color:"#00e5ff", fontSize:12, fontWeight:700, cursor:"pointer", fontFamily:"Outfit,sans-serif", letterSpacing:0.5, flexShrink:0 },
+    // Sidebar
+    sidebar: isMobile
+      ? { width:"100%", borderBottom:"1px solid #0e2435", overflowY:"auto", maxHeight: sidebarOpen ? 480 : 0, opacity: sidebarOpen ? 1 : 0, transition:"max-height 0.25s ease, opacity 0.2s ease", overflow:"hidden" }
+      : { width:340, minWidth:280, maxWidth:380, borderRight:"1px solid #0e2435", overflowY:"auto", paddingBottom:16, flexShrink:0 },
+    content:{ flex:1, minWidth:0, overflowY:"auto", padding: isMobile ? "16px 14px 32px" : "28px 32px 40px" },
     intro:{ padding:"20px 18px 16px", borderBottom:"1px solid #0e2435", background:"linear-gradient(135deg,#070d14 0%,#0a1a24 100%)" },
     eyebrow:{ fontSize:11, letterSpacing:2.4, textTransform:"uppercase", color:"#00e5ff", fontWeight:800, marginBottom:8 },
     title:{ fontSize:24, lineHeight:1.2, color:"#e0f4ff", fontWeight:800, marginBottom:8 },
     sub:{ fontSize:13, color:"#4a7a96", lineHeight:1.7 },
-    stats:{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, padding:"12px 18px", borderBottom:"1px solid #0e2435" },
-    stat:{ background:"#070d14", border:"1px solid #0e2435", padding:"10px 12px" },
-    statLabel:{ fontSize:10, color:"#2a5a72", letterSpacing:1.4, textTransform:"uppercase", marginBottom:6 },
-    statValue:{ fontSize:18, color:"#e0f4ff", fontWeight:800 },
     progressWrap:{ padding:"12px 18px", borderBottom:"1px solid #0e2435" },
     progressLabel:{ display:"flex", justifyContent:"space-between", fontSize:11, color:"#2a5a72", marginBottom:6, letterSpacing:1 },
     progressBar:{ height:3, background:"#0e2435", position:"relative" },
@@ -4878,50 +4917,69 @@ function CryptoBootcampTab() {
     chevron:(open) => ({ marginLeft:"auto", color:open ? "#00e5ff" : "#1a3a5e", fontSize:18, transform:open ? "rotate(90deg)" : "rotate(0deg)", transition:"transform 0.15s" }),
     drop:(open) => ({ overflow:"hidden", maxHeight:open ? 680 : 0, opacity:open ? 1 : 0, transition:"max-height 0.2s ease, opacity 0.15s ease" }),
     lesson:(active) => ({
-      width:"100%", display:"flex", alignItems:"center", gap:10, padding:"10px 16px 10px 58px",
+      width:"100%", display:"flex", alignItems:"center", gap:10,
+      padding: isMobile ? "11px 14px 11px 14px" : "10px 16px 10px 58px",
       border:"none", borderBottom:"1px solid rgba(14,36,53,0.55)",
       background:active ? "#0a1a24" : "transparent", cursor:"pointer", textAlign:"left",
       borderLeft:active ? "2px solid #00e5ff" : "2px solid transparent", fontFamily:"Outfit,sans-serif",
+      boxSizing:"border-box",
     }),
     checkCircle:(done) => ({
-      width:16, height:16, minWidth:16, borderRadius:"50%",
+      width:18, height:18, minWidth:18, borderRadius:"50%",
       border:done ? "none" : "1px solid #1a3a5e",
       background:done ? "#00ff88" : "transparent",
       display:"flex", alignItems:"center", justifyContent:"center",
-      fontSize:9, color:"#050a0f", fontWeight:900, flexShrink:0,
+      fontSize:10, color:"#050a0f", fontWeight:900, flexShrink:0,
     }),
-    lessonTitle:(active) => ({ fontSize:13, color:active ? "#e0f4ff" : "#7ab8d4", flex:1, lineHeight:1.4 }),
+    lessonTitle:(active) => ({ fontSize: isMobile ? 14 : 13, color:active ? "#e0f4ff" : "#7ab8d4", flex:1, lineHeight:1.4 }),
     pill:{ fontSize:10, color:"#2a5a72", border:"1px solid #12304a", padding:"2px 7px", whiteSpace:"nowrap" },
     badge:{ display:"inline-block", padding:"2px 10px", fontSize:11, border:"1px solid #00e5ff", color:"#00e5ff", letterSpacing:1.5, textTransform:"uppercase", marginBottom:14 },
-    lessonHeader:{ fontSize:26, fontWeight:800, color:"#e0f4ff", lineHeight:1.25, marginBottom:10 },
-    metaRow:{ display:"flex", alignItems:"center", gap:14, flexWrap:"wrap", marginBottom:24, color:"#4a7a96", fontSize:12 },
+    lessonHeader:{ fontSize: isMobile ? 20 : 26, fontWeight:800, color:"#e0f4ff", lineHeight:1.25, marginBottom:10 },
+    metaRow:{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", marginBottom:20, color:"#4a7a96", fontSize:12 },
     sectionTitle:{ fontSize:11, letterSpacing:2, color:"#2a5a72", textTransform:"uppercase", marginBottom:12, marginTop:22, paddingBottom:8, borderBottom:"1px solid #0e2435" },
-    desc:{ fontSize:15, color:"#7ab8d4", lineHeight:1.8, maxWidth:760, marginBottom:20 },
-    pending:{ background:"#070d14", border:"1px solid #0e2435", padding:"18px 20px", color:"#4a7a96", fontSize:13, lineHeight:1.7, maxWidth:760 },
-    contentBlock:{ background:"#070d14", border:"1px solid #0e2435", padding:"16px 18px", marginBottom:12, maxWidth:820 },
+    desc:{ fontSize: isMobile ? 14 : 15, color:"#7ab8d4", lineHeight:1.8, maxWidth:760, marginBottom:20 },
+    pending:{ background:"#070d14", border:"1px solid #0e2435", padding:"18px 20px", color:"#4a7a96", fontSize:13, lineHeight:1.7 },
+    contentBlock:{ background:"#070d14", border:"1px solid #0e2435", padding: isMobile ? "14px 14px" : "16px 18px", marginBottom:12 },
     contentTitle:{ fontSize:13, color:"#00e5ff", fontWeight:800, marginBottom:8 },
     contentText:{ fontSize:14, color:"#9ab8c8", lineHeight:1.75 },
     contentList:{ margin:0, paddingLeft:18, color:"#9ab8c8", fontSize:14, lineHeight:1.75 },
-    mediaGrid:{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))", gap:12, maxWidth:820 },
+    mediaGrid:{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(220px, 1fr))", gap:12 },
     image:{ width:"100%", border:"1px solid #0e2435", background:"#050a0f", display:"block" },
     sourceCard:{ border:"1px solid #0e2435", background:"#070d14", padding:"12px 14px", color:"#4a7a96", fontSize:12, lineHeight:1.5 },
     sourceLink:{ color:"#00e5ff", textDecoration:"none", fontSize:12, wordBreak:"break-word" },
-    actions:{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center", paddingTop:18 },
+    actions:{ display:"flex", flexDirection: isMobile ? "column" : "row", gap:10, alignItems: isMobile ? "stretch" : "center", paddingTop:18 },
     btnComplete:(done) => ({
-      padding:"9px 20px", fontSize:13, cursor:"pointer", fontFamily:"Outfit,sans-serif",
+      padding:"11px 20px", fontSize:13, cursor:"pointer", fontFamily:"Outfit,sans-serif",
       fontWeight:700, background:done ? "transparent" : "#00ff88",
       border:"1px solid #00ff88", color:done ? "#00ff88" : "#050a0f",
-      letterSpacing:"0.5px", transition:"all 0.15s",
+      letterSpacing:"0.5px", transition:"all 0.15s", textAlign:"center",
     }),
     btnNext:{
-      padding:"9px 20px", fontSize:13, cursor:"pointer", fontFamily:"Outfit,sans-serif",
+      padding:"11px 20px", fontSize:13, cursor:"pointer", fontFamily:"Outfit,sans-serif",
       fontWeight:700, background:"#00e5ff", border:"1px solid #00e5ff",
-      color:"#050a0f", letterSpacing:"0.5px",
+      color:"#050a0f", letterSpacing:"0.5px", textAlign:"center",
     },
   };
 
+  const currentLessonLabel = modulo && clase
+    ? `${modulo.titulo} · Clase ${claseActiva + 1}`
+    : "Selecciona una lección";
+
   return (
     <div style={S.wrap}>
+      {/* Mobile toggle bar — only shown on small screens */}
+      {isMobile && (
+        <div style={S.mobileBar}>
+          <div>
+            <div style={S.mobileBarTitle}>Crypto Bootcamp</div>
+            <div style={S.mobileBarMeta}>{currentLessonLabel}</div>
+          </div>
+          <button style={S.toggleBtn} onClick={() => setSidebarOpen(v => !v)}>
+            {sidebarOpen ? "✕ Cerrar" : "☰ Módulos"}
+          </button>
+        </div>
+      )}
+
       <div style={S.sidebar}>
         <div style={S.intro}>
           <div style={S.eyebrow}>School of Crypto</div>
@@ -4983,7 +5041,7 @@ function CryptoBootcampTab() {
             <div style={S.metaRow}>
               <span>Clase {claseActiva + 1} de {modulo.clases.length}</span>
               <span>{clase.estado}</span>
-              {completadas.includes(clase.id) && <span style={{ color:"#00ff88" }}>Completada</span>}
+              {completadas.includes(clase.id) && <span style={{ color:"#00ff88" }}>✓ Completada</span>}
             </div>
 
             <div style={S.sectionTitle}>Resumen</div>

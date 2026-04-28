@@ -1,10 +1,12 @@
 // src/Root.jsx
 import { useEffect, useState, Component } from 'react'
 import { useAuth } from './lib/AuthContext'
-import Login        from './pages/Login'
-import AuthCallback from './pages/AuthCallback'
-import Home         from './pages/Home'
-import App          from './App'
+import Login              from './pages/Login'
+import AuthCallback       from './pages/AuthCallback'
+import Home               from './pages/Home'
+import ProgramasPage      from './pages/ProgramasPage'
+import LiquidityEnginePage from './pages/LiquidityEnginePage'
+import App                from './App'
 
 class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -101,8 +103,11 @@ export default function Root() {
   const { session, loading, isPaused, signOut } = useAuth()
   const [, forceUpdate] = useState(0)
 
-  const path = window.location.pathname
-  const isAppRoute = path === '/app' || window.location.hash === '#app'
+  const path    = window.location.pathname
+  const hash    = window.location.hash
+  const isAppRoute       = path === '/app' || hash === '#app'
+  const isProgramasRoute = hash === '#programas'
+  const isLERoute        = hash === '#liquidity-engine'
 
   useEffect(() => {
     const handler = () => forceUpdate(n => n + 1)
@@ -136,6 +141,9 @@ export default function Root() {
     if (isPaused)  return <PausedScreen signOut={signOut} />
     return <ErrorBoundary><App /></ErrorBoundary>
   }
+
+  if (isProgramasRoute) return <ProgramasPage />
+  if (isLERoute)        return <LiquidityEnginePage />
 
   return <Home />
 }
