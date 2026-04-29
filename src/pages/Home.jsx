@@ -656,7 +656,7 @@ const SERVICES = [
     badge: 'Más popular',
     name: 'Bootcamp Crypto',
     sub: 'Inversión y Trading de Criptomonedas',
-    desc: 'Aprende a invertir en criptomonedas de manera profesional. Análisis técnico, gestión de riesgo, DeFi, Liquidity Pools y estrategias avanzadas para mercados 24/7.',
+    desc: 'Aprende a navegar el mercado cripto con estructura y disciplina, dominando análisis técnico, gestión de riesgo, DeFi y estrategias avanzadas para resultados consistentes. Todo depende de ti.',
     list: ['Análisis técnico cripto', 'DeFi & Liquidity Mining', 'Gestión de riesgo', 'Herramientas profesionales', 'Mentoría directa con Oscar'],
   },
   {
@@ -664,16 +664,16 @@ const SERVICES = [
     badge: 'Nuevo',
     name: 'Express Trading',
     sub: 'Trading de Futuros',
-    desc: 'Domina el trading de contratos de futuros en Forex y cripto. Estrategias de breakout, gestión de posiciones y psicología del trader profesional.',
-    list: ['Futuros Forex & Cripto', 'Estrategias de breakout', 'Gestión de capital', 'Trading en vivo', 'Mentorías 1 a 1'],
+    desc: 'Domina el trading de contratos de futuros en Forex. Estrategias de breakout, gestión de posiciones y psicología.',
+    list: ['Futuros Forex', 'Estrategias de breakout', 'Gestión de capital', 'Mentoría directa con Oscar'],
   },
   {
     icon: '🏛',
     badge: 'Beta',
     name: 'Liquidity Engine',
     sub: 'Gestión de Pools DeFi',
-    desc: 'Nuestra plataforma exclusiva para gestionar tus posiciones de liquidez en Uniswap V3. Seguimiento en tiempo real, múltiples pools y cobertura de riesgo programable en los 5 mejores exchanges de criptomonedas del mundo.',
-    list: ['Múltiples pools en un solo lugar', 'Seguimiento en tiempo real', 'SHORT apalancado vía API en futuros', 'Acceso exclusivo para estudiantes'],
+    desc: 'Nuestra plataforma exclusiva para gestionar tus pools de liquidez en Uniswap. Monitoreo en tiempo real, Configuración de cobertura de riesgo en los 5 mejores exchanges de criptomonedas del mundo.',
+    list: ['Múltiples pools en un solo lugar', 'Seguimiento en tiempo real', 'SHORT de protección apalancado vía API en futuros', 'Acceso exclusivo para estudiantes'],
     exchanges: [
       { name: 'Binance', color: '#F0B90B', bg: 'rgba(240,185,11,0.1)', border: 'rgba(240,185,11,0.3)' },
       { name: 'Bybit', color: '#F7A600', bg: 'rgba(247,166,0,0.1)', border: 'rgba(247,166,0,0.3)' },
@@ -706,9 +706,9 @@ const TESTIMONIALS = [
 ]
 
 const WHY = [
-  { num: '01', title: 'Resultados en tiempo récord', desc: 'Metodología práctica diseñada para que en 90 días tengas el conocimiento y las herramientas para invertir con confianza. Sin rellenos, directo al punto.' },
-  { num: '02', title: 'Acompañamiento personalizado', desc: 'Tendrás acceso directo a Oscar en todo momento. Preguntas respondidas en menos de 2 horas, garantizado.' },
-  { num: '03', title: 'Tecnología exclusiva', desc: 'Acceso al Liquidity Engine, nuestra plataforma DeFi propia para gestionar pools de liquidez con Coberturas automáticos. Una herramienta que no encontrarás en ningún otro lugar.' },
+  { num: '01', title: 'Resultados medibles, no promesas', desc: 'Metodología práctica diseñada para que en aproximadamente 90 días adquieras el conocimiento y las herramientas necesarias para operar con confianza y criterio profesional. Todo depende de ti.' },
+  { num: '02', title: 'Acceso directo, sin intermediarios', desc: 'Mentoría personalizada con acompañamiento real, soporte cercano y respuestas rápidas para acelerar tu evolución como trader.' },
+  { num: '03', title: 'Ventaja tecnológica exclusiva', desc: 'Utiliza Liquidity Engine, nuestra tecnología propia para generar ingresos pasivos utilizando proveendo liquidez a un mercado descentralizado. Allí también puedes automatizar coberturas y proteger tu capital. (Finanzas descentralizadas)' },
 ]
 
 function InfoModal({ program, onClose }) {
@@ -927,7 +927,7 @@ export default function Home() {
         <div className="hero-content">
           <div className="hero-badge">
             <div className="hero-badge-dot" />
-            Bienvenido aFormación de Trading Profesional · Colombia
+            DEJA DE IMPROVISAR, EMPIEZA A OPERAR
           </div>
           <h1 className="hero-title">
             Domina <span>Crypto</span>, Futuros<br />
@@ -982,9 +982,7 @@ export default function Home() {
               acompañamiento cercano y herramientas tecnológicas propias como el Liquidity Engine para operaciones descentralizadas.
             </p>
             <div className="about-highlights">
-              {[
-                'Exchanges, Prop Firms, brokers y estructuras de inversión privadas.',
-                'Estrategias avanzadas de Liquidity Mining DEX and CEX.',
+              {[                
                 'Desarrollador del Liquidity Engine — herramienta de monitoreo y cobertura de capital DeFi propia. 🤖'
               ].map((h, i) => (
                 <div key={i} className="about-hl">
@@ -1013,8 +1011,7 @@ export default function Home() {
             <div className="section-label">Nuestros Programas</div>
             <h2 className="section-title">La solución correcta<br /><span>para tu nivel</span></h2>
             <p className="section-desc">
-              Desde principiantes hasta traders avanzados. Cada programa está diseñado
-              para llevarte al siguiente nivel con metodología práctica y resultados reales.
+              No importa si estás comenzando o ya tienes experiencia: aquí desarrollas una operativa profesional con procesos claros y resultados sostenibles.
             </p>
           </div>
           <div className="services-grid">

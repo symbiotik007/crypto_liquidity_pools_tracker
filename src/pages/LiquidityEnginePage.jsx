@@ -161,8 +161,8 @@ const FEATURES = [
   {
     icon:'📊',
     name:'Pool Tracker en Tiempo Real',
-    desc:'Visualiza todas tus posiciones de liquidez en Uniswap V3 con métricas precisas: fees acumulados, estado del rango, impermanent loss actual y ROI por posición.',
-    tags:['Uniswap V3','Tiempo real','Métricas DeFi','Multi-pool'],
+    desc:'Visualiza todas tus posiciones de liquidez en Uniswap con métricas precisas: fees acumulados, estado del rango, impermanent loss actual y ROI por posición.',
+    tags:['Uniswap','Tiempo real','Métricas DeFi','Multi-pool'],
   },
   {
     icon:'🛡',
@@ -196,7 +196,7 @@ const STEPS = [
   {
     num:'01',
     title:'Conecta tus wallets y APIs',
-    desc:'Agrega tus wallets de Ethereum para rastrear pools en Uniswap V3 y conecta las APIs de tus exchanges para activar el módulo de coberturas.',
+    desc:'Agrega tus wallets de Ethereum para rastrear pools en Uniswap y conecta las APIs de tus exchanges para activar el módulo de coberturas.',
   },
   {
     num:'02',
@@ -219,7 +219,7 @@ const ACCESS_ITEMS = [
   'Actualizaciones continuas de la plataforma',
 ]
 
-const TICKER_ITEMS = ['Liquidity Engine','·','Uniswap V3','·','DeFi Hedging','·','Real-time Pools','·','The Crypto House','·']
+const TICKER_ITEMS = ['Liquidity Engine','·','Uniswap','·','DeFi Hedging','·','Real-time Pools','·','The Crypto House','·']
 
 export default function LiquidityEnginePage() {
   const [dropOpen, setDropOpen] = useState(false)
@@ -292,8 +292,8 @@ export default function LiquidityEnginePage() {
             <span>Liquidity</span><br />Engine
           </h1>
           <p className="le-sub">
-            La herramienta que ningún broker te va a dar.<br />
-            Gestiona tus posiciones DeFi en Uniswap V3 con cobertura automática en tiempo real.
+            La herramienta que ningún crypto exchange te va a dar.<br />
+            Gestiona tus posiciones DeFi en Uniswap con cobertura automática en tiempo real.
           </p>
           <div className="le-btns">
             <a className="btn-glare" href="/#app">
@@ -303,7 +303,7 @@ export default function LiquidityEnginePage() {
             <button className="btn-secondary" onClick={wa}>Saber más</button>
           </div>
           <div className="le-stats">
-            {[['5','exchanges integrados'],['V3','Uniswap compatible'],['24/7','monitoreo activo'],['API','ejecución directa']].map(([v,l],i) => (
+            {[['5','exchanges integrados'],['Uniswap compatible'],['24/7','monitoreo activo'],['API','ejecución directa']].map(([v,l],i) => (
               <div key={i}>
                 <div className="le-stat-val"><span>{v}</span></div>
                 <div className="le-stat-lab">{l}</div>
@@ -326,7 +326,7 @@ export default function LiquidityEnginePage() {
           <div className="center">
             <div className="section-label center">Funcionalidades</div>
             <h2 className="section-title">Todo lo que necesitas para<br /><span>operar en DeFi</span></h2>
-            <p className="section-desc">Cuatro módulos diseñados para simplificar, proteger y optimizar tus operaciones en Uniswap V3.</p>
+            <p className="section-desc">Cuatro módulos diseñados para simplificar, proteger y optimizar tus operaciones en Uniswap.</p>
           </div>
           <div className="features-grid">
             {FEATURES.map((f, i) => (
@@ -363,7 +363,7 @@ export default function LiquidityEnginePage() {
           <div style={{ textAlign:'center', marginTop:36 }}>
             <div style={{ display:'inline-flex', alignItems:'center', gap:12, padding:'12px 24px', border:'1px solid rgba(0,229,255,0.15)', background:'rgba(0,229,255,0.04)', fontSize:14, color:'var(--muted)' }}>
               <span style={{ color:'var(--cyan)', fontWeight:700 }}>+</span>
-              Uniswap V3 — Protocolo DeFi principal
+              Uniswap — Protocolo DeFi principal
             </div>
           </div>
         </div>

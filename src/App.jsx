@@ -3720,8 +3720,8 @@ function TradingViewOperableTab() {
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginTop:48, width:"100%" }}>
           {[
             { icon:"🔐", title:"Login seguro",      desc:"Inicia sesión con tu cuenta TradingView directamente",        color:"#7b61ff" },
-            { icon:"📊", title:"Charts completos",   desc:"Todos tus indicadores, alertas y configuraciones guardadas",   color:"#00e5ff" },
-            { icon:"⚡", title:"Operaciones reales", desc:"Ejecuta trades con tu broker conectado a TradingView",        color:"#00ff88" },
+            { icon:"📊", title:"Gráficos completos",   desc:"Todos tus indicadores, alertas y configuraciones guardadas",   color:"#00e5ff" },
+            { icon:"⚡", title:"Operaciones reales", desc:"Ejecuta operaciones con tu broker/exchange conectado a TradingView",        color:"#00ff88" },
           ].map((c,i) => (
             <div key={i} style={{ background:"rgba(7,13,20,0.8)", border:`1px solid ${c.color}1a`, borderRadius:10, padding:"20px 16px", backdropFilter:"blur(4px)", position:"relative", overflow:"hidden" }}>
               <div style={{ position:"absolute", top:0, left:0, right:0, height:2, background:`linear-gradient(90deg, transparent, ${c.color}66, transparent)` }} />
@@ -4121,7 +4121,7 @@ const CRYPTO_BOOTCAMP = [
         },
         {
           titulo:"Las criptomonedas están descentralizadas",
-          texto:"A diferencia de las monedas tradicionales (conocidas como monedas \"fiat\"), como el dólar estadounidense, las criptomonedas no están conectadas a ningún gobierno ni banco central.\n\nEl dólar estadounidense es emitido y controlado por la Reserva Federal (\"Fed\"), el euro por el Banco Central Europeo (BCE), y el yen japonés por el Banco de Japón (BOJ). Las criptomonedas no tienen este tipo de control central. Esta característica definitoria se conoce como descentralización.\n\nSi ningún banco central o gobierno emite criptomonedas, ¿entonces quién las crea? Las unidades se generan según reglas predeterminadas escritas en código, ejecutadas por software.",
+          texto:"A diferencia de las monedas tradicionales (conocidas como monedas \"fiat\"), como el dólar estadounidense, las criptomonedas no están conectadas a ningún gobierno ni banco central.\n\nEl dólar estadounidense es emitido y controlado por la Reserva Federal (\"Fed\"), el euro por el Banco Central Europeo (BCE), y el yen japonés por el Banco de Japón (BOJ). Las criptomonedas no tienen este tipo de control central. Esta característica definitoria se conoce como descentralización.\n\nSi ningún banco central o gobierno emite criptomonedas, ¿entonces quién las crea? Las unidades se generan según reglas predeterminadas escritas en código, ejecutadas por software. Obviamente software que un humano creó.",
           imagen:{ src:"/bootcamp/mod1-lec1/bitcoin-decentralized-currency.png", alt:"Bitcoin como moneda descentralizada" },
         },
         {
@@ -5176,7 +5176,7 @@ function ContactModal({ onClose }) {
               <img src={cryptoHouseLogo} alt="The Crypto House" style={{ width:32, height:32, objectFit:"contain" }} />
               <div>
                 <div style={{ fontSize:11,fontWeight:700,color:"#7ab8d4",letterSpacing:2,textTransform:"uppercase" }}>The Crypto House</div>
-                <div style={{ fontSize:10,color:"#2a5a72",letterSpacing:1,textTransform:"uppercase" }}>Liquidity Engine · Soporte</div>
+                <div style={{ fontSize:10,color:"#2a5a72",letterSpacing:1,textTransform:"uppercase" }}>Soporte</div>
               </div>
             </div>
             <div style={{ fontSize:20,fontWeight:700,color:"#c8e6f0",marginTop:12 }}>Contáctanos</div>
