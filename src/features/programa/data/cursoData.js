@@ -1,0 +1,217 @@
+export const CURSO = [
+  {
+    id: 1,
+    titulo: "Módulo 1 — Mentalidad del Especulador",
+    color: "#00e5ff",
+    lecciones: [
+      {
+        id: "1-1",
+        titulo: "¿Qué es especular y en qué se diferencia de invertir?",
+        duracion: "18 min",
+        descripcion: "Definimos con precisión qué significa especular: tomar posiciones calculadas sobre movimientos de precio en el corto y mediano plazo. Vemos la diferencia fundamental con la inversión pasiva y por qué el especulador debe tener un edge claro antes de operar.",
+        puntosClave: [
+          "El especulador trabaja con probabilidades, no con certezas",
+          "La diferencia entre especular e invertir está en el horizonte temporal y el análisis",
+          "Sin ventaja (edge) definida, no hay especulación — hay juego",
+        ],
+        ejercicio: "Escribe en tu diario de trading qué ventaja concreta posees hoy. Si no puedes describirla en 2 oraciones, aún no tienes un edge.",
+      },
+      {
+        id: "1-2",
+        titulo: "El perfil psicológico del especulador exitoso",
+        duracion: "22 min",
+        descripcion: "El mercado no te paga por tener razón — te paga por gestionar bien el riesgo. Estudiamos las características mentales que separan a los especuladores consistentes de los que quiebran su cuenta en los primeros 6 meses.",
+        puntosClave: [
+          "Disciplina sobre las reglas propias, incluso cuando el mercado tienta a romperlas",
+          "Desapego emocional del resultado de cada operación individual",
+          "Pensar en series de operaciones, no en cada trade como si fuera el último",
+        ],
+        ejercicio: "Identifica tu mayor sesgo emocional al operar (miedo, soberbia, FOMO). Diseña una regla de proceso que lo contrarreste.",
+      },
+      {
+        id: "1-3",
+        titulo: "Los errores más comunes y cómo blindarse contra ellos",
+        duracion: "20 min",
+        descripcion: "Catalogamos los errores que destruyen cuentas de forma recurrente: el sobretrading, mover el stop, promediar perdedoras y operar sin plan. Cada uno tiene una causa raíz y una solución de proceso.",
+        puntosClave: [
+          "El sobretrading es el mayor asesino silencioso de capital",
+          "Mover el stop de pérdida equivale a operar sin plan",
+          "Promediar en perdedoras es aceptable solo si estaba en el plan original",
+        ],
+        ejercicio: "Revisa tus últimas 20 operaciones. Clasifica cada pérdida: ¿fue error de análisis, error de gestión o error psicológico?",
+      },
+    ],
+  },
+  {
+    id: 2,
+    titulo: "Módulo 2 — Lectura Profesional del Mercado",
+    color: "#00ff88",
+    lecciones: [
+      {
+        id: "2-1",
+        titulo: "Estructura del mercado: tendencia, rango y transición",
+        duracion: "26 min",
+        descripcion: "El precio no se mueve de forma aleatoria — sigue estructuras. Aprendemos a identificar si el mercado está en tendencia, en rango o en fase de transición, y qué estrategia aplica a cada contexto. Operar la estrategia correcta en el contexto equivocado es la causa principal de pérdidas.",
+        puntosClave: [
+          "En tendencia: busca retrocesos para unirte al movimiento dominante",
+          "En rango: vende resistencia, compra soporte — con stops ajustados",
+          "En transición: reduce el tamaño o espera confirmación antes de entrar",
+        ],
+        ejercicio: "Analiza el gráfico diario de BTC, ETH y SOL. Clasifica cada uno: ¿tendencia, rango o transición? Justifica con estructura de máximos y mínimos.",
+      },
+      {
+        id: "2-2",
+        titulo: "Zonas de oferta y demanda de alta probabilidad",
+        duracion: "24 min",
+        descripcion: "Las zonas de oferta y demanda son las huellas que dejan los grandes operadores. Aprendemos a identificarlas en el gráfico, a validar su relevancia y a construir operaciones alrededor de ellas con una lógica de riesgo/beneficio asimétrica.",
+        puntosClave: [
+          "Una zona de demanda válida es la base de un movimiento alcista fuerte previo",
+          "Cuantas menos veces ha sido tocada la zona, más potente es",
+          "Siempre entra en la zona con stop por debajo/encima de ella — nunca antes",
+        ],
+        ejercicio: "Marca en el gráfico de 4H de BTC las 3 zonas de demanda más relevantes. Establece un precio de entrada, stop y objetivo para cada una.",
+      },
+      {
+        id: "2-3",
+        titulo: "El volumen como confirmador de intención del precio",
+        duracion: "19 min",
+        descripcion: "El volumen es la huella real del dinero institucional. Un movimiento de precio sin volumen es sospechoso. Volumen alto en zonas clave confirma la intención. Aprendemos a leer el delta de volumen y las velas de absorción.",
+        puntosClave: [
+          "Volumen creciente en tendencia = tendencia sana y continúa",
+          "Volumen decreciente en rango = acumulación o distribución silenciosa",
+          "Velas de alta volatilidad y volumen bajo = mercado manipulado — cuidado",
+        ],
+        ejercicio: "Compara 5 breakouts recientes en tus activos favoritos. ¿Cuántos tuvieron volumen por encima del promedio de 20 sesiones? ¿Qué pasó después?",
+      },
+    ],
+  },
+  {
+    id: 3,
+    titulo: "Módulo 3 — Estrategias de Entrada y Salida",
+    color: "#c9a227",
+    lecciones: [
+      {
+        id: "3-1",
+        titulo: "Señales de entrada de alta probabilidad",
+        duracion: "28 min",
+        descripcion: "No todas las setups valen lo mismo. Definimos una taxonomía de señales según su probabilidad y su ratio riesgo/beneficio esperado. Solo operamos cuando confluyen al menos tres factores: estructura, zona y señal de precio.",
+        puntosClave: [
+          "La confluencia de factores multiplica la probabilidad de éxito",
+          "Una señal sin contexto de estructura es ruido — no la operes",
+          "Paciencia: esperar el setup correcto es tan importante como ejecutarlo bien",
+        ],
+        ejercicio: "Define tu setup de entrada ideal en 5 condiciones concretas. Ponlo por escrito. Solo operarás cuando las 5 se cumplan simultáneamente.",
+      },
+      {
+        id: "3-2",
+        titulo: "Gestión del stop loss y take profit como proceso",
+        duracion: "21 min",
+        descripcion: "El stop no es opcional — es la definición de cuándo estás equivocado. Aprendemos a colocarlo en lugares lógicos (detrás de estructura) y a gestionar el take profit de forma dinámica según el comportamiento del precio.",
+        puntosClave: [
+          "El stop va donde el análisis queda invalidado — no donde duela menos",
+          "Mueve el stop a breakeven solo cuando el precio ya alcanzó el 1:1",
+          "Nunca muevas el stop en contra de tu posición — es la regla cardinal",
+        ],
+        ejercicio: "Retrocede en tu historial: ¿cuántas veces moviste el stop alejándolo? Calcula el impacto en tu P&L acumulado.",
+      },
+      {
+        id: "3-3",
+        titulo: "Tipos de órdenes y cuándo usar cada una",
+        duracion: "16 min",
+        descripcion: "Market, limit, stop-limit, trailing stop — cada orden tiene un propósito. Usarlas mal destruye el edge que cuesta tanto construir. Vemos en qué contexto usa cada una un especulador profesional.",
+        puntosClave: [
+          "Las órdenes limit preservan el precio de entrada — úsalas en zonas claras",
+          "Las órdenes market en breakouts reales — cuando la velocidad importa más que el precio",
+          "El trailing stop es tu mejor aliado en tendencias extendidas",
+        ],
+        ejercicio: "En tu próxima operación, documenta antes de entrar: ¿qué tipo de orden usaré en entrada, stop y salida? ¿Por qué?",
+      },
+    ],
+  },
+  {
+    id: 4,
+    titulo: "Módulo 4 — Gestión del Riesgo y el Capital",
+    color: "#ff4f6e",
+    lecciones: [
+      {
+        id: "4-1",
+        titulo: "Las reglas de oro del money management",
+        duracion: "23 min",
+        descripcion: "El money management no es un tema aburrido — es lo que determina si sobrevives el tiempo suficiente para que tu edge funcione. Vemos las reglas fundamentales que todo especulador debe cumplir sin excepción.",
+        puntosClave: [
+          "Nunca arriesgues más del 1-2% de tu capital en una sola operación",
+          "Define el máximo de pérdida diaria y semanal antes de abrir el gráfico",
+          "Después de 3 pérdidas consecutivas, para. El mercado no va a ningún lado.",
+        ],
+        ejercicio: "Calcula tu riesgo máximo por operación en euros/dólares con tu capital actual. Escríbelo. Nunca lo cambies en caliente.",
+      },
+      {
+        id: "4-2",
+        titulo: "El ratio riesgo/beneficio como filtro de operaciones",
+        duracion: "18 min",
+        descripcion: "Un sistema con 40% de aciertos puede ser muy rentable si el ratio R/B es 1:3. La matemática de la especulación no funciona como la intuición. Entendemos cómo el ratio R/B determina la rentabilidad a largo plazo.",
+        puntosClave: [
+          "Mínimo 1:2 de R/B para que el sistema sea viable con una tasa de aciertos normal",
+          "No entres en operaciones con R/B menor a 1:1.5 — el esfuerzo no vale la recompensa",
+          "La consistencia supera a la búsqueda del trade perfecto",
+        ],
+        ejercicio: "Calcula el ratio R/B promedio de tus últimas 30 operaciones. ¿Estás por encima de 1:2? Si no, ¿qué debes cambiar?",
+      },
+      {
+        id: "4-3",
+        titulo: "Dimensionamiento de posiciones: la fórmula exacta",
+        duracion: "20 min",
+        descripcion: "El tamaño de la posición no es algo que se decide a ojo. Existe una fórmula precisa que integra tu capital, tu riesgo porcentual, la distancia al stop y el precio del activo. La aplicamos con ejemplos reales en crypto.",
+        puntosClave: [
+          "Tamaño = (Capital × % Riesgo) ÷ Distancia al Stop en precio",
+          "Nunca aumentes el tamaño para recuperar pérdidas previas",
+          "En crypto volátil, reduce el tamaño estándar un 30% adicional",
+        ],
+        ejercicio: "Con tu capital actual y tu distancia de stop promedio en BTC, calcula el tamaño correcto de tu próxima posición usando la fórmula.",
+      },
+    ],
+  },
+  {
+    id: 5,
+    titulo: "Módulo 5 — Especulación Práctica en Criptomonedas",
+    color: "#a855f7",
+    lecciones: [
+      {
+        id: "5-1",
+        titulo: "El mercado cripto: particularidades y ventajas del especulador",
+        duracion: "25 min",
+        descripcion: "El mercado cripto tiene características únicas: opera 24/7, es más volátil, tiene menor liquidez en altcoins y está más influenciado por narrativas y sentimiento. Estas diferencias crean oportunidades específicas para el especulador preparado.",
+        puntosClave: [
+          "La volatilidad alta es una ventaja — si gestionas bien el riesgo",
+          "Bitcoin marca el ritmo: cuando BTC cae, las altcoins caen más. Cuando sube, las altcoins pueden superar a BTC",
+          "El sentimiento de mercado (Fear & Greed) es un input, no una señal directa",
+        ],
+        ejercicio: "Observa el mercado durante una semana completa. Documenta cómo se comportan ETH, SOL y las altcoins principales en relación a BTC en cada movimiento relevante.",
+      },
+      {
+        id: "5-2",
+        titulo: "Pools de liquidez como herramienta del especulador avanzado",
+        duracion: "30 min",
+        descripcion: "Los pools de liquidez en Uniswap V3 y protocolos similares no son solo para proveer liquidez pasiva — el especulador puede usarlos activamente para generar yield sobre posiciones direccionales. Integramos este conocimiento con las herramientas del Liquidity Engine.",
+        puntosClave: [
+          "Los pools concentrados en V3 permiten expresar una visión de precio con un rango específico",
+          "El impermanent loss es gestionable si el rango se establece con análisis técnico",
+          "Combinar fees de pool + especulación direccional puede mejorar el ratio R/B total",
+        ],
+        ejercicio: "Usando el Liquidity Engine de esta plataforma, abre un pool simulado en el rango que tu análisis técnico indique como zona de valor. Monitorea por 7 días.",
+      },
+      {
+        id: "5-3",
+        titulo: "Tu plan de trading personalizado: el documento que te hace profesional",
+        duracion: "27 min",
+        descripcion: "El plan de trading es el contrato que firmas contigo mismo. Define tu estrategia, tus reglas de entrada y salida, tu gestión del riesgo, tus horarios de operación y tu proceso de revisión. Sin este documento, estás improvisando.",
+        puntosClave: [
+          "El plan de trading elimina las decisiones emocionales en tiempo real",
+          "Debe ser lo suficientemente específico para que otra persona pueda seguirlo",
+          "Revísalo y actualízalo cada mes con base en los resultados reales",
+        ],
+        ejercicio: "Redacta hoy la primera versión de tu plan de trading. Mínimo: activos, timeframe, setup de entrada, reglas de stop, reglas de take profit y límites de riesgo diario.",
+      },
+    ],
+  },
+];

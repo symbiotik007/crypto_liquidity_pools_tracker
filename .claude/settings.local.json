@@ -33,7 +33,11 @@
       "Read(//tmp/**)",
       "Bash(grep -v '^[[:space:]]*$')",
       "Bash(cp C:/Users/ASUS/Desktop/scrape_output/www.babypips.com/crypto/learn/cryptocurrencies-new-asset-class/images/Screenshot_2.png C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod1-lec2/one-legged-deer.png)",
-      "Bash(cp 'C:/Users/ASUS/Desktop/scrape_output/www.babypips.com/crypto/learn/cryptocurrencies-new-asset-class/images/ChatGPT Image Apr 27, 2026, 10_05_51 PM.png' C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod1-lec2/asset-classes.png)"
+      "Bash(cp 'C:/Users/ASUS/Desktop/scrape_output/www.babypips.com/crypto/learn/cryptocurrencies-new-asset-class/images/ChatGPT Image Apr 27, 2026, 10_05_51 PM.png' C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod1-lec2/asset-classes.png)",
+      "Bash(git checkout *)",
+      "Bash(npm install *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }
