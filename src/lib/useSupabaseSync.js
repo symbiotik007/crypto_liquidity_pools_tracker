@@ -5,6 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from './supabase'
+import { fetchPools, insertPool, deletePool } from '../features/pools/services/poolsService'
 
 // Helper global — inserta notificación para cualquier usuario
 export async function insertarNotificacion(userId, tipo, titulo, mensaje) {
@@ -24,49 +25,11 @@ export function usePoolsSync(userId) {
     if (!userId) { setLoading(false); return }
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('pools')
-        .select('*')
-        .eq('user_id', userId)
-        .order('imported_at', { ascending: false })
-
-      if (error) throw error
-
-      // Convert Supabase rows to app format
-      const mapped = (data || []).map(row => ({
-        tokenId:      row.token_id,
-        chainName:    row.chain_name,
-        chainId:      row.chain_id,
-        poolAddress:  row.pool_address,
-        dex:          row.dex,
-        token0Symbol: row.token0_symbol,
-        token1Symbol: row.token1_symbol,
-        token0Address:row.token0_address,
-        token1Address:row.token1_address,
-        priceLower:   parseFloat(row.price_lower  || 0),
-        priceUpper:   parseFloat(row.price_upper  || 0),
-        tickLower:    row.tick_lower,
-        tickUpper:    row.tick_upper,
-        priceAtCreation:  parseFloat(row.price_at_creation  || 0),
-        valueAtCreation:  parseFloat(row.value_at_creation  || 0),
-        walletAddress:    row.wallet_address,
-        importedAt:       new Date(row.imported_at).getTime(),
-        createdAtTimestamp: new Date(row.created_at).getTime(),
-        // Runtime fields (not in DB, will be refreshed by Revert)
-        valueUsd:  0,
-        currentPrice: 0,
-        amount0:   "0",
-        amount1:   "0",
-        status:    { label:"Cargando...", color:"#4a7a96", bg:"#0a1520", border:"#1a3a5e" },
-        _dbId:     row.id,  // keep DB id for updates/deletes
-      }))
-
+      const mapped = await fetchPools(userId)
       setPools(mapped)
-      // Also sync to localStorage as cache
       localStorage.setItem('liquidity_engine_pools', JSON.stringify(mapped))
     } catch (e) {
       setError(e.message)
-      // Fallback to localStorage cache
       try {
         const cached = JSON.parse(localStorage.getItem('liquidity_engine_pools') || '[]')
         setPools(cached)
@@ -80,40 +43,7 @@ export function usePoolsSync(userId) {
   // ── Add pool ─────────────────────────────────────────────────────
   const addPool = useCallback(async (pool) => {
     if (!userId) return
-
-    const row = {
-      user_id:          userId,
-      token_id:         pool.tokenId,
-      chain_name:       pool.chainName,
-      chain_id:         pool.chainId,
-      pool_address:     pool.poolAddress,
-      dex:              pool.dex || 'uniswap_v3',
-      token0_symbol:    pool.token0Symbol,
-      token1_symbol:    pool.token1Symbol,
-      token0_address:   pool.token0Address,
-      token1_address:   pool.token1Address,
-      price_lower:      pool.priceLower,
-      price_upper:      pool.priceUpper,
-      tick_lower:       pool.tickLower,
-      tick_upper:       pool.tickUpper,
-      price_at_creation: pool.priceAtCreation || pool.currentPrice,
-      value_at_creation: pool.valueAtCreation || pool.valueUsd,
-      wallet_address:   pool.walletAddress || pool.og_owner,
-    }
-
-    const { data, error } = await supabase
-      .from('pools')
-      .insert(row)
-      .select()
-      .single()
-
-    if (error) {
-      if (error.code === '23505') throw new Error('Este pool ya está importado')
-      if (error.code === 'P0001') throw new Error(error.message) // plan limit trigger
-      throw error
-    }
-
-    const newPool = { ...pool, _dbId: data.id }
+    const newPool = await insertPool(pool, userId)
     setPools(prev => {
       const updated = [...prev, newPool]
       localStorage.setItem('liquidity_engine_pools', JSON.stringify(updated))
@@ -126,9 +56,8 @@ export function usePoolsSync(userId) {
   const removePool = useCallback(async (tokenId) => {
     const pool = pools.find(p => String(p.tokenId) === String(tokenId))
     if (userId && pool?._dbId) {
-      await supabase.from('pools').delete().eq('id', pool._dbId)
+      await deletePool(pool._dbId)
     }
-
     setPools(prev => {
       const updated = prev.filter(p => String(p.tokenId) !== String(tokenId))
       localStorage.setItem('liquidity_engine_pools', JSON.stringify(updated))
