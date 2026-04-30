@@ -4,6 +4,7 @@
 // Las private keys NUNCA van a Supabase — solo a localStorage
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from './supabase'
 import { fetchPools, insertPool, deletePool } from '../features/pools/services/poolsService'
 
@@ -13,98 +14,85 @@ export async function insertarNotificacion(userId, tipo, titulo, mensaje) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// POOLS SYNC
+// POOLS SYNC  (React Query — shared cache across all consumers)
 // ════════════════════════════════════════════════════════════════════
 export function usePoolsSync(userId) {
-  const [pools, setPools]     = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
+  const queryClient = useQueryClient()
+  const qKey = ['pools', userId]
 
-  // ── Load pools from Supabase on mount ───────────────────────────
-  const loadPools = useCallback(async () => {
-    if (!userId) { setLoading(false); return }
-    setLoading(true)
-    try {
+  const { data: pools = [], isPending: loading, error: qError } = useQuery({
+    queryKey: qKey,
+    queryFn: async () => {
       const mapped = await fetchPools(userId)
-      setPools(mapped)
       localStorage.setItem('liquidity_engine_pools', JSON.stringify(mapped))
-    } catch (e) {
-      setError(e.message)
-      try {
-        const cached = JSON.parse(localStorage.getItem('liquidity_engine_pools') || '[]')
-        setPools(cached)
-      } catch {}
-    }
-    setLoading(false)
-  }, [userId])
+      return mapped
+    },
+    enabled: !!userId,
+    initialData: () => {
+      try { return JSON.parse(localStorage.getItem('liquidity_engine_pools') || '[]') } catch { return [] }
+    },
+    initialDataUpdatedAt: 0,
+  })
 
-  useEffect(() => { loadPools() }, [loadPools])
+  const { mutateAsync: addPool } = useMutation({
+    mutationFn: (pool) => insertPool(pool, userId),
+    onSuccess: (newPool) => {
+      queryClient.setQueryData(qKey, prev => {
+        const updated = [...(prev || []), newPool]
+        localStorage.setItem('liquidity_engine_pools', JSON.stringify(updated))
+        return updated
+      })
+    },
+  })
 
-  // ── Add pool ─────────────────────────────────────────────────────
-  const addPool = useCallback(async (pool) => {
-    if (!userId) return
-    const newPool = await insertPool(pool, userId)
-    setPools(prev => {
-      const updated = [...prev, newPool]
-      localStorage.setItem('liquidity_engine_pools', JSON.stringify(updated))
-      return updated
-    })
-    return newPool
-  }, [userId])
+  const { mutateAsync: removePool } = useMutation({
+    mutationFn: async (tokenId) => {
+      const pool = (queryClient.getQueryData(qKey) || []).find(p => String(p.tokenId) === String(tokenId))
+      if (userId && pool?._dbId) await deletePool(pool._dbId)
+      return tokenId
+    },
+    onSuccess: (tokenId) => {
+      queryClient.setQueryData(qKey, prev => {
+        const updated = (prev || []).filter(p => String(p.tokenId) !== String(tokenId))
+        localStorage.setItem('liquidity_engine_pools', JSON.stringify(updated))
+        return updated
+      })
+    },
+  })
 
-  // ── Remove pool ──────────────────────────────────────────────────
-  const removePool = useCallback(async (tokenId) => {
-    const pool = pools.find(p => String(p.tokenId) === String(tokenId))
-    if (userId && pool?._dbId) {
-      await deletePool(pool._dbId)
-    }
-    setPools(prev => {
-      const updated = prev.filter(p => String(p.tokenId) !== String(tokenId))
-      localStorage.setItem('liquidity_engine_pools', JSON.stringify(updated))
-      return updated
-    })
-  }, [userId, pools])
+  const setPools = useCallback((newPools) => {
+    const updated = typeof newPools === 'function' ? newPools(queryClient.getQueryData(qKey) || []) : newPools
+    queryClient.setQueryData(qKey, updated)
+    localStorage.setItem('liquidity_engine_pools', JSON.stringify(updated))
+  }, [queryClient, qKey])
 
-  // ── Update pool runtime data (Revert enrichment) ─────────────────
   const updatePoolRuntime = useCallback((tokenId, runtimeData) => {
-    setPools(prev => {
-      const updated = prev.map(p =>
-        p.tokenId === tokenId ? { ...p, ...runtimeData } : p
-      )
-      localStorage.setItem('liquidity_engine_pools', JSON.stringify(updated))
-      return updated
-    })
-  }, [])
+    queryClient.setQueryData(qKey, prev =>
+      (prev || []).map(p => p.tokenId === tokenId ? { ...p, ...runtimeData } : p)
+    )
+  }, [queryClient, qKey])
 
-  return { pools, setPools, loading, error, addPool, removePool, updatePoolRuntime, reload: loadPools }
+  const reload = () => queryClient.invalidateQueries({ queryKey: qKey })
+
+  return { pools, setPools, loading, error: qError?.message || null, addPool, removePool, updatePoolRuntime, reload }
 }
 
 // ════════════════════════════════════════════════════════════════════
-// WALLETS SYNC
+// WALLETS SYNC  (React Query — shared cache across all consumers)
 // Private keys NUNCA van a Supabase — solo dirección y metadata
-// La private key se guarda en localStorage con clave por wallet_id
 // ════════════════════════════════════════════════════════════════════
 export function useWalletsSync(userId) {
-  const [wallets, setWallets] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
+  const queryClient = useQueryClient()
+  const qKey = ['wallets', userId]
 
-  // localStorage como cache local (para acceso offline por otros componentes)
-  const syncToLocalStorage = (wList) => {
-    localStorage.setItem('hl_wallets', JSON.stringify(wList))
-  }
-
-  // ── Load wallets from Supabase ───────────────────────────────────
-  const loadWallets = useCallback(async () => {
-    if (!userId) { setLoading(false); return }
-    setLoading(true)
-    try {
+  const { data: wallets = [], isPending: loading, error: qError } = useQuery({
+    queryKey: qKey,
+    queryFn: async () => {
       const { data, error } = await supabase
         .from('wallets')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
-
       if (error) throw error
 
       const mapped = (data || []).map(row => ({
@@ -118,9 +106,9 @@ export function useWalletsSync(userId) {
         privateKey:   row.private_key || localStorage.getItem(`hl_pk_${row.id}`) || '',
       }))
 
-      setWallets(mapped)
-      syncToLocalStorage(mapped)
-      // Migrar private keys de localStorage a Supabase si existen
+      localStorage.setItem('hl_wallets', JSON.stringify(mapped))
+
+      // Migrate private keys from localStorage → Supabase
       for (const row of (data || [])) {
         const localPk = localStorage.getItem(`hl_pk_${row.id}`)
         if (localPk && !row.private_key) {
@@ -128,74 +116,73 @@ export function useWalletsSync(userId) {
           localStorage.removeItem(`hl_pk_${row.id}`)
         }
       }
-    } catch (e) {
-      setError(e.message)
-      try {
-        const cached = JSON.parse(localStorage.getItem('hl_wallets') || '[]')
-        setWallets(cached)
-      } catch {}
-    }
-    setLoading(false)
-  }, [userId])
 
-  useEffect(() => { loadWallets() }, [loadWallets])
+      return mapped
+    },
+    enabled: !!userId,
+    initialData: () => {
+      try { return JSON.parse(localStorage.getItem('hl_wallets') || '[]') } catch { return [] }
+    },
+    initialDataUpdatedAt: 0,
+  })
 
-  // ── Add wallet ───────────────────────────────────────────────────
-  const addWallet = useCallback(async ({ label, address, agentAddress, purpose, privateKey, exchange }) => {
-    if (!userId) return
-
-    const { data, error } = await supabase
-      .from('wallets')
-      .insert({
-        user_id:       userId,
-        label,
-        address,
-        agent_address: agentAddress || null,
-        private_key:   privateKey   || null,
-        purpose:       purpose      || 'proteccion',
-        exchange:      exchange     || 'hyperliquid',
+  const { mutateAsync: addWallet } = useMutation({
+    mutationFn: async ({ label, address, agentAddress, purpose, privateKey, exchange }) => {
+      const { data, error } = await supabase
+        .from('wallets')
+        .insert({
+          user_id:       userId,
+          label,
+          address,
+          agent_address: agentAddress || null,
+          private_key:   privateKey   || null,
+          purpose:       purpose      || 'proteccion',
+          exchange:      exchange     || 'hyperliquid',
+        })
+        .select()
+        .single()
+      if (error) {
+        if (error.code === '23505') throw new Error('Esta wallet ya está registrada')
+        throw error
+      }
+      return {
+        id:           data.id,
+        label:        data.label,
+        address:      data.address,
+        agentAddress: data.agent_address,
+        purpose:      data.purpose,
+        exchange:     data.exchange || 'hyperliquid',
+        createdAt:    new Date(data.created_at).getTime(),
+        privateKey:   data.private_key || '',
+      }
+    },
+    onSuccess: (newWallet) => {
+      queryClient.setQueryData(qKey, prev => {
+        const updated = [newWallet, ...(prev || [])]
+        localStorage.setItem('hl_wallets', JSON.stringify(updated))
+        return updated
       })
-      .select()
-      .single()
+    },
+  })
 
-    if (error) {
-      if (error.code === '23505') throw new Error('Esta wallet ya está registrada')
-      throw error
-    }
+  const { mutateAsync: removeWallet } = useMutation({
+    mutationFn: async (id) => {
+      await supabase.from('wallets').delete().eq('id', id)
+      localStorage.removeItem(`hl_pk_${id}`)
+      return id
+    },
+    onSuccess: (id) => {
+      queryClient.setQueryData(qKey, prev => {
+        const updated = (prev || []).filter(w => w.id !== id)
+        localStorage.setItem('hl_wallets', JSON.stringify(updated))
+        return updated
+      })
+    },
+  })
 
-    const newWallet = {
-      id:           data.id,
-      label:        data.label,
-      address:      data.address,
-      agentAddress: data.agent_address,
-      purpose:      data.purpose,
-      exchange:     data.exchange || 'hyperliquid',
-      createdAt:    new Date(data.created_at).getTime(),
-      privateKey:   data.private_key || '',
-    }
+  const reload = () => queryClient.invalidateQueries({ queryKey: qKey })
 
-    setWallets(prev => {
-      const updated = [newWallet, ...prev]
-      syncToLocalStorage(updated)
-      return updated
-    })
-
-    return newWallet
-  }, [userId])
-
-  // ── Remove wallet ────────────────────────────────────────────────
-  const removeWallet = useCallback(async (id) => {
-    if (!userId) return
-    await supabase.from('wallets').delete().eq('id', id)
-    localStorage.removeItem(`hl_pk_${id}`)
-    setWallets(prev => {
-      const updated = prev.filter(w => w.id !== id)
-      syncToLocalStorage(updated)
-      return updated
-    })
-  }, [userId])
-
-  return { wallets, loading, error, addWallet, removeWallet, reload: loadWallets }
+  return { wallets, loading, error: qError?.message || null, addWallet, removeWallet, reload }
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -481,27 +468,28 @@ export function useUsersAdmin(isAdmin) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// NOTIFICACIONES
+// NOTIFICACIONES  (React Query + Supabase realtime)
 // ════════════════════════════════════════════════════════════════════
 export function useNotificaciones(userId) {
-  const [notifs,  setNotifs]  = useState([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
+  const qKey = ['notifs', userId]
 
-  const load = useCallback(async () => {
-    if (!userId) { setLoading(false); return }
-    const { data } = await supabase
-      .from('notificaciones')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(50)
-    setNotifs(data || [])
-    setLoading(false)
-  }, [userId])
+  const { data: notifs = [], isPending: loading } = useQuery({
+    queryKey: qKey,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('notificaciones')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50)
+      return data || []
+    },
+    enabled: !!userId,
+    staleTime: 60_000,
+  })
 
-  useEffect(() => { load() }, [load])
-
-  // Realtime — escucha nuevas notificaciones en tiempo real
+  // Realtime — push new notif into cache without refetch
   useEffect(() => {
     if (!userId) return
     const channel = supabase
@@ -511,26 +499,27 @@ export function useNotificaciones(userId) {
         table: 'notificaciones',
         filter: `user_id=eq.${userId}`,
       }, payload => {
-        setNotifs(prev => [payload.new, ...prev])
+        queryClient.setQueryData(qKey, prev => [payload.new, ...(prev || [])])
       })
       .subscribe()
     return () => supabase.removeChannel(channel)
-  }, [userId])
+  }, [userId, queryClient])
 
   const marcarLeida = useCallback(async (id) => {
     await supabase.from('notificaciones').update({ leida: true }).eq('id', id)
-    setNotifs(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n))
-  }, [])
+    queryClient.setQueryData(qKey, prev => (prev || []).map(n => n.id === id ? { ...n, leida: true } : n))
+  }, [userId, queryClient])
 
   const marcarTodasLeidas = useCallback(async () => {
     if (!userId) return
     await supabase.from('notificaciones').update({ leida: true }).eq('user_id', userId).eq('leida', false)
-    setNotifs(prev => prev.map(n => ({ ...n, leida: true })))
-  }, [userId])
+    queryClient.setQueryData(qKey, prev => (prev || []).map(n => ({ ...n, leida: true })))
+  }, [userId, queryClient])
 
   const noLeidas = notifs.filter(n => !n.leida).length
+  const reload = () => queryClient.invalidateQueries({ queryKey: qKey })
 
-  return { notifs, loading, noLeidas, marcarLeida, marcarTodasLeidas, reload: load }
+  return { notifs, loading, noLeidas, marcarLeida, marcarTodasLeidas, reload }
 }
 
 // ════════════════════════════════════════════════════════════════════
