@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { CHAINS } from "../services/chainConfig";
+import "./ScanModal.css";
 import { formatPrice } from "../../../lib/rpcCodec";
 import { scanWalletOnChain } from "../services/uniswapV3Service";
 

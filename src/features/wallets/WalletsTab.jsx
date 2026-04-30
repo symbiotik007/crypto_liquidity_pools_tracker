@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../lib/AuthContext";
+import "./WalletsTab.css";
 import { useWalletsSync } from "../../lib/useSupabaseSync";
 import { hlGetPositions, hlGetAllMids } from "./services/hlService";
 import { WALLET_TYPES, EXCHANGES } from "./constants";

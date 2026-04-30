@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../lib/AuthContext";
+import "./PoolCard.css";
 import { calcPoolStats } from "../utils/calcPoolStats";
 import { OOR_COOLDOWN_MS, sendOorAlert } from "../services/oorService";
 import TradingModal from "./TradingModal";
