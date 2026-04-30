@@ -1,5 +1,6 @@
 // src/pages/ProgramasPage.jsx
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import cryptoHouseLogo from '../assets/cryptohouselogo.png'
 import CryptoPriceBar from '../components/CryptoPriceBar'
 
@@ -245,6 +246,7 @@ function ModuleAccordion({ mod }) {
 const TICKER_ITEMS = ['Bootcamp Crypto','·','Express Trading','·','DeFi & Liquidity Pools','·','Uniswap V3','·','Futuros Cripto','·','Formación Profesional','·']
 
 export default function ProgramasPage() {
+  const navigate = useNavigate()
   const [active, setActive]     = useState('bootcamp')
   const [dropOpen, setDropOpen] = useState(false)
   const dropTimer = useRef(null)
@@ -255,7 +257,7 @@ export default function ProgramasPage() {
 
   const goHome = (sectionId) => {
     if (sectionId) sessionStorage.setItem('pendingScroll', sectionId)
-    window.location.hash = ''
+    navigate('/')
   }
 
   const wa = (program) => {
@@ -282,7 +284,7 @@ export default function ProgramasPage() {
               <button
                 className={`nav-dropdown-btn${dropOpen ? ' open' : ''}`}
                 style={{ color:'var(--cyan)' }}
-                onClick={() => { window.location.hash = '#programas' }}
+                onClick={() => { navigate('/programas') }}
               >Formación ▾</button>
               {dropOpen && (
                 <div className="nav-dropdown-menu">
@@ -296,12 +298,12 @@ export default function ProgramasPage() {
                 </div>
               )}
             </div>
-            <button className="nav-link" onClick={() => { window.location.hash = '#liquidity-engine' }}>Liquidity Engine</button>
+            <button className="nav-link" onClick={() => { navigate('/liquidity-engine') }}>Liquidity Engine</button>
             <button className="nav-link" onClick={() => goHome('faq')}>FAQ</button>
             <button className="nav-link" onClick={() => goHome('contacto')}>Contacto</button>
           </div>
           <div className="nav-sep" />
-          <a className="nav-app" href="/#app">Acceder al Ecosistema</a>
+          <a className="nav-app" href="/app">Acceder al Ecosistema</a>
         </nav>
       </div>
 
@@ -489,7 +491,7 @@ export default function ProgramasPage() {
               <div className="footer-links">
                 <button className="footer-link" onClick={() => setActive('bootcamp')}>Bootcamp Crypto</button>
                 <button className="footer-link" onClick={() => setActive('express')}>Express Trading</button>
-                <button className="footer-link" onClick={() => { window.location.hash = '#liquidity-engine' }}>Liquidity Engine</button>
+                <button className="footer-link" onClick={() => { navigate('/liquidity-engine') }}>Liquidity Engine</button>
               </div>
             </div>
             <div>

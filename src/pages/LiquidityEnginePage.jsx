@@ -1,5 +1,6 @@
 // src/pages/LiquidityEnginePage.jsx
 import { useEffect, useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import cryptoHouseLogo from '../assets/cryptohouselogo.png'
 import CryptoPriceBar from '../components/CryptoPriceBar'
 
@@ -222,6 +223,7 @@ const ACCESS_ITEMS = [
 const TICKER_ITEMS = ['Liquidity Engine','·','Uniswap','·','DeFi Hedging','·','Real-time Pools','·','The Crypto House','·']
 
 export default function LiquidityEnginePage() {
+  const navigate = useNavigate()
   const [dropOpen, setDropOpen] = useState(false)
   const dropTimer = useRef(null)
   const openDrop  = () => { clearTimeout(dropTimer.current); setDropOpen(true) }
@@ -231,7 +233,7 @@ export default function LiquidityEnginePage() {
 
   const goHome = (sectionId) => {
     if (sectionId) sessionStorage.setItem('pendingScroll', sectionId)
-    window.location.hash = ''
+    navigate('/')
   }
 
   const wa = () => {
@@ -257,15 +259,15 @@ export default function LiquidityEnginePage() {
             <div className="nav-dropdown" onMouseEnter={openDrop} onMouseLeave={closeDrop}>
               <button
                 className={`nav-dropdown-btn${dropOpen ? ' open' : ''}`}
-                onClick={() => { window.location.hash = '#programas' }}
+                onClick={() => { navigate('/programas') }}
               >Formación ▾</button>
               {dropOpen && (
                 <div className="nav-dropdown-menu">
-                  <button className="nav-dropdown-item" onClick={() => { window.location.hash = '#programas' }}>
+                  <button className="nav-dropdown-item" onClick={() => { navigate('/programas') }}>
                     <span>₿</span> Bootcamp Crypto
                   </button>
                   <div className="nav-dropdown-sep" />
-                  <button className="nav-dropdown-item" onClick={() => { window.location.hash = '#programas' }}>
+                  <button className="nav-dropdown-item" onClick={() => { navigate('/programas') }}>
                     <span>📊</span> Express Trading
                   </button>
                 </div>
@@ -276,7 +278,7 @@ export default function LiquidityEnginePage() {
             <button className="nav-link" onClick={() => goHome('contacto')}>Contacto</button>
           </div>
           <div className="nav-sep" />
-          <a className="nav-app" href="/#app">Acceder al Ecosistema</a>
+          <a className="nav-app" href="/app">Acceder al Ecosistema</a>
         </nav>
       </div>
 
@@ -296,7 +298,7 @@ export default function LiquidityEnginePage() {
             Gestiona tus posiciones DeFi en Uniswap con cobertura automática en tiempo real.
           </p>
           <div className="le-btns">
-            <a className="btn-glare" href="/#app">
+            <a className="btn-glare" href="/app">
               <span className="btn-glare-shine" />
               Acceder al Ecosistema →
             </a>
@@ -407,11 +409,11 @@ export default function LiquidityEnginePage() {
               ))}
             </div>
             <div style={{ display:'flex', gap:14, justifyContent:'center', flexWrap:'wrap', position:'relative', zIndex:1 }}>
-              <a className="btn-glare" href="/#app">
+              <a className="btn-glare" href="/app">
                 <span className="btn-glare-shine" />
                 Acceder al Ecosistema →
               </a>
-              <button className="btn-secondary" onClick={() => { window.location.hash = '#programas' }}>
+              <button className="btn-secondary" onClick={() => { navigate('/programas') }}>
                 Ver Bootcamp Crypto
               </button>
             </div>
@@ -438,8 +440,8 @@ export default function LiquidityEnginePage() {
             <div>
               <div className="footer-col-title">Programas</div>
               <div className="footer-links">
-                <button className="footer-link" onClick={() => { window.location.hash = '#programas' }}>Bootcamp Crypto</button>
-                <button className="footer-link" onClick={() => { window.location.hash = '#programas' }}>Express Trading</button>
+                <button className="footer-link" onClick={() => { navigate('/programas') }}>Bootcamp Crypto</button>
+                <button className="footer-link" onClick={() => { navigate('/programas') }}>Express Trading</button>
                 <button className="footer-link" style={{ color:'var(--cyan)' }}>Liquidity Engine</button>
               </div>
             </div>

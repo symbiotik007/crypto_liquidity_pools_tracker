@@ -1,5 +1,6 @@
 // src/pages/Home.jsx
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import oscarImg from '../assets/OscarB1.jpg'
 import cryptoHouseLogo from '../assets/cryptohouselogo.png'
 import CryptoPriceBar from '../components/CryptoPriceBar'
@@ -827,6 +828,7 @@ function FAQItem({ q, a }) {
 }
 
 export default function Home() {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({ name: '', email: '', msg: '' })
   const [sent, setSent] = useState(false)
   const [infoProgram, setInfoProgram] = useState(null)
@@ -887,28 +889,28 @@ export default function Home() {
             <div className="nav-dropdown" onMouseEnter={openDrop} onMouseLeave={closeDrop}>
               <button
                 className={`nav-dropdown-btn${dropOpen ? ' open' : ''}`}
-                onClick={() => { window.location.hash = '#programas' }}
+                onClick={() => { navigate('/programas') }}
               >
                 Formación ▾
               </button>
               {dropOpen && (
                 <div className="nav-dropdown-menu">
-                  <button className="nav-dropdown-item" onClick={() => { window.location.hash = '#programas' }}>
+                  <button className="nav-dropdown-item" onClick={() => { navigate('/programas') }}>
                     <span>₿</span> Bootcamp Crypto
                   </button>
                   <div className="nav-dropdown-sep" />
-                  <button className="nav-dropdown-item" onClick={() => { window.location.hash = '#programas' }}>
+                  <button className="nav-dropdown-item" onClick={() => { navigate('/programas') }}>
                     <span>📊</span> Express Trading
                   </button>
                 </div>
               )}
             </div>
-            <a className="nav-link" onClick={e => { e.preventDefault(); window.location.hash = '#liquidity-engine' }} href="#">Liquidity Engine</a>
+            <a className="nav-link" onClick={e => { e.preventDefault(); navigate('/liquidity-engine') }} href="#">Liquidity Engine</a>
             <a className="nav-link" onClick={e => goTo(e, 'faq')} href="#">FAQ</a>
             <a className="nav-link" onClick={e => goTo(e, 'contacto')} href="#">Contacto</a>
           </div>
           <div className="nav-sep" />
-          <a className="nav-app" href="/#app">Acceder al Ecosistema</a>
+          <a className="nav-app" href="/app">Acceder al Ecosistema</a>
         </nav>
       </div>
 
@@ -1044,8 +1046,8 @@ export default function Home() {
                   </div>
                 )}
                 <button className="service-btn" onClick={() => {
-                  if (i === 2) window.location.hash = '#liquidity-engine'
-                  else window.location.hash = '#programas'
+                  if (i === 2) navigate('/liquidity-engine')
+                  else navigate('/programas')
                 }}>
                   {i === 2 ? 'Explorar Liquidity Engine →' : 'Ver programa completo →'}
                 </button>
@@ -1246,7 +1248,7 @@ export default function Home() {
             <div>
               <div className="footer-col-title">Herramientas</div>
               <div className="footer-links">
-                <a className="footer-link" href="/#app">Liquidity Engine App</a>
+                <a className="footer-link" href="/app">Liquidity Engine App</a>
                 <a className="footer-link" href="https://app.hyperliquid.xyz" target="_blank" rel="noreferrer">Hyperliquid</a>
                 <a className="footer-link" href="https://app.uniswap.org" target="_blank" rel="noreferrer">Uniswap</a>
               </div>
