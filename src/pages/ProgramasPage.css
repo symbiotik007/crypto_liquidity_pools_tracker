@@ -1,0 +1,71 @@
+/* ── PAGE HERO ── */
+.page-hero { padding: 140px 60px 80px; text-align: center; background: var(--dark); position: relative; overflow: hidden; }
+.page-hero::before { content: ''; position: absolute; top: -40%; left: 50%; transform: translateX(-50%); width: 700px; height: 700px; border-radius: 50%; background: radial-gradient(circle, rgba(0,229,255,0.06) 0%, transparent 65%); pointer-events: none; }
+.page-hero-grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 60px 60px; opacity: 0.3; pointer-events: none; }
+.page-hero-content { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; }
+.page-hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border: 1px solid rgba(0,229,255,0.3); background: rgba(0,229,255,0.05); margin-bottom: 24px; font-size: 12px; color: var(--cyan); letter-spacing: 1.5px; text-transform: uppercase; }
+.page-hero-title { font-size: clamp(36px, 5vw, 60px); font-weight: 900; line-height: 1.05; color: #fff; letter-spacing: -1px; margin-bottom: 16px; }
+.page-hero-title span { color: var(--cyan); }
+.page-hero-sub { font-size: 17px; color: var(--muted); line-height: 1.7; margin-bottom: 40px; }
+
+/* ── PROGRAM SWITCHER ── */
+.prog-switcher { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.prog-pill { padding: 10px 28px; border-radius: 999px; font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; letter-spacing: 0.3px; border: 1px solid rgba(0,229,255,0.2); text-decoration: none; }
+.prog-pill.active { background: var(--cyan); color: var(--dark); border-color: var(--cyan); box-shadow: 0 0 24px rgba(0,229,255,0.3); }
+.prog-pill.inactive { background: transparent; color: rgba(200,230,240,0.6); }
+.prog-pill.inactive:hover { background: rgba(0,229,255,0.08); color: #c8e6f0; border-color: rgba(0,229,255,0.35); }
+
+/* ── SECTIONS ── */
+.prog-section { padding: 100px 60px; }
+.prog-section.alt { background: var(--dark2); }
+.prog-inner { max-width: 1140px; margin: 0 auto; }
+.prog-header { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; margin-bottom: 72px; }
+.prog-badge { display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border: 1px solid rgba(0,229,255,0.25); background: rgba(0,229,255,0.06); font-size: 11px; color: var(--cyan); font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 18px; }
+.prog-title { font-size: clamp(30px, 4vw, 46px); font-weight: 900; color: #fff; line-height: 1.1; margin-bottom: 10px; letter-spacing: -0.5px; }
+.prog-title span { color: var(--cyan); }
+.prog-subtitle { font-size: 15px; color: var(--cyan); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 18px; }
+.prog-desc { font-size: 15px; color: var(--muted); line-height: 1.8; margin-bottom: 24px; }
+.prog-stats { display: flex; gap: 28px; flex-wrap: wrap; }
+.prog-stat { text-align: center; }
+.prog-stat-val { font-size: 28px; font-weight: 900; color: #fff; }
+.prog-stat-val span { color: var(--cyan); }
+.prog-stat-lab { font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+
+/* ── MODULES ── */
+.modules-title { font-size: 11px; font-weight: 700; color: var(--cyan); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; }
+.modules-title::before { content: ''; width: 20px; height: 1px; background: var(--cyan); }
+.module-item { border: 1px solid var(--border); background: var(--dark3); margin-bottom: 8px; }
+.module-header { display: flex; align-items: center; gap: 16px; padding: 18px 22px; cursor: pointer; width: 100%; background: none; border: none; text-align: left; font-family: 'Outfit', sans-serif; transition: background 0.15s; }
+.module-header:hover { background: rgba(0,229,255,0.03); }
+.module-num { width: 36px; height: 36px; min-width: 36px; background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: var(--cyan); }
+.module-info { flex: 1; min-width: 0; }
+.module-name { font-size: 15px; font-weight: 700; color: #e0f4ff; }
+.module-meta { font-size: 12px; color: var(--dimmed); margin-top: 2px; }
+.module-chevron { color: var(--dimmed); font-size: 18px; transition: transform 0.15s; margin-left: auto; flex-shrink: 0; }
+.module-chevron.open { transform: rotate(90deg); color: var(--cyan); }
+.module-body { padding: 0 22px 18px 74px; }
+.module-lessons { display: flex; flex-direction: column; gap: 8px; }
+.module-lesson { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--muted); line-height: 1.5; }
+.module-lesson::before { content: ''; width: 5px; height: 5px; min-width: 5px; background: var(--cyan); border-radius: 50%; margin-top: 7px; }
+
+/* ── INCLUDES ── */
+.includes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.include-item { display: flex; align-items: center; gap: 12px; padding: 14px 18px; background: var(--dark3); border: 1px solid var(--border); font-size: 14px; color: var(--text); }
+.include-check { width: 22px; height: 22px; min-width: 22px; background: rgba(0,255,136,0.12); border: 1px solid rgba(0,255,136,0.3); display: flex; align-items: center; justify-content: center; font-size: 11px; color: #00ff88; font-weight: 900; flex-shrink: 0; }
+
+/* ── CTA CARD ── */
+.prog-cta-card { background: linear-gradient(135deg, #0c1e2e, #071830 55%, #0a0f1e); border: 1px solid rgba(0,229,255,0.25); padding: 48px 40px; position: relative; overflow: hidden; margin-top: 52px; }
+.prog-cta-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--cyan), #7b61ff, transparent); }
+.prog-cta-title { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 12px; }
+.prog-cta-sub { font-size: 15px; color: var(--muted); margin-bottom: 28px; line-height: 1.7; }
+.prog-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .page-hero { padding: 120px 20px 60px; }
+  .prog-section { padding: 70px 20px; }
+  .prog-header { grid-template-columns: 1fr; gap: 40px; }
+  .includes-grid { grid-template-columns: 1fr; }
+  .prog-cta-card { padding: 32px 24px; }
+  .module-body { padding: 0 16px 16px 16px; }
+}
