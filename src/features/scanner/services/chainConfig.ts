@@ -1,8 +1,6 @@
-// Configuración de cadenas soportadas para el scanner on-chain de Uniswap V3.
-// Añadir una cadena aquí la hace disponible en el dropdown de escaneo sin
-// tocar ningún componente.
+import type { ChainConfig, Chain } from '../../../types'
 
-export const CHAINS_CONFIG = {
+export const CHAINS_CONFIG: Record<string, ChainConfig> = {
   ethereum: {
     label:      "Ethereum",
     chainId:    1,
@@ -31,18 +29,17 @@ export const CHAINS_CONFIG = {
     nftManager: "0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1",
     factory:    "0x33128a8fC17869897dcE68Ed026d694621f6FDfD",
   },
-};
+}
 
-// Lista plana para dropdowns/selects — [{id, label}]
-export const CHAINS = Object.entries(CHAINS_CONFIG).map(([id, c]) => ({ id, label: c.label }));
+export const CHAINS: Chain[] = Object.entries(CHAINS_CONFIG).map(([id, c]) => ({ id, label: c.label }))
 
 // ABI selectors — keccak256 de la firma de función (4 bytes)
-export const SEL = {
-  balanceOf:           "0x70a08231", // balanceOf(address)
-  tokenOfOwnerByIndex: "0x2f745c59", // tokenOfOwnerByIndex(address,uint256)
-  positions:           "0x99fbab88", // positions(uint256)
-  getPool:             "0x1698ee82", // getPool(address,address,uint24)
-  slot0:               "0x3850c7bd", // slot0()
-  decimals:            "0x313ce567", // decimals()
-  symbol:              "0x95d89b41", // symbol()
-};
+export const SEL: Record<string, string> = {
+  balanceOf:           "0x70a08231",
+  tokenOfOwnerByIndex: "0x2f745c59",
+  positions:           "0x99fbab88",
+  getPool:             "0x1698ee82",
+  slot0:               "0x3850c7bd",
+  decimals:            "0x313ce567",
+  symbol:              "0x95d89b41",
+}
