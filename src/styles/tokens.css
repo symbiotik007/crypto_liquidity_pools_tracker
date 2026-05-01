@@ -1,0 +1,95 @@
+/* ─────────────────────────────────────────────────────────
+   Design Tokens — CryptoPoolsEngine
+   Fuente de verdad para colores, tipografía, espaciado y
+   animaciones. Todos los valores hardcodeados del proyecto
+   viven aquí. Consumir via var(--nombre) en CSS/módulos.
+   ───────────────────────────────────────────────────────── */
+
+:root {
+
+  /* ── Accent / Brand ─────────────────────────────────── */
+  --color-accent:        #00e5ff;   /* cyan principal, Fee APR, badges */
+  --color-success:       #00ff88;   /* positivo, en rango, PNL verde   */
+  --color-danger:        #ff4f6e;   /* negativo, fuera (abajo), PNL    */
+  --color-warning:       #ffb347;   /* fuera (arriba), rangos altos    */
+
+  /* ── Purple (Ethereum / InactivityOverlay) ──────────── */
+  --color-purple:        #8b5cf6;
+  --color-purple-dark:   #7c3aed;
+  --color-purple-deeper: #6d28d9;
+  --color-purple-light:  #a78bfa;
+  --color-purple-pale:   #c4b5fd;
+  --color-purple-faint:  #9061f9;
+
+  /* ── Chain brand colors ─────────────────────────────── */
+  --color-chain-ethereum: #627eea;
+  --color-chain-arbitrum: #28a0f0;
+  --color-chain-optimism: #ff0420;
+  --color-chain-base:     #0052ff;
+
+  /* ── Backgrounds (más oscuro → más elevado) ─────────── */
+  --bg-base:             #050a0f;   /* fondo raíz de la app            */
+  --bg-overlay:          rgba(4, 2, 16, 0.90); /* InactivityOverlay  */
+  --bg-surface:          #070d14;   /* cards, paneles, sidebar         */
+  --bg-elevated:         #060b16;   /* métricas dentro de cards        */
+  --bg-deep:             #0b0f1e;   /* gradiente inicio GlareCard      */
+  --bg-card-mid:         #0e1525;   /* gradiente medio GlareCard       */
+  --bg-card-end:         #090d1a;   /* gradiente final GlareCard       */
+  --bg-badge:            #0d1f35;   /* fondo de badges/chips           */
+  --bg-input:            #0a1a24;   /* fondo de inputs                 */
+  --bg-tag:              #0d0a1a;   /* fondo tags purple (HL)          */
+
+  /* ── Borders ────────────────────────────────────────── */
+  --border-accent:       rgba(0, 229, 255, 0.15); /* cyan sutil       */
+  --border-dim:          #0d1f35;   /* divisores principales           */
+  --border-muted:        #0e2435;   /* divisores alternativos          */
+  --border-inactive:     #1a2a44;   /* bordes en reposo                */
+  --border-blue:         #1a3a5e;   /* azul-grisáceo                   */
+  --border-blue-dim:     #1a3a4e;   /* más suave                       */
+  --border-purple:       #3730a3;   /* panel InactivityOverlay         */
+  --border-purple-dim:   rgba(55, 48, 163, 0.33);
+  --border-tag-purple:   #7a40cc;   /* tag leverage Hyperliquid        */
+
+  /* ── Texto ──────────────────────────────────────────── */
+  --text-primary:        #f0f6ff;   /* texto principal, par de pool    */
+  --text-secondary:      #c8e6f0;   /* valores de stats                */
+  --text-muted:          #c8d8e8;   /* pares en HedgeTracker           */
+  --text-dim:            #4a8ab0;   /* badges, fee tier                */
+  --text-faint:          #2e5070;   /* labels de métricas              */
+  --text-label:          #2a5a72;   /* labels uppercase pequeños       */
+  --text-blue-soft:      #a0c8ff;   /* Edad, métricas secundarias      */
+  --text-purple-soft:    #c8a0ff;   /* tags leverage HL                */
+  --text-range-min:      #ff6b88;   /* precio mínimo rango             */
+  --text-inactivity:     #6b5fa0;   /* botón reconnect (off)           */
+
+  /* ── Tipografía ─────────────────────────────────────── */
+  --font-family:         'Outfit', sans-serif;
+  --font-size-xs:        9px;
+  --font-size-sm:        10px;
+  --font-size-base:      12px;
+  --font-size-md:        13px;
+  --font-size-lg:        14px;
+  --font-size-xl:        15px;
+  --font-size-2xl:       20px;
+
+  /* ── Radios ─────────────────────────────────────────── */
+  --radius-sm:           4px;
+  --radius-md:           8px;
+  --radius-lg:           12px;
+  --radius-card:         16px;
+  --radius-pill:         999px;
+
+  /* ── Sombras ────────────────────────────────────────── */
+  --shadow-card:         0 12px 32px rgba(0,0,0,0.4);
+  --shadow-card-active:  0 30px 70px rgba(0,0,0,0.55);
+  --shadow-overlay:      0 40px 100px rgba(0,0,0,0.65);
+
+  /* ── Timing (también disponibles como JS exports) ───── */
+  --duration-transition: 200ms;
+  --duration-glare:      30s;   /* ticker scroll CryptoPriceBar       */
+}
+
+/* ── Constantes JS — importar desde tokens.js, no desde aquí ──────
+   INACTIVITY_MS   = 600_000    (10 minutos)
+   ALERT_COOLDOWN_MS = 1_800_000 (30 minutos)
+   ─────────────────────────────────────────────────────────────── */

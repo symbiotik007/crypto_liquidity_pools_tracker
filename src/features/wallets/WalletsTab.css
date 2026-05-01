@@ -1,0 +1,24 @@
+.info-box { background: #060c12; border: 1px solid #0e2435; padding: 14px 18px; margin-bottom: 20px; font-size: 13px; color: #4a7a96; line-height: 1.6; }
+.info-box strong { color: #7ab8d4; }
+.wallets-section { background: #070d14; border: 1px solid #0e2435; padding: 18px 20px; margin-bottom: 20px; }
+.wallets-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.wallets-section-title { font-size: 15px; font-weight: 600; color: #7ab8d4; }
+
+/* ADD WALLET MODAL */
+.wallet-modal { background: #0a1520; border: 1px solid #1a3a5e; width: 100%; max-width: 440px; margin: 20px; }
+.form-hint { font-size: 11px; color: #2a4a5e; display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border: 1px solid #2a4a5e; border-radius: 50%; cursor: help; margin-left: 6px; }
+.form-sub { font-size: 11px; color: #2a4a5e; margin-top: 5px; line-height: 1.5; }
+.form-sub a { color: #00b4d8; text-decoration: none; }
+.wallet-types { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.wallet-type { background: #060c12; border: 1px solid #1a3a5e; padding: 10px 8px; cursor: pointer; text-align: center; transition: all 0.15s; }
+.wallet-type:hover { border-color: #2a5a7e; }
+.wallet-type.selected { border-color: #c9a227; background: #1a1200; }
+.wallet-type.disabled { opacity: 0.35; cursor: not-allowed; }
+.wallet-type-icon { font-size: 18px; margin-bottom: 4px; }
+.wallet-type-name { font-size: 12px; font-weight: 600; color: #c8d8e8; margin-bottom: 2px; }
+.wallet-type-sub { font-size: 10px; color: #4a7a96; }
+.wallet-type.selected .wallet-type-name { color: #c9a227; }
+
+@media (max-width: 768px) {
+  .wallet-types { grid-template-columns: repeat(2, 1fr); }
+}

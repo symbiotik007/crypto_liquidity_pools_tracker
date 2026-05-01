@@ -1,13 +1,8 @@
-// src/Root.jsx
-import { useEffect, useState, Component } from 'react'
-import { useAuth } from './lib/AuthContext'
-import Login              from './pages/Login'
-import AuthCallback       from './pages/AuthCallback'
-import Home               from './pages/Home'
-import ProgramasPage      from './pages/ProgramasPage'
-import LiquidityEnginePage from './pages/LiquidityEnginePage'
-import App                from './App'
+import { Component } from 'react'
+import { useAuth }   from '../lib/AuthContext'
+import Login         from '../pages/Login'
 
+// ── Error boundary ─────────────────────────────────────────────────
 class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { error: null }; }
   static getDerivedStateFromError(e) { return { error: e }; }
@@ -37,20 +32,13 @@ class ErrorBoundary extends Component {
   }
 }
 
+// ── Membresía pausada ──────────────────────────────────────────────
 function PausedScreen({ signOut }) {
   return (
-    <div style={{
-      minHeight:'100vh', background:'#050a0f', display:'flex',
-      alignItems:'center', justifyContent:'center', padding:24,
-      fontFamily:"'Outfit', sans-serif",
-    }}>
+    <div style={{ minHeight:'100vh', background:'#050a0f', display:'flex', alignItems:'center', justifyContent:'center', padding:24, fontFamily:"'Outfit', sans-serif" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap');`}</style>
       <div style={{ maxWidth:480, width:'100%', textAlign:'center' }}>
-
-        {/* Icono */}
         <div style={{ fontSize:56, marginBottom:24 }}>⏸</div>
-
-        {/* Título */}
         <div style={{ fontSize:11, fontWeight:700, color:'#ffb347', letterSpacing:3, textTransform:'uppercase', marginBottom:12 }}>
           Membresía pausada
         </div>
@@ -61,8 +49,6 @@ function PausedScreen({ signOut }) {
           Para reactivar tu acceso comunícate con Oscar,
           quien te hará la respectiva validación y te habilitará nuevamente.
         </p>
-
-        {/* Contactos */}
         <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:36 }}>
           <a href="https://wa.me/573215646716" target="_blank" rel="noreferrer"
             style={{ display:'flex', alignItems:'center', gap:14, padding:'16px 20px', background:'#070d14', border:'1px solid #1a3a5e', textDecoration:'none', transition:'border-color 0.15s' }}
@@ -89,7 +75,6 @@ function PausedScreen({ signOut }) {
             <span style={{ marginLeft:'auto', color:'#00e5ff' }}>→</span>
           </a>
         </div>
-
         <button onClick={signOut}
           style={{ background:'none', border:'none', color:'#2a5a72', fontSize:13, cursor:'pointer', fontFamily:'Outfit,sans-serif', textDecoration:'underline' }}>
           Cerrar sesión
@@ -99,51 +84,26 @@ function PausedScreen({ signOut }) {
   )
 }
 
-export default function Root() {
-  const { session, loading, isPaused, signOut } = useAuth()
-  const [, forceUpdate] = useState(0)
-
-  const path    = window.location.pathname
-  const hash    = window.location.hash
-  const isAppRoute       = path === '/app' || hash === '#app'
-  const isProgramasRoute = hash === '#programas'
-  const isLERoute        = hash === '#liquidity-engine'
-
-  useEffect(() => {
-    const handler = () => forceUpdate(n => n + 1)
-    window.addEventListener('hashchange', handler)
-    return () => window.removeEventListener('hashchange', handler)
-  }, [])
-
-  useEffect(() => {
-    if (!isAppRoute) window.scrollTo(0, 0)
-  }, [isAppRoute])
-
-  if (loading) {
-    return (
-      <div style={{
-        display:'flex', alignItems:'center', justifyContent:'center',
-        height:'100vh', background:'#050a0f', color:'#00e5ff',
-        fontFamily:'Outfit, sans-serif',
-      }}>
-        <div style={{ textAlign:'center' }}>
-          <div style={{ fontSize:48, marginBottom:16 }}>◈</div>
-          <div style={{ fontSize:14, color:'#4a7a96', letterSpacing:2 }}>LIQUIDITY ENGINE</div>
-        </div>
+// ── Spinner de carga inicial ───────────────────────────────────────
+function LoadingScreen() {
+  return (
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:'#050a0f', color:'#00e5ff', fontFamily:'Outfit, sans-serif' }}>
+      <div style={{ textAlign:'center' }}>
+        <div style={{ fontSize:48, marginBottom:16 }}>◈</div>
+        <div style={{ fontSize:14, color:'#4a7a96', letterSpacing:2 }}>LIQUIDITY ENGINE</div>
       </div>
-    )
-  }
+    </div>
+  )
+}
 
-  if (path === '/auth/callback') return <AuthCallback />
+// ── Guardia de autenticación ───────────────────────────────────────
+// Envuelve rutas protegidas: bloquea si no hay sesión, pausa o errores.
+export default function RequireAuth({ children }) {
+  const { session, loading, isPaused, signOut } = useAuth()
 
-  if (isAppRoute) {
-    if (!session) return <Login />
-    if (isPaused)  return <PausedScreen signOut={signOut} />
-    return <ErrorBoundary><App /></ErrorBoundary>
-  }
+  if (loading)   return <LoadingScreen />
+  if (!session)  return <Login />
+  if (isPaused)  return <PausedScreen signOut={signOut} />
 
-  if (isProgramasRoute) return <ProgramasPage />
-  if (isLERoute)        return <LiquidityEnginePage />
-
-  return <Home />
+  return <ErrorBoundary>{children}</ErrorBoundary>
 }
