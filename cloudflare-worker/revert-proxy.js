@@ -7,6 +7,8 @@ const ROUTES = {
   '/okx-api':         'https://www.okx.com',
   '/bingx-api':       'https://open-api.bingx.com',
   '/coinbase-api':    'https://api.coinbase.com',
+  '/bitget-api':      'https://api.bitget.com',
+  '/kucoin-api':      'https://api.kucoin.com',
   '/dydx-api':        'https://indexer.dydx.trade',
   '/gmx-api':         'https://gmx-server-mainnet.uw.r.appspot.com',
   '/dexscreener-api': 'https://api.dexscreener.com',

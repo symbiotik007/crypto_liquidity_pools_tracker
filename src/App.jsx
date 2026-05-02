@@ -19,6 +19,7 @@ import TradingViewOperableTab from "./components/TradingViewOperableTab";
 import ComingSoonTab          from "./components/ComingSoonTab";
 import ContactModal           from "./components/ContactModal";
 import NotificationBell       from "./components/NotificationBell";
+import ThemeToggle            from "./components/ThemeToggle";
 import "./styles/app.css";
 import "./styles/themes/futurista.css";
 import "./styles/themes/light.css";
@@ -161,58 +162,44 @@ export default function App() {
               const locked = !isPaid && PAID_TABS.includes(l);
               const isActive = activeSection === l;
               return (
-                <div key={l}
+                <button key={l}
                   className={`nav-item ${isActive ? 'active' : ''}`}
                   onClick={() => { setActiveSection(l); closeSidebar(); }}
                   style={locked ? { opacity:0.5 } : {}}
                 >
                   {l}
                   {locked && <span style={{ marginLeft:"auto", fontSize:11, color:"#2a5a72" }}>🔒</span>}
-                </div>
+                </button>
               );
             })}
           </div>
           <div className="nav-section">
             <div className="nav-label">Herramientas</div>
-            <div
+            <button
               className={`nav-item ${isLiquiditySection ? 'active' : ''}`}
               onClick={() => { setActiveSection("liquidity"); closeSidebar(); }}
             >
               Liquidity Engine <span className="badge">BETA</span>
-            </div>
-            <div
+            </button>
+            <button
               className={`nav-item ${activeSection === "TradingView" ? 'active' : ''}`}
               onClick={() => { setActiveSection("TradingView"); closeSidebar(); }}
             >
               📈 TradingView
-            </div>
-            <div
+            </button>
+            <button
               className={`nav-item ${activeSection === "TradingViewOperable" ? 'active' : ''}`}
               onClick={() => { setActiveSection("TradingViewOperable"); closeSidebar(); }}
             >
               🖥️ TV Operable
-            </div>
+            </button>
           </div>
           <div className="nav-section">
             <div className="nav-label">Contacto</div>
-            <div className="nav-item" style={{cursor:"pointer"}} onClick={() => { setContactOpen(true); closeSidebar(); }}>
+            <button className="nav-item" onClick={() => { setContactOpen(true); closeSidebar(); }}>
               💬 WhatsApp / Email
-            </div>
+            </button>
           </div>
-          {isAdmin && (
-            <div className="nav-section">
-              <div className="nav-label" style={{ color:"#00e5ff44" }}>Admin</div>
-              {NAV_ITEMS_ADMIN.map(l => (
-                <div key={l}
-                  className={`nav-item ${activeSection === l ? "active" : ""}`}
-                  onClick={() => { setActiveSection(l); closeSidebar(); }}
-                  style={{ color: activeSection===l ? "#00e5ff" : "#4a7a96" }}
-                >
-                  ⚙ {l}
-                </div>
-              ))}
-            </div>
-          )}
 
           <div className="sidebar-spacer" />
 
@@ -263,18 +250,23 @@ export default function App() {
               {isLiquiditySection && <span className="beta-tag">BETA</span>}
               <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
                 <NotificationBell userId={user?.id} />
+                <ThemeToggle />
                 {isAdmin && (
                   <button
                     onClick={() => { setActiveSection("Admin Panel"); closeSidebar(); }}
                     style={{
-                      padding:"5px 12px",
-                      background:"transparent", border:"1px solid #00e5ff44",
-                      color:"#00e5ff88", fontFamily:"Outfit,sans-serif",
-                      fontSize:11, fontWeight:700, cursor:"pointer",
-                      letterSpacing:"0.5px",
+                      display:"flex", alignItems:"center", gap:6,
+                      padding:"7px 14px",
+                      background:"rgba(var(--color-accent-rgb),0.08)",
+                      border:"1px solid rgba(var(--color-accent-rgb),0.35)",
+                      color:"var(--color-accent)", fontFamily:"Outfit,sans-serif",
+                      fontSize:13, fontWeight:700, cursor:"pointer",
+                      letterSpacing:"0.5px", transition:"all 0.15s",
                     }}
+                    onMouseEnter={e => { e.currentTarget.style.background="rgba(var(--color-accent-rgb),0.15)"; e.currentTarget.style.borderColor="var(--color-accent)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background="rgba(var(--color-accent-rgb),0.08)"; e.currentTarget.style.borderColor="rgba(var(--color-accent-rgb),0.35)"; }}
                   >
-                    ⚙ Admin
+                    🔧 Admin
                   </button>
                 )}
               </div>

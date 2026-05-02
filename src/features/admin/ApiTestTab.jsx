@@ -59,6 +59,23 @@ const EXCHANGES = [
     method: 'GET',
     parse: d => ({ price: +d.data?.amount, vol: null, change: null, asset: 'BTC' }),
   },
+  {
+    id: 'bitget', name: 'Bitget', type: 'CEX', chain: 'Multi-chain', color: '#00F0FF', bg: '#00100f',
+    badge: '#001a18',
+    url: () => `${P}/bitget-api/api/v2/spot/market/tickers?symbol=BTCUSDT`,
+    method: 'GET',
+    parse: d => {
+      const t = d.data?.[0]
+      return { price: +t?.lastPr, vol: fmtVol(+t?.usdtVol), change: +(+t?.change24h * 100).toFixed(2), asset: 'BTC' }
+    },
+  },
+  {
+    id: 'kucoin', name: 'KuCoin', type: 'CEX', chain: 'Multi-chain', color: '#23AF91', bg: '#00100c',
+    badge: '#001a12',
+    url: () => `${P}/kucoin-api/api/v1/market/stats?symbol=BTC-USDT`,
+    method: 'GET',
+    parse: d => ({ price: +d.data?.last, vol: fmtVol(+d.data?.volValue), change: +(+d.data?.changeRate * 100).toFixed(2), asset: 'BTC' }),
+  },
   // ─── Perp DEX ───────────────────────────────────────────────────────
   {
     id: 'hyperliquid', name: 'Hyperliquid', type: 'Perp DEX', chain: 'L1 propio', color: '#00AAFF', bg: '#00080f',
@@ -314,7 +331,7 @@ export default function ApiTestTab() {
         <div>
           <div style={{ fontSize: 16, fontWeight: 800, color: '#e0f4ff' }}>Test de Conectividad — Exchanges</div>
           <div style={{ fontSize: 11, color: '#2a5a72', marginTop: 2 }}>
-            Verifica latencia y precios en vivo desde {EXCHANGES.length} exchanges (5 CEX + 5 DEX)
+            Verifica latencia y precios en vivo desde {EXCHANGES.length} exchanges (7 CEX + 5 DEX)
           </div>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
