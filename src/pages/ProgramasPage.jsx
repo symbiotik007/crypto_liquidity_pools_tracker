@@ -17,7 +17,7 @@ const BOOTCAMP_MODULES = [
   },
   {
     num:'03', name:'DeFi & Liquidity Mining', weeks:'Semana 6–8',
-    lessons:['Protocolos DeFi: Uniswap, Aave, Compound','Liquidity Pools: cómo funcionan y cómo generar rendimiento','Gestión de posiciones en Uniswap V3 con rangos personalizados','Impermanent Loss: cálculo y estrategias de mitigación'],
+    lessons:['Protocolos DeFi: Uniswap, Aave, Compound','Liquidity Pools: cómo funcionan y cómo generar rendimiento','Gestión de posiciones en Uniswap con rangos personalizados','Impermanent Loss: cálculo y estrategias de mitigación'],
   },
   {
     num:'04', name:'Gestión de Riesgo Profesional', weeks:'Semana 9–10',
@@ -93,7 +93,7 @@ function ModuleAccordion({ mod }) {
   )
 }
 
-const TICKER_ITEMS = ['Bootcamp Crypto','·','Express Trading','·','DeFi & Liquidity Pools','·','Uniswap V3','·','Futuros Cripto','·','Formación Profesional','·']
+const TICKER_ITEMS = ['Bootcamp Crypto','·','Express Trading','·','DeFi & Liquidity Pools','·','Uniswap','·','Futuros Cripto','·','Formación Profesional','·']
 
 export default function ProgramasPage() {
   const navigate = useNavigate()
@@ -204,7 +204,7 @@ export default function ProgramasPage() {
                 </p>
                 <p className="prog-desc">
                   Incluye acceso exclusivo al Liquidity Engine — nuestra herramienta propia para gestionar
-                  posiciones en Uniswap V3 con cobertura automática en los 5 principales exchanges del mundo.
+                  posiciones en Uniswap con cobertura automática en los 5 principales exchanges del mundo.
                 </p>
                 <div className="prog-stats">
                   {[['90','días de programa'],['5','módulos'],['1·1','mentoría directa'],['13','semanas']].map(([v,l],i) => (

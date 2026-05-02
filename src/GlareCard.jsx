@@ -147,7 +147,7 @@ export default function GlareCard({
                 fontFamily: "Outfit, sans-serif",
                 letterSpacing: "0.5px",
               }}>
-                {pos.chainName} · Uniswap V3 · #{pos.tokenId}
+                {pos.chainName} · Uniswap · #{pos.tokenId}
               </div>
             </div>
 

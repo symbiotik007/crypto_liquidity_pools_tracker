@@ -94,7 +94,7 @@ const EXCHANGES = [
   },
   // ─── Spot / Stable DEX ──────────────────────────────────────────────
   {
-    id: 'uniswap', name: 'Uniswap V3', type: 'Spot DEX', chain: 'Ethereum', color: '#FF007A', bg: '#0f0008',
+    id: 'uniswap', name: 'Uniswap', type: 'Spot DEX', chain: 'Ethereum', color: '#FF007A', bg: '#0f0008',
     badge: '#1a000f',
     url: () => `${P}/dexscreener-api/latest/dex/pairs/ethereum/0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640`,
     method: 'GET',

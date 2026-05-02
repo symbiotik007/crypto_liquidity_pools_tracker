@@ -45,7 +45,7 @@ export default function LockedTab({ tabName }) {
           </div>
           {[
             "Programa completo de formación en criptomonedas",
-            "Liquidity Engine — gestión de pools Uniswap V3",
+            "Liquidity Engine — gestión de pools Uniswap",
             "Trading automatizado en Hyperliquid",
             "Cobertura automático SHORT",
             "Acompañamiento personalizado 1 a 1",

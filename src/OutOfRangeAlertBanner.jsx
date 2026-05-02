@@ -21,7 +21,7 @@ const ANIM = `
 export default function OutOfRangeAlertBanner({ direction, pair, onDismiss }) {
   const isBelow = direction === 'below'
 
-  // Uniswap V3: precio BAJA del rango → 100% token0 (ej. ETH)
+  // Uniswap: precio BAJA del rango → 100% token0 (ej. ETH)
   //             precio SUBE del rango → 100% token1 (ej. USDC)
   const C = isBelow
     ? { accent: '#ff4f6e', bg: '#1a0810', border: '#5a1a28', icon: '⬇', label: 'Por debajo del mínimo', token: pair?.split('/')[0] ?? '?' }

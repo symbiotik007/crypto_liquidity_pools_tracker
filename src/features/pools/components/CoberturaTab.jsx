@@ -173,7 +173,7 @@ export default function CoberturaTab() {
       {pools.length === 0 ? (
         <div className="empty-state">
           <div className="empty-title">No tienes pools LP monitoreados.</div>
-          <div className="empty-sub">Escanea tu wallet LP para detectar posiciones de Uniswap V3 automáticamente.</div>
+          <div className="empty-sub">Escanea tu wallet LP para detectar posiciones de Uniswap automáticamente.</div>
         </div>
       ) : (
         pools.map(pos => (

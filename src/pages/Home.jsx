@@ -291,7 +291,7 @@ export default function Home() {
     }
   }, [])
 
-  const TICKER_ITEMS = ['Bootcamp Crypto', '·', 'Trading de Futuros', '·', 'DeFi y pools de liquidez', '·', 'Uniswap V3', '·', 'Formación Profesional', '·']
+  const TICKER_ITEMS = ['Bootcamp Crypto', '·', 'Trading de Futuros', '·', 'DeFi y pools de liquidez', '·', 'Uniswap', '·', 'Formación Profesional', '·']
 
   return (
     <>

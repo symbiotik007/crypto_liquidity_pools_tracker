@@ -91,7 +91,7 @@ export default function ScanModal({ open, onClose, onImport }) {
           <div>
             <div className="modal-title">Escanear Posiciones LP</div>
             <div className="modal-subtitle">
-              Escanea tu wallet para encontrar posiciones LP activas de Uniswap V3 en la chain seleccionada.
+              Escanea tu wallet para encontrar posiciones LP activas de Uniswap en la chain seleccionada.
             </div>
           </div>
           <button className="modal-close" onClick={handleClose}>✕</button>

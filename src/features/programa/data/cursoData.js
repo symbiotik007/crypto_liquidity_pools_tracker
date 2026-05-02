@@ -192,7 +192,7 @@ export const CURSO = [
         id: "5-2",
         titulo: "Pools de liquidez como herramienta del especulador avanzado",
         duracion: "30 min",
-        descripcion: "Los pools de liquidez en Uniswap V3 y protocolos similares no son solo para proveer liquidez pasiva — el especulador puede usarlos activamente para generar yield sobre posiciones direccionales. Integramos este conocimiento con las herramientas del Liquidity Engine.",
+        descripcion: "Los pools de liquidez en Uniswap y protocolos similares no son solo para proveer liquidez pasiva — el especulador puede usarlos activamente para generar yield sobre posiciones direccionales. Integramos este conocimiento con las herramientas del Liquidity Engine.",
         puntosClave: [
           "Los pools concentrados en V3 permiten expresar una visión de precio con un rango específico",
           "El impermanent loss es gestionable si el rango se establece con análisis técnico",

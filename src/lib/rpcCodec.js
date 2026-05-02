@@ -70,7 +70,7 @@ export function decodeString(hex) {
   }
 }
 
-// ── Uniswap V3 tick math ───────────────────────────────────────────────────
+// ── Uniswap tick math ───────────────────────────────────────────────────
 
 // Convierte un tick a precio. Para WETH(18)/USDT(6) devuelve el precio de ETH en USDT.
 export function tickToPrice(tick, decimals0, decimals1) {

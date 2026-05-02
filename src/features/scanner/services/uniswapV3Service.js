@@ -1,4 +1,4 @@
-// Lógica pura de escaneo on-chain para Uniswap V3.
+// Lógica pura de escaneo on-chain para Uniswap.
 // Lee el contrato NonfungiblePositionManager directamente via RPC,
 // sin dependencias de React ni de estado de UI.
 
@@ -15,7 +15,7 @@ import {
 } from '../../../lib/rpcCodec';
 
 /**
- * Escanea todas las posiciones Uniswap V3 activas de una wallet en una cadena.
+ * Escanea todas las posiciones Uniswap activas de una wallet en una cadena.
  *
  * @param {string}   walletAddr  - Dirección de la wallet (0x...)
  * @param {string}   chainKey    - Clave de cadena (ethereum | arbitrum | optimism | base)

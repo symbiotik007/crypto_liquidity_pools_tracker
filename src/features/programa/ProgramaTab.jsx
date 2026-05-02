@@ -229,7 +229,7 @@ export default function ProgramaTab() {
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
             {[
-              "Especialista en Uniswap V3 y Liquidity Mining",
+              "Especialista en Uniswap y Liquidity Mining",
               "Creador de Liquidity Engine",
               "Prop Firms, brokers y estructuras privadas",
               "Formación 1 a 1 · Colombia y Latinoamérica",
