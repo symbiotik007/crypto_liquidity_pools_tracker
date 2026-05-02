@@ -1,6 +1,9 @@
 // src/components/CryptoPriceBar.jsx
 import { useState, useEffect } from 'react'
 
+const _PROXY   = import.meta.env.VITE_REVERT_PROXY_URL ?? ''
+const GECKO    = `${_PROXY}/coingecko/api/v3`
+
 const COIN_IDS = [
   'bitcoin','ethereum','tether','binancecoin','solana',
   'ripple','usd-coin','dogecoin','cardano','tron',
@@ -30,8 +33,8 @@ export default function CryptoPriceBar() {
   const fetchAll = async () => {
     try {
       const [pRes, gRes] = await Promise.all([
-        fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${COIN_IDS.join(',')}&order=market_cap_desc&per_page=15&page=1&sparkline=false&price_change_percentage=24h`),
-        fetch('https://api.coingecko.com/api/v3/global'),
+        fetch(`${GECKO}/coins/markets?vs_currency=usd&ids=${COIN_IDS.join(',')}&order=market_cap_desc&per_page=15&page=1&sparkline=false&price_change_percentage=24h`),
+        fetch(`${GECKO}/global`),
       ])
       if (pRes.ok) { setCoins(await pRes.json()); setLastUpdate(new Date()) }
       if (gRes.ok) { const g = await gRes.json(); setGlobalData(g.data) }

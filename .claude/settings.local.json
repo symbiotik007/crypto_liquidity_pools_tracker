@@ -38,7 +38,8 @@
       "Bash(npm install *)",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(wrangler deploy *)"
     ]
   }
 }

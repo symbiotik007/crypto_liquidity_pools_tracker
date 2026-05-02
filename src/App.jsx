@@ -8,12 +8,11 @@ import { buildWaUpgradeUrl }  from "./features/dashboard/utils";
 import DashboardTab           from "./features/dashboard/DashboardTab";
 import LockedTab              from "./features/dashboard/LockedTab";
 import WalletsTab             from "./features/wallets/WalletsTab";
-import HLTestModal            from "./features/wallets/components/HLTestModal";
 import CoberturaTab           from "./features/pools/components/CoberturaTab";
 import TradingTab             from "./features/pools/components/TradingTab";
 import ProgramaTab            from "./features/programa/ProgramaTab";
 import CryptoBootcampTab      from "./features/programa/CryptoBootcampTab";
-import UsersAdminTab          from "./features/admin/UsersAdminTab";
+import AdminPanel             from "./features/admin/AdminPanel";
 import PreguntasTab           from "./features/admin/PreguntasTab";
 import TradingViewTab         from "./components/TradingViewTab";
 import TradingViewOperableTab from "./components/TradingViewOperableTab";
@@ -33,7 +32,7 @@ const TABS = [
   { id: "Insider (Trading)",    label: "Insider (Trading)",    available: false },
 ];
 const NAV_ITEMS       = ["Dashboard","Programa","Crypto Bootcamp","Preguntas"];
-const NAV_ITEMS_ADMIN = ["Users Admin"];
+const NAV_ITEMS_ADMIN = ["Admin Panel"];
 const PAID_TABS = ["Wallets","Cobertura","Trading Automatizado","Programa CryptoEducation","Programa","Crypto Bootcamp"];
 
 // ════════════════════════════════════════════════════════════════════
@@ -80,7 +79,6 @@ export default function App() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
-  const [hlTestOpen, setHlTestOpen]   = useState(false);
   const closeSidebar = () => setSidebarOpen(false);
 
   useEffect(() => {
@@ -109,7 +107,7 @@ export default function App() {
     TradingView:"TradingView",
     TradingViewOperable:"TradingView Operable",
     Preguntas:"Preguntas",
-    "Users Admin":"Users Admin",
+    "Admin Panel":"Admin Panel",
   };
 
   const renderContent = () => {
@@ -132,7 +130,7 @@ export default function App() {
       case "TradingView":          return <TradingViewTab />;
       case "TradingViewOperable":  return <TradingViewOperableTab />;
       case "Preguntas":            return <PreguntasTab />;
-      case "Users Admin":          return <UsersAdminTab />;
+      case "Admin Panel":          return <AdminPanel />;
       default:                     return <ComingSoonTab name={activeSection} />;
     }
   };
@@ -142,7 +140,6 @@ export default function App() {
       <div className="app">
         <div className={`overlay ${sidebarOpen ? "open" : ""}`} onClick={closeSidebar} />
         {contactOpen && <ContactModal onClose={() => setContactOpen(false)} />}
-        {hlTestOpen  && <HLTestModal  onClose={() => setHlTestOpen(false)}  />}
 
         <div className={`sidebar ${sidebarOpen ? "open" : ""}`}>
           <div className="logo">
@@ -258,15 +255,20 @@ export default function App() {
               {isLiquiditySection && <span className="beta-tag">BETA</span>}
               <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
                 <NotificationBell userId={user?.id} />
-                <button onClick={() => setHlTestOpen(true)} style={{
-                  padding:"5px 12px",
-                  background:"transparent", border:"1px solid #ffb347",
-                  color:"#ffb347", fontFamily:"Outfit,sans-serif",
-                  fontSize:11, fontWeight:700, cursor:"pointer",
-                  letterSpacing:"0.5px",
-                }}>
-                ⚡ TEST HL API
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => { setActiveSection("Admin Panel"); closeSidebar(); }}
+                    style={{
+                      padding:"5px 12px",
+                      background:"transparent", border:"1px solid #00e5ff44",
+                      color:"#00e5ff88", fontFamily:"Outfit,sans-serif",
+                      fontSize:11, fontWeight:700, cursor:"pointer",
+                      letterSpacing:"0.5px",
+                    }}
+                  >
+                    ⚙ Admin
+                  </button>
+                )}
               </div>
             </div>
             <div className="page-sub">
