@@ -1,7 +1,7 @@
 ﻿// src/pages/Home.jsx
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import oscarImg from '../assets/OscarB1.jpg'
+import oscarImg from '../assets/IMG_7704(1).jpg'
 import cryptoHouseLogo from '../assets/cryptohouselogo.png'
 import CryptoPriceBar from '../components/CryptoPriceBar'
 import '../styles/marketing.css'
@@ -349,7 +349,7 @@ export default function Home() {
         <div className="about-inner">
           <div className="about-img-wrap">
             <div className="about-img-box">
-              <img src={oscarImg} alt="Oscar Bolaños" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={oscarImg} alt="Oscar Bolaños" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 35%' }} />
             </div>
           </div>
           <div className="about-content">

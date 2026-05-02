@@ -1,4 +1,5 @@
-const REVERT_API = "/revert-api/v1/positions/account";
+const _PROXY = import.meta.env.VITE_REVERT_PROXY_URL ?? '';
+const REVERT_API = `${_PROXY}/revert-api/v1/positions/account`;
 
 export async function fetchRevertPositions(walletAddress) {
   try {
