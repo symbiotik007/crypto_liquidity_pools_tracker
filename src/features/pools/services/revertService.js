@@ -43,15 +43,21 @@ export async function enrichPoolsWithMarketData(pools) {
     const sym1 = (pos.token1Symbol || "").toUpperCase();
     const isStable1 = sym1.includes("USD") || ["USDC","USDT","DAI"].includes(sym1);
 
+    // When Revert API has no data for this position, use priceAtCreation as best-effort fallback
+    const noLiveData = !r;
     const livePrice = r
       ? parseFloat(r.pool_price ?? pos.currentPrice ?? 0)
-      : (priceMap[sym0] ?? pos.currentPrice ?? 0);
+      : (priceMap[sym0] ?? (pos.priceAtCreation > 0 ? pos.priceAtCreation : (pos.currentPrice ?? 0)));
 
-    const inRange = r ? r.in_range : (livePrice >= pos.priceLower && livePrice <= pos.priceUpper);
     let status;
-    if (inRange)                          status = { label: "En Rango",       color: "#00ff88", bg: "#001a0e", border: "#003a22" };
-    else if (livePrice < pos.priceLower)  status = { label: "Fuera (Abajo)", color: "#ff4f6e", bg: "#1a0810", border: "#5a1a28" };
-    else                                  status = { label: "Fuera (Arriba)",color: "#ffb347", bg: "#1a0e00", border: "#5a3a00" };
+    if (noLiveData) {
+      status = { label: "Sin datos", color: "#7a8a96", bg: "#0a1015", border: "#1a2530" };
+    } else {
+      const inRange = r ? r.in_range : (livePrice >= pos.priceLower && livePrice <= pos.priceUpper);
+      if (inRange)                         status = { label: "En Rango",      color: "#00ff88", bg: "#001a0e", border: "#003a22" };
+      else if (livePrice < pos.priceLower) status = { label: "Fuera (Abajo)", color: "#ff4f6e", bg: "#1a0810", border: "#5a1a28" };
+      else                                 status = { label: "Fuera (Arriba)",color: "#ffb347", bg: "#1a0e00", border: "#5a3a00" };
+    }
 
     const amount0  = r ? parseFloat(r.current_amount0 ?? pos.amount0 ?? "0") : parseFloat(pos.amount0 ?? "0");
     const amount1  = r ? parseFloat(r.current_amount1 ?? pos.amount1 ?? "0") : parseFloat(pos.amount1 ?? "0");
@@ -67,6 +73,7 @@ export async function enrichPoolsWithMarketData(pools) {
       amount0: String(amount0),
       amount1: String(amount1),
       revert: r,
+      _noLiveData: noLiveData,
       og_owner: pos.og_owner ?? pos.walletAddress,
     };
   });

@@ -23,15 +23,34 @@ export function usePoolsSync(userId) {
   const { data: pools = [], isPending: loading, error: qError } = useQuery({
     queryKey: qKey,
     queryFn: async () => {
-      const mapped = await fetchPools(userId)
-      localStorage.setItem('liquidity_engine_pools', JSON.stringify(mapped))
-      return mapped
+      const fresh = await fetchPools(userId)
+      // Preserve enriched runtime fields (revert, currentPrice, status, valueUsd, amounts)
+      // that were written by enrichPoolsWithMarketData — Supabase only stores base DB fields
+      let cached = []
+      try { cached = JSON.parse(localStorage.getItem('liquidity_engine_pools') || '[]') } catch {}
+      const cachedById = Object.fromEntries(cached.map(p => [String(p.tokenId), p]))
+      const RUNTIME = ['revert', 'currentPrice', 'status', 'valueUsd', 'amount0', 'amount1', '_noLiveData', 'og_owner']
+      const merged = fresh.map(p => {
+        const c = cachedById[String(p.tokenId)]
+        if (!c || !c.revert) return p
+        const patch = {}
+        for (const k of RUNTIME) if (c[k] !== undefined) patch[k] = c[k]
+        return { ...p, ...patch }
+      })
+      localStorage.setItem('liquidity_engine_pools', JSON.stringify(merged))
+      return merged
     },
     enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
     initialData: () => {
       try { return JSON.parse(localStorage.getItem('liquidity_engine_pools') || '[]') } catch { return [] }
     },
-    initialDataUpdatedAt: 0,
+    initialDataUpdatedAt: () => {
+      try {
+        const cached = JSON.parse(localStorage.getItem('liquidity_engine_pools') || '[]')
+        return cached.length > 0 ? Date.now() : 0
+      } catch { return 0 }
+    },
   })
 
   const { mutateAsync: addPool } = useMutation({

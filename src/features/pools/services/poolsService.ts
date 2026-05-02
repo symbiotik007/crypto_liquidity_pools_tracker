@@ -5,7 +5,7 @@ type PoolRow = Record<string, unknown>
 
 export function mapPoolRow(row: PoolRow): Pool {
   return {
-    tokenId:            row.token_id          as number,
+    tokenId:            Number(row.token_id),
     chainName:          row.chain_name        as string,
     chainId:            row.chain_id          as number,
     poolAddress:        row.pool_address      as string,

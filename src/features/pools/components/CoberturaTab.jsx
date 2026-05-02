@@ -131,6 +131,28 @@ export default function CoberturaTab() {
         ))}
       </div>
 
+      {pools.some(p => p._noLiveData) && (
+        <div style={{
+          margin: "12px 0",
+          padding: "10px 14px",
+          background: "#0e1820",
+          border: "1px solid #1a3a5e",
+          borderRadius: "8px",
+          color: "#7a9ab0",
+          fontSize: "13px",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+        }}>
+          <span style={{ color: "#4a8ab0", fontSize: "16px" }}>⚠</span>
+          <span>
+            Datos en tiempo real no disponibles. Los precios y estados mostrados
+            son estimaciones basadas en los datos de importación.
+            {!import.meta.env.VITE_REVERT_PROXY_URL && " Configura el proxy de Revert para habilitar precios en vivo."}
+          </span>
+        </div>
+      )}
+
       <div className="section-header">
         <div className="section-title">Pools LP Monitoreados</div>
         {pools.length > 0 && <span className="count-badge">{pools.length}</span>}
