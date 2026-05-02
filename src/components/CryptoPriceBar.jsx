@@ -57,9 +57,9 @@ export default function CryptoPriceBar() {
         <div style={{ width:5, height:5, borderRadius:'50%', background:'#00e5ff', boxShadow:'0 0 6px #00e5ff', animation:'livePulse 2s infinite' }} />
         <span style={{ fontSize:9, fontWeight:800, color:'#00e5ff', letterSpacing:2, textTransform:'uppercase' }}>CRYPTO LIVE</span>
       </div>
-      {btcDom   && <div style={pill}><span style={{ fontSize:9, color:'#2a5a72', letterSpacing:1, textTransform:'uppercase' }}>BTC DOM</span><span style={{ fontSize:11, fontWeight:700, color:'#f7931a' }}>{btcDom}%</span></div>}
-      {ethDom   && <div style={pill}><span style={{ fontSize:9, color:'#2a5a72', letterSpacing:1, textTransform:'uppercase' }}>ETH DOM</span><span style={{ fontSize:11, fontWeight:700, color:'#627eea' }}>{ethDom}%</span></div>}
-      {totalMcap && <div style={pill}><span style={{ fontSize:9, color:'#2a5a72', letterSpacing:1, textTransform:'uppercase' }}>MKT CAP</span><span style={{ fontSize:11, fontWeight:700, color:'#c8e6f0' }}>{fmtMcap(totalMcap)}</span></div>}
+      {btcDom   && <div style={pill} className="price-bar-label"><span style={{ fontSize:9, color:'#2a5a72', letterSpacing:1, textTransform:'uppercase' }}>BTC DOM</span><span style={{ fontSize:11, fontWeight:700, color:'#f7931a' }}>{btcDom}%</span></div>}
+      {ethDom   && <div style={pill} className="price-bar-label"><span style={{ fontSize:9, color:'#2a5a72', letterSpacing:1, textTransform:'uppercase' }}>ETH DOM</span><span style={{ fontSize:11, fontWeight:700, color:'#627eea' }}>{ethDom}%</span></div>}
+      {totalMcap && <div style={pill} className="price-bar-label"><span style={{ fontSize:9, color:'#2a5a72', letterSpacing:1, textTransform:'uppercase' }}>MKT CAP</span><span style={{ fontSize:11, fontWeight:700, color:'#c8e6f0' }}>{fmtMcap(totalMcap)}</span></div>}
       <div style={{ flex:1, overflow:'hidden', height:'100%' }}>
         {items.length === 0
           ? <div style={{ display:'flex', alignItems:'center', height:'100%', paddingLeft:16, fontSize:10, color:'#2a5a72' }}>Cargando precios...</div>
@@ -84,6 +84,9 @@ export default function CryptoPriceBar() {
       <style>{`
         @keyframes priceScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
         @keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 6px #00e5ff} 50%{opacity:0.4;box-shadow:0 0 2px #00e5ff} }
+        @media(max-width:480px){
+          .price-bar-label { display:none; }
+        }
       `}</style>
     </div>
   )

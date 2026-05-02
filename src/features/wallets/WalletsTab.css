@@ -21,4 +21,12 @@
 
 @media (max-width: 768px) {
   .wallet-types { grid-template-columns: repeat(2, 1fr); }
+  .wallet-modal { margin: 12px; max-width: calc(100vw - 24px); }
+  .wallets-section { padding: 14px 16px; }
+}
+@media (max-width: 480px) {
+  .wallet-types { grid-template-columns: 1fr 1fr; gap: 6px; }
+  .wallet-type { padding: 8px 6px; }
+  .wallet-type-icon { font-size: 16px; }
+  .wallet-type-name { font-size: 11px; }
 }

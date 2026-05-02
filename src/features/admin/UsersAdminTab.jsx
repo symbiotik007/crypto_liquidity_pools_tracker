@@ -49,7 +49,7 @@ export default function UsersAdminTab() {
   )
 
   return (
-    <div style={{ padding:"32px", maxWidth:1100, margin:"0 auto", display:"flex", flexDirection:"column", gap:24, position:"relative" }}>
+    <div style={{ padding:"clamp(16px, 4vw, 32px)", maxWidth:1100, margin:"0 auto", display:"flex", flexDirection:"column", gap:24, position:"relative" }}>
 
       {toast && (
         <div style={{ position:"fixed", top:24, right:24, zIndex:999, padding:"12px 20px", background: toast.ok ? "#001a0e" : "#1a0810", border:`1px solid ${toast.ok?"#003a22":"#5a1a28"}`, color: toast.ok?"#00ff88":"#ff6b88", fontSize:13, fontWeight:600, boxShadow:"0 4px 20px rgba(0,0,0,0.5)" }}>
@@ -103,7 +103,7 @@ export default function UsersAdminTab() {
             placeholder="Buscar por nombre o email..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ padding:"9px 14px", background:"#0a1520", border:"1px solid #1a3a5e", color:"#c8e6f0", fontFamily:"Outfit,sans-serif", fontSize:13, outline:"none", width:240 }}
+            style={{ padding:"9px 14px", background:"#0a1520", border:"1px solid #1a3a5e", color:"#c8e6f0", fontFamily:"Outfit,sans-serif", fontSize:13, outline:"none", width:"clamp(160px,40vw,240px)" }}
           />
           <button onClick={reload}
             style={{ padding:"9px 14px", background:"transparent", border:"1px solid #1a3a5e", color:"#4a7a96", fontFamily:"Outfit,sans-serif", fontSize:13, cursor:"pointer" }}>
@@ -129,7 +129,8 @@ export default function UsersAdminTab() {
       {loading && <div style={{ color:"#2a5a72", fontSize:13 }}>Cargando usuarios...</div>}
       {error   && <div style={{ color:"#ff6b88", fontSize:13 }}>⚠ {error}</div>}
       {!loading && !error && (
-        <div style={{ background:"#070d14", border:"1px solid #1a3a5e" }}>
+        <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
+        <div style={{ background:"#070d14", border:"1px solid #1a3a5e", minWidth:680 }}>
           <div style={{ display:"grid", gridTemplateColumns:"2fr 2fr 1fr 1fr 1fr 160px", gap:0, padding:"10px 20px", borderBottom:"1px solid #0e2435", fontSize:10, fontWeight:700, color:"#2a5a72", letterSpacing:2, textTransform:"uppercase" }}>
             <span>Usuario</span><span>Email</span><span>Plan</span><span>Admin</span><span>Registro</span><span style={{ textAlign:"right" }}>Acciones</span>
           </div>
@@ -262,6 +263,7 @@ export default function UsersAdminTab() {
               </div>
             )
           })}
+        </div>
         </div>
       )}
     </div>

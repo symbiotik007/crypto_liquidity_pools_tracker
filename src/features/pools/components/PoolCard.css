@@ -162,9 +162,27 @@
   .pc-grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 768px) {
-  .pc-row { flex-wrap: wrap; gap: 8px; }
+  .pc-row { flex-wrap: wrap; gap: 8px; padding: 12px 14px; }
+  .pc-left { min-width: 0; flex: 1; }
   .pc-stats { flex-wrap: wrap; justify-content: flex-start; width: 100%; }
   .pc-stat { padding: 4px 12px 4px 0; border-left: none; text-align: left; }
   .pc-grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pc-info-row { gap: 10px; }
+  .pcn-wrap { padding: 14px; }
+  .pcn-range-grid { grid-template-columns: 1fr 1fr; }
+  .pcn-total { font-size: 22px; }
+  .pc-current-price { font-size: 22px; margin-bottom: 16px; }
+}
+@media (max-width: 480px) {
+  .pc-pair { font-size: 13px; }
+  .pc-stat-label { font-size: 9px; }
+  .pc-stat-val { font-size: 12px; }
+  .pcn-range-grid { grid-template-columns: 1fr; }
+  .pcn-tokens { grid-template-columns: 1fr; }
+  .pcn-total { font-size: 20px; }
+  .pc-grid4 { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pc-metric-val { font-size: 12px; }
+  .pc-actions { gap: 6px; }
+  .pc-btn-link, .pc-btn-close, .pc-btn-remove { font-size: 11px; padding: 5px 10px; }
+  .pc-panel { padding: 14px 14px 12px; }
 }

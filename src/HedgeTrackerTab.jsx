@@ -61,6 +61,24 @@ const CSS = `
   .ht-stat-val.green { color:#00ff88; }
   .ht-stat-val.red   { color:#ff4f6e; }
   .ht-stat-val.cyan  { color:#00e5ff; }
+  @media(max-width:768px){
+    .ht-stats { grid-template-columns:repeat(2,1fr); }
+    .ht-stat-val { font-size:18px; }
+    .ht-body { grid-template-columns:1fr 1fr; }
+    .ht-metric:nth-child(3n) { border-right:1px solid #0e2435; }
+    .ht-metric:nth-child(2n) { border-right:none; }
+  }
+  @media(max-width:480px){
+    .ht-stats { grid-template-columns:repeat(2,1fr); gap:8px; }
+    .ht-stat { padding:10px 12px; }
+    .ht-stat-val { font-size:16px; }
+    .ht-body { grid-template-columns:1fr; }
+    .ht-metric { border-right:none !important; }
+    .ht-pnl-row { gap:10px; }
+    .ht-pnl-big { font-size:18px; }
+    .ht-card-header { padding:10px 12px; gap:6px; }
+    .ht-pair { font-size:13px; }
+  }
 
   .ht-section-title {
     font-size:10px; letter-spacing:2px; color:#2a5a72; text-transform:uppercase;
