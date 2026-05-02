@@ -4,4 +4,5 @@ compatibility_date = "2024-01-01"
 
 # Optional secrets — add with:
 #   wrangler secret put COINGECKO_API_KEY
+#   wrangler secret put TURNSTILE_SECRET_KEY
 # Secrets are encrypted and never exposed to the browser.

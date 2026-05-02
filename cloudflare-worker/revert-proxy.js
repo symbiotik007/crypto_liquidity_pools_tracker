@@ -21,6 +21,11 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders() })
     }
 
+    // ── Cloudflare Turnstile server-side verification ──────────────────
+    if (url.pathname === '/turnstile-verify') {
+      return handleTurnstileVerify(request, env)
+    }
+
     const prefix = Object.keys(ROUTES).find(p => url.pathname.startsWith(p))
     if (!prefix) {
       return new Response('Not found', { status: 404 })
@@ -55,6 +60,52 @@ export default {
       },
     })
   },
+}
+
+// ── Turnstile verification ─────────────────────────────────────────────
+async function handleTurnstileVerify(request, env) {
+  if (request.method !== 'POST') {
+    return jsonResponse({ success: false, error: 'method_not_allowed' }, 405)
+  }
+
+  let token, remoteip
+  try {
+    const body = await request.json()
+    token    = body.token
+    remoteip = body.remoteip
+  } catch {
+    return jsonResponse({ success: false, error: 'invalid_body' }, 400)
+  }
+
+  if (!token) {
+    return jsonResponse({ success: false, error: 'missing_token' }, 400)
+  }
+
+  // Use real secret key when set, otherwise fall back to Cloudflare test secret
+  const secretKey = env.TURNSTILE_SECRET_KEY || '1x0000000000000000000000000000000AA'
+
+  const form = new FormData()
+  form.append('secret',   secretKey)
+  form.append('response', token)
+  if (remoteip) form.append('remoteip', remoteip)
+
+  const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    body:   form,
+  })
+  const data = await result.json()
+
+  return jsonResponse({
+    success: data.success === true,
+    error:   data['error-codes']?.[0] ?? null,
+  })
+}
+
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+  })
 }
 
 function corsHeaders() {

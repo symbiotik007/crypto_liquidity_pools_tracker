@@ -4,8 +4,25 @@ import { useNavigate } from 'react-router-dom'
 import oscarImg from '../assets/IMG_7704(1).jpg'
 import cryptoHouseLogo from '../assets/cryptohouselogo.png'
 import CryptoPriceBar from '../components/CryptoPriceBar'
+import Turnstile from '../components/Turnstile'
 import '../styles/marketing.css'
 import './Home.css'
+
+const _PROXY = import.meta.env.VITE_REVERT_PROXY_URL ?? ''
+
+async function verifyTurnstile(token) {
+  try {
+    const res = await fetch(`${_PROXY}/turnstile-verify`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ token }),
+    })
+    const data = await res.json()
+    return data.success === true
+  } catch {
+    return false
+  }
+}
 
 const FAQS = [
   {
@@ -101,6 +118,10 @@ function InfoModal({ program, onClose }) {
   const [phone, setPhone] = useState('')
   const [done, setDone] = useState(false)
   const [errs, setErrs] = useState({})
+  const [tsToken, setTsToken] = useState(null)
+  const [tsError, setTsError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const tsRef = useRef(null)
 
   const validate = () => {
     const e = {}
@@ -109,10 +130,16 @@ function InfoModal({ program, onClose }) {
     return e
   }
 
-  const handleSubmit = (ev) => {
+  const handleSubmit = async (ev) => {
     ev.preventDefault()
     const e = validate()
     if (Object.keys(e).length) { setErrs(e); return }
+    if (!tsToken) { setTsError('Completa la verificación de seguridad'); return }
+    setTsError(''); setSubmitting(true)
+    const ok = await verifyTurnstile(tsToken)
+    setTsToken(null); tsRef.current?.reset()
+    setSubmitting(false)
+    if (!ok) { setTsError('Verificación fallida. Intenta de nuevo.'); return }
     const msg = encodeURIComponent(
       `Hola Oscar! Me interesa el programa *${program.name}*.\n\n` +
       `Nombre: ${name.trim()}\n` +
@@ -182,8 +209,11 @@ function InfoModal({ program, onClose }) {
                   onChange={e => { setPhone(e.target.value); setErrs(v => ({ ...v, phone: false })) }}
                 />
               </div>
-              <button className="info-submit" type="submit">
-                Quiero información →
+              <Turnstile ref={tsRef} onVerify={setTsToken} onExpire={() => setTsToken(null)} />
+              {tsError && <div style={{ fontSize: 12, color: '#ff6b88', marginTop: -6 }}>⚠ {tsError}</div>}
+              <button className="info-submit" type="submit" disabled={submitting || !tsToken}
+                style={{ opacity: submitting || !tsToken ? 0.5 : 1 }}>
+                {submitting ? 'Verificando...' : 'Quiero información →'}
               </button>
               <div className="info-note">
                 Al enviar, se abrirá WhatsApp con tus datos.<br />
@@ -215,14 +245,25 @@ export default function Home() {
   const [formData, setFormData] = useState({ name: '', email: '', msg: '' })
   const [sent, setSent] = useState(false)
   const [infoProgram, setInfoProgram] = useState(null)
+  const [ctsTsToken, setCtsTsToken] = useState(null)
+  const [ctsTsError, setCtsTsError] = useState('')
+  const [ctsSending, setCtsSending] = useState(false)
+  const ctsTsRef = useRef(null)
   const [dropOpen, setDropOpen] = useState(false)
   const dropTimer = useRef(null)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const openDrop  = () => { clearTimeout(dropTimer.current); setDropOpen(true) }
   const closeDrop = () => { dropTimer.current = setTimeout(() => setDropOpen(false), 220) }
 
-  const handleContact = (e) => {
+  const handleContact = async (e) => {
     e.preventDefault()
     if (!formData.name || !formData.msg) return
+    if (!ctsTsToken) { setCtsTsError('Completa la verificación de seguridad'); return }
+    setCtsTsError(''); setCtsSending(true)
+    const ok = await verifyTurnstile(ctsTsToken)
+    setCtsTsToken(null); ctsTsRef.current?.reset()
+    setCtsSending(false)
+    if (!ok) { setCtsTsError('Verificación fallida. Intenta de nuevo.'); return }
     const subject = encodeURIComponent(`The Crypto House — Mensaje de ${formData.name}`)
     const body = encodeURIComponent(`Nombre: ${formData.name}\nEmail: ${formData.email}\n\n${formData.msg}`)
     window.location.href = `mailto:profeoscarbol@gmail.com?subject=${subject}&body=${body}`
@@ -250,7 +291,7 @@ export default function Home() {
     }
   }, [])
 
-  const TICKER_ITEMS = ['Bootcamp Crypto', '·', 'Trading de Futuros', '·', 'DeFi & Liquidity Pools', '·', 'Hyperliquid', '·', 'Uniswap V3', '·', 'Formación Profesional', '·']
+  const TICKER_ITEMS = ['Bootcamp Crypto', '·', 'Trading de Futuros', '·', 'DeFi y pools de liquidez', '·', 'Uniswap V3', '·', 'Formación Profesional', '·']
 
   return (
     <>
@@ -291,9 +332,29 @@ export default function Home() {
             <a className="nav-link" onClick={e => goTo(e, 'contacto')} href="#">Contacto</a>
           </div>
           <div className="nav-sep" />
+          <button
+            className="nav-hamburger"
+            onClick={e => { e.stopPropagation(); setMobileMenuOpen(o => !o) }}
+            aria-label="Menú"
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
           <a className="nav-app" href="/app">Acceder al Ecosistema</a>
         </nav>
+        {mobileMenuOpen && (
+          <div className="nav-mobile-menu" onClick={e => e.stopPropagation()}>
+            <a className="nav-mobile-link" href="#" onClick={() => { scrollTop(); setMobileMenuOpen(false) }}>Inicio</a>
+            <a className="nav-mobile-link" href="#" onClick={e => { goTo(e, 'sobre'); setMobileMenuOpen(false) }}>Instructor</a>
+            <button className="nav-mobile-link" onClick={() => { navigate('/programas'); setMobileMenuOpen(false) }}>Formación</button>
+            <button className="nav-mobile-link" onClick={() => { navigate('/liquidity-engine'); setMobileMenuOpen(false) }}>Liquidity Engine</button>
+            <a className="nav-mobile-link" href="#" onClick={e => { goTo(e, 'faq'); setMobileMenuOpen(false) }}>FAQ</a>
+            <a className="nav-mobile-link" href="#" onClick={e => { goTo(e, 'contacto'); setMobileMenuOpen(false) }}>Contacto</a>
+            <div className="nav-mobile-sep" />
+            <a className="nav-mobile-app" href="/app" onClick={() => setMobileMenuOpen(false)}>Acceder al Ecosistema →</a>
+          </div>
+        )}
       </div>
+      {mobileMenuOpen && <div className="nav-mobile-backdrop" onClick={() => setMobileMenuOpen(false)} />}
 
       {/* TICKER — debajo del nav pill */}
       <div className="ticker ticker-top">
@@ -582,8 +643,11 @@ export default function Home() {
                     placeholder="Cuéntame sobre tu experiencia actual y qué programa te interesa..."
                     value={formData.msg} onChange={e => setFormData(p => ({ ...p, msg: e.target.value }))} />
                 </div>
-                <button className="form-submit" type="submit">
-                  Enviar mensaje →
+                <Turnstile ref={ctsTsRef} onVerify={setCtsTsToken} onExpire={() => setCtsTsToken(null)} />
+                {ctsTsError && <div style={{ fontSize: 12, color: '#ff6b88', marginTop: -8 }}>⚠ {ctsTsError}</div>}
+                <button className="form-submit" type="submit" disabled={ctsSending || !ctsTsToken}
+                  style={{ opacity: ctsSending || !ctsTsToken ? 0.55 : 1 }}>
+                  {ctsSending ? 'Verificando...' : 'Enviar mensaje →'}
                 </button>
               </form>
             )}

@@ -1,8 +1,25 @@
 // src/pages/Login.jsx
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import cryptoHouseLogo from '../assets/cryptohouselogo.png'
+import Turnstile from '../components/Turnstile'
 import './Login.css'
+
+const _PROXY = import.meta.env.VITE_REVERT_PROXY_URL ?? ''
+
+async function verifyTurnstile(token) {
+  try {
+    const res = await fetch(`${_PROXY}/turnstile-verify`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ token }),
+    })
+    const data = await res.json()
+    return data.success === true
+  } catch {
+    return false
+  }
+}
 
 // ── helpers ──────────────────────────────────────────────────────────
 const EMAIL_DOMAINS = [
@@ -142,6 +159,8 @@ function LoginModal({ onClose, onSwitch }) {
   const [resetOk, setResetOk]    = useState(false)
   const [attempts, setAttempts]  = useState(0)
   const [cooldown, setCooldown]  = useState(0)
+  const [tsToken, setTsToken]    = useState(null)
+  const tsRef                    = useRef(null)
 
   useEffect(() => {
     if (cooldown <= 0) return
@@ -161,13 +180,19 @@ function LoginModal({ onClose, onSwitch }) {
     if (error) { setError(error.message); setLoading(false) }
   }
 
+  const resetTs = () => { setTsToken(null); tsRef.current?.reset() }
+
   const withPassword = async (e) => {
     e.preventDefault()
     if (cooldown > 0) return
     if (!email || !pw) return setError('Completa todos los campos')
     if (!isValidEmail(email)) { setEmailErr(true); return setError('Ingresa un email válido') }
+    if (!tsToken) return setError('Completa la verificación de seguridad')
     setLoading(true); setError('')
+    const ok = await verifyTurnstile(tsToken)
+    if (!ok) { resetTs(); setLoading(false); return setError('Verificación fallida. Intenta de nuevo.') }
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: pw })
+    resetTs()
     if (error) {
       const next = attempts + 1
       setAttempts(next)
@@ -192,8 +217,12 @@ function LoginModal({ onClose, onSwitch }) {
     e.preventDefault()
     if (!email) return setError('Ingresa tu email')
     if (!isValidEmail(email)) { setEmailErr(true); return setError('Ingresa un email válido') }
+    if (!tsToken) return setError('Completa la verificación de seguridad')
     setLoading(true); setError('')
+    const ok = await verifyTurnstile(tsToken)
+    if (!ok) { resetTs(); setLoading(false); return setError('Verificación fallida. Intenta de nuevo.') }
     const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options:{ emailRedirectTo:`${location.origin}/auth/callback` } })
+    resetTs()
     if (error) { setError(error.message); setLoading(false); return }
     setMagicOk(true); setLoading(false)
   }
@@ -251,9 +280,10 @@ function LoginModal({ onClose, onSwitch }) {
               <div className="m-forgot-row">
                 <button type="button" className="m-fgbtn" onClick={()=>{setResetMode(true);setError('');setEmailErr(false)}}>¿Olvidaste tu contraseña?</button>
               </div>
+              <Turnstile ref={tsRef} onVerify={setTsToken} onExpire={()=>setTsToken(null)} />
               {error&&!cooldown&&<div className="m-err">⚠ {error}</div>}
-              <button className="m-submit" type="submit" disabled={loading||cooldown>0}>
-                {loading?'Entrando...':cooldown>0?`Espera ${cooldown}s...`:'Iniciar sesión'}
+              <button className="m-submit" type="submit" disabled={loading||cooldown>0||!tsToken}>
+                {loading?'Verificando...':cooldown>0?`Espera ${cooldown}s...`:'Iniciar sesión'}
               </button>
             </form>
           )}
@@ -282,8 +312,9 @@ function LoginModal({ onClose, onSwitch }) {
                 <EmailInput value={email} onChange={handleEmailChange} disabled={loading} hasError={emailErr} />
                 {emailErr && <div style={{fontSize:11,marginTop:4,color:'#ff6b88'}}>✗ Email no válido</div>}
               </div>
+              <Turnstile ref={tsRef} onVerify={setTsToken} onExpire={()=>setTsToken(null)} />
               {error&&<div className="m-err">⚠ {error}</div>}
-              <button className="m-submit" type="submit" disabled={loading}>{loading?'Enviando...':'✉ Enviar Magic Link'}</button>
+              <button className="m-submit" type="submit" disabled={loading||!tsToken}>{loading?'Verificando...':'✉ Enviar Magic Link'}</button>
             </form>
           )}
           {magicOk&&<div className="m-ok">✉ Link enviado a<br/><strong style={{color:'#00ff88'}}>{email}</strong></div>}
@@ -308,6 +339,8 @@ function SignupModal({ onClose, onSwitch }) {
   const [loading, setLoading] = useState(false)
   const [error, setError]   = useState('')
   const [done, setDone]     = useState(false)
+  const [tsToken, setTsToken] = useState(null)
+  const tsRef                 = useRef(null)
   const { score } = checkPassword(pw)
   const match = pw === cf && cf.length > 0
 
@@ -343,12 +376,20 @@ function SignupModal({ onClose, onSwitch }) {
     if (!isValidEmail(email)) { setEmailErr(true); return setError('Ingresa un email válido') }
     if (score < 4) return setError('La contraseña no cumple los requisitos mínimos')
     if (!match) return setError('Las contraseñas no coinciden')
+    if (!tsToken) return setError('Completa la verificación de seguridad')
     setLoading(true); setError('')
+    const ok = await verifyTurnstile(tsToken)
+    if (!ok) {
+      setTsToken(null); tsRef.current?.reset()
+      setLoading(false)
+      return setError('Verificación fallida. Intenta de nuevo.')
+    }
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
       password: pw,
       options: { data: { full_name: trimmedName }, emailRedirectTo: `${location.origin}/auth/callback` }
     })
+    setTsToken(null); tsRef.current?.reset()
     if (error) {
       setError(error.message.includes('already registered') ? 'Este email ya está registrado' : error.message)
       setLoading(false)
@@ -357,7 +398,7 @@ function SignupModal({ onClose, onSwitch }) {
     setDone(true); setLoading(false)
   }
 
-  const canSubmit = !loading && score >= 4 && match && !nameErr && !emailErr && name.trim().length >= 2 && isValidEmail(email)
+  const canSubmit = !loading && score >= 4 && match && !nameErr && !emailErr && name.trim().length >= 2 && isValidEmail(email) && !!tsToken
 
   if (done) return (
     <div className="m-overlay">
@@ -451,10 +492,11 @@ function SignupModal({ onClose, onSwitch }) {
               {cf && <div style={{fontSize:11,marginTop:4,color:match?'#00ff88':'#ff4f6e'}}>{match?'✓ Coinciden':'✗ No coinciden'}</div>}
             </div>
 
+            <Turnstile ref={tsRef} onVerify={setTsToken} onExpire={()=>setTsToken(null)} />
             {error && <div className="m-err">⚠ {error}</div>}
 
             <button className="m-submit" type="submit" disabled={!canSubmit}>
-              {loading ? 'Creando cuenta...' : 'Crear cuenta gratis'}
+              {loading ? 'Verificando...' : 'Crear cuenta gratis'}
             </button>
             <div style={{fontSize:11,color:'#2a5a72',textAlign:'center',lineHeight:1.6}}>
               Al registrarte aceptas nuestros <a href="#" style={{color:'#4a7a96'}}>Términos</a> y <a href="#" style={{color:'#4a7a96'}}>Privacidad</a>

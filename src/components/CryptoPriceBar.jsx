@@ -1,8 +1,9 @@
 // src/components/CryptoPriceBar.jsx
 import { useState, useEffect } from 'react'
 
-const _PROXY   = import.meta.env.VITE_REVERT_PROXY_URL ?? ''
-const GECKO    = `${_PROXY}/coingecko/api/v3`
+const _PROXY        = import.meta.env.VITE_REVERT_PROXY_URL ?? ''
+const GECKO_PRIMARY = _PROXY ? `${_PROXY}/coingecko/api/v3` : 'https://api.coingecko.com/api/v3'
+const GECKO_DIRECT  = 'https://api.coingecko.com/api/v3'
 
 const COIN_IDS = [
   'bitcoin','ethereum','tether','binancecoin','solana',
@@ -30,15 +31,24 @@ export default function CryptoPriceBar() {
   const [globalData, setGlobalData] = useState(null)
   const [lastUpdate, setLastUpdate] = useState(null)
 
+  const doFetch = async (base) => {
+    const [pRes, gRes] = await Promise.all([
+      fetch(`${base}/coins/markets?vs_currency=usd&ids=${COIN_IDS.join(',')}&order=market_cap_desc&per_page=15&page=1&sparkline=false&price_change_percentage=24h`),
+      fetch(`${base}/global`),
+    ])
+    if (!pRes.ok && !gRes.ok) throw new Error('api_error')
+    if (pRes.ok) { setCoins(await pRes.json()); setLastUpdate(new Date()) }
+    if (gRes.ok) { const g = await gRes.json(); setGlobalData(g.data) }
+  }
+
   const fetchAll = async () => {
     try {
-      const [pRes, gRes] = await Promise.all([
-        fetch(`${GECKO}/coins/markets?vs_currency=usd&ids=${COIN_IDS.join(',')}&order=market_cap_desc&per_page=15&page=1&sparkline=false&price_change_percentage=24h`),
-        fetch(`${GECKO}/global`),
-      ])
-      if (pRes.ok) { setCoins(await pRes.json()); setLastUpdate(new Date()) }
-      if (gRes.ok) { const g = await gRes.json(); setGlobalData(g.data) }
-    } catch {}
+      await doFetch(GECKO_PRIMARY)
+    } catch {
+      if (GECKO_PRIMARY !== GECKO_DIRECT) {
+        try { await doFetch(GECKO_DIRECT) } catch {}
+      }
+    }
   }
 
   useEffect(() => { fetchAll(); const t = setInterval(fetchAll, 60000); return () => clearInterval(t) }, [])
