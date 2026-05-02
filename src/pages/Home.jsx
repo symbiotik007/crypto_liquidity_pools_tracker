@@ -418,12 +418,14 @@ export default function Home() {
             <div className="about-name">Oscar Bolaños</div>
             <div className="about-role">Trader profesional & Mentor de inversiones</div>
             <p className="about-text">
-              Soy Oscar, operador de criptomonedas VIP en Bybit y con experiencia en Prop Firms, brokers y estructuras de inversión enfocadas en DeFi, futuros y gestión de liquidez. Durante más de 4 años he trabajado en la ejecución, análisis y desarrollo de estrategias aplicadas a mercados reales, con enfoque en consistencia, control de riesgo y toma de decisiones basada en datos.
+              Mucho gusto soy Oscar Bolaños, operador activo de criptomonedas VIP en Bybit con experiencia en Prop Firms, brokers y estructuras de inversión enfocadas en finanzas descentralizadas, futuros y gestión de liquidez. Durante más de 4 años he trabajado en la ejecución, análisis y desarrollo de estrategias aplicadas a mercados reales, con enfoque en consistencia, control de riesgo y toma de decisiones basada en datos.
             </p>
             <p className="about-text">
-              Creé The Crypto House con una misión clara: democratizar el acceso a la educación
-              financiera de calidad. Mi metodología combina teoría sólida con práctica real,
-              acompañamiento cercano y herramientas tecnológicas propias como el Liquidity Engine para operaciones descentralizadas.
+              The Crypto House nace para redefinir cómo se aprende y se ejecuta en el mundo financiero. No es solo educación: es un ecosistema diseñado para transformar conocimiento en resultados reales.
+
+Aquí no te quedas en la teoría. Accedes a una metodología enfocada en acción, donde cada concepto se aplica directamente en el mercado, con acompañamiento estratégico y herramientas tecnológicas propias que marcan la diferencia. Entre ellas, el Liquidity Engine, desarrollado para optimizar y potenciar operaciones en entornos centralizados.
+
+El objetivo es claro: cerrar la brecha entre aprender y generar resultados, llevando a cualquier persona —sin importar su punto de partida— a operar con criterio, precisión y ventaja competitiva.
             </p>
             <div className="about-highlights">
               {[                
