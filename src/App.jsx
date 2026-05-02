@@ -148,6 +148,9 @@ export default function App() {
             </div>
             <div className="logo-text">The Crypto<br />House</div>
           </div>
+          <a href="/" className="nav-item-site" title="Volver al sitio web">
+            ← Sitio web
+          </a>
           <div className="nav-section">
             {NAV_ITEMS.map(l => {
               const locked = !isPaid && PAID_TABS.includes(l);

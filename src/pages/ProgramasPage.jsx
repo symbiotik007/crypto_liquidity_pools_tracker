@@ -97,8 +97,9 @@ const TICKER_ITEMS = ['Bootcamp Crypto','·','Express Trading','·','DeFi & Liqu
 
 export default function ProgramasPage() {
   const navigate = useNavigate()
-  const [active, setActive]     = useState('bootcamp')
-  const [dropOpen, setDropOpen] = useState(false)
+  const [active, setActive]         = useState('bootcamp')
+  const [dropOpen, setDropOpen]     = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const dropTimer = useRef(null)
   const openDrop  = () => { clearTimeout(dropTimer.current); setDropOpen(true) }
   const closeDrop = () => { dropTimer.current = setTimeout(() => setDropOpen(false), 220) }
@@ -152,9 +153,29 @@ export default function ProgramasPage() {
             <button className="nav-link" onClick={() => goHome('contacto')}>Contacto</button>
           </div>
           <div className="nav-sep" />
+          <button
+            className="nav-hamburger"
+            onClick={e => { e.stopPropagation(); setMobileMenuOpen(o => !o) }}
+            aria-label="Menú"
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
           <a className="nav-app" href="/app">Acceder al Ecosistema</a>
         </nav>
+        {mobileMenuOpen && (
+          <div className="nav-mobile-menu" onClick={e => e.stopPropagation()}>
+            <button className="nav-mobile-link" onClick={() => { goHome(); setMobileMenuOpen(false) }}>Inicio</button>
+            <button className="nav-mobile-link" onClick={() => { goHome('sobre'); setMobileMenuOpen(false) }}>Instructor</button>
+            <button className="nav-mobile-link" onClick={() => { navigate('/programas'); setMobileMenuOpen(false) }}>Formación</button>
+            <button className="nav-mobile-link" onClick={() => { navigate('/liquidity-engine'); setMobileMenuOpen(false) }}>Liquidity Engine</button>
+            <button className="nav-mobile-link" onClick={() => { goHome('faq'); setMobileMenuOpen(false) }}>FAQ</button>
+            <button className="nav-mobile-link" onClick={() => { goHome('contacto'); setMobileMenuOpen(false) }}>Contacto</button>
+            <div className="nav-mobile-sep" />
+            <a className="nav-mobile-app" href="/app" onClick={() => setMobileMenuOpen(false)}>Acceder al Ecosistema →</a>
+          </div>
+        )}
       </div>
+      {mobileMenuOpen && <div className="nav-mobile-backdrop" onClick={() => setMobileMenuOpen(false)} />}
 
       {/* HERO */}
       <div className="page-hero">

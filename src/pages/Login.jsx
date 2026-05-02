@@ -532,6 +532,7 @@ export default function Login() {
               </div>
               <div className="lp-name">The Crypto House</div>
             </div>
+            <a className="lp-home-btn" href="/">← Página principal</a>
             <div className="lp-sep" />
             <button className="btn-ghost" onClick={()=>setModal('login')}>Iniciar sesión</button>
             <button className="btn-cyan" onClick={()=>setModal('signup')}>Registrarse →</button>
