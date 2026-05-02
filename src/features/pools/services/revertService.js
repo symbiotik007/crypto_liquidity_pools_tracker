@@ -1,4 +1,4 @@
-const REVERT_API = "https://api.revert.finance/v1/positions/account";
+const REVERT_API = "/revert-api/v1/positions/account";
 
 export async function fetchRevertPositions(walletAddress) {
   try {

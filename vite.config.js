@@ -14,6 +14,12 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/graph-api/, '/api'),
         secure: true,
+      },
+      '/revert-api': {
+        target: 'https://api.revert.finance',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/revert-api/, ''),
+        secure: true,
       }
     }
   }
