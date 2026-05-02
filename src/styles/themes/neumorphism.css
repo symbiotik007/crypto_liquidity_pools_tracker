@@ -1,0 +1,9 @@
+/* ─────────────────────────────────────────────────────────
+   Tema: Neumorphism
+   Relieves suaves, monocromático oscuro. Minimalista.
+   Se activa con: document.documentElement.setAttribute('data-theme', 'neumorphism')
+
+   TODO: completar variables de color
+   ───────────────────────────────────────────────────────── */
+
+/* :root[data-theme="neumorphism"] { } */

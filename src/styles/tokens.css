@@ -87,6 +87,37 @@
   /* ── Timing (también disponibles como JS exports) ───── */
   --duration-transition: 200ms;
   --duration-glare:      30s;   /* ticker scroll CryptoPriceBar       */
+
+  /* ── Theme helpers ──────────────────────────────────── */
+  --color-accent-rgb:    0, 229, 255;   /* accent como triplete RGB para rgba() */
+  --text-hover:          #7ab8d4;       /* texto en estado hover                */
+  --bg-modal:            #0a1520;       /* modales, paneles flotantes            */
+  --bg-empty:            #060c12;       /* estados vacíos, fondos de formulario  */
+  --bg-count:            #001a22;       /* fondo de badges de conteo            */
+  --border-count:        #003a4e;       /* borde de badges de conteo            */
+  --btn-primary-text:    #050a0f;       /* texto del botón primario             */
+
+  /* ── Overlays (reemplaza rgba hardcodeados en app.css) ── */
+  --overlay-backdrop:    rgba(0, 0, 0, 0.80);   /* fondo oscuro del modal       */
+  --overlay-mobile:      rgba(0, 0, 0, 0.65);   /* overlay sidebar mobile       */
+  --overlay-lock:        rgba(5, 10, 15, 0.70); /* blur overlay de stat-card    */
+
+  /* ── RGB triplets para rgba() dinámico ─────────────────── */
+  --bg-base-rgb:         5, 10, 15;
+  --bg-surface-rgb:      7, 13, 20;
+
+  /* ── Estados semánticos sutiles ────────────────────────── */
+  --bg-danger-subtle:     #1a0810;
+  --border-danger-subtle: #5a1a28;
+  --text-danger-subtle:   #ff6b88;
+  --bg-warning-subtle:    #1a1000;
+  --border-warning-subtle:#5a3a00;
+  --bg-success-subtle:    #001a0e;
+  --border-success-subtle:#003a22;
+
+  /* ── Especiales de página ───────────────────────────────── */
+  --hero-overlay:         rgba(5, 10, 15, 0.80);
+  --bg-band-card:         linear-gradient(135deg, #0c1e2e 0%, #071830 55%, #0a0f1e 100%);
 }
 
 /* ── Constantes JS — importar desde tokens.js, no desde aquí ──────

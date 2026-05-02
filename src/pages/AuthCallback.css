@@ -1,57 +1,57 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap');
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Outfit', sans-serif; background: #050a0f; }
+body { font-family: 'Outfit', sans-serif; background: var(--bg-base); }
 .rc-overlay {
-  position: fixed; inset: 0; background: rgba(5,10,15,0.9);
+  position: fixed; inset: 0; background: rgba(var(--bg-base-rgb),0.9);
   display: flex; align-items: center; justify-content: center;
   padding: 20px; backdrop-filter: blur(10px);
   animation: fadeIn 0.2s ease;
 }
 @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
 .rc-box {
-  background: #070d14; border: 1px solid #1a3a5e;
+  background: var(--bg-surface); border: 1px solid var(--border-blue);
   width: 100%; max-width: 420px;
   animation: slideUp 0.25s ease;
 }
 @keyframes slideUp { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
 .rc-head {
   padding: 28px 32px 0;
-  border-bottom: 1px solid #0e2435;
+  border-bottom: 1px solid var(--border-dim);
   padding-bottom: 20px;
 }
 .rc-body { padding: 24px 32px 32px; display: flex; flex-direction: column; gap: 16px; }
-.rc-lbl { display: block; font-size: 11px; font-weight: 600; color: #4a7a96; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 7px; }
+.rc-lbl { display: block; font-size: 11px; font-weight: 600; color: var(--text-dim); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 7px; }
 .rc-inp {
   width: 100%; padding: 11px 42px 11px 14px;
-  background: #0a1520; border: 1px solid #1a3a5e;
-  color: #c8e6f0; font-family: 'Outfit', sans-serif;
+  background: var(--bg-input); border: 1px solid var(--border-blue);
+  color: var(--text-secondary); font-family: 'Outfit', sans-serif;
   font-size: 14px; outline: none; transition: border-color 0.15s;
 }
-.rc-inp:focus { border-color: #00e5ff; }
-.rc-inp.err { border-color: #ff4f6e; }
+.rc-inp:focus { border-color: var(--color-accent); }
+.rc-inp.err { border-color: var(--color-danger); }
 .rc-pw { position: relative; }
 .rc-eye {
   position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-  background: none; border: none; color: #2a5a72; cursor: pointer; padding: 0;
+  background: none; border: none; color: var(--text-label); cursor: pointer; padding: 0;
   display: flex; align-items: center; transition: color 0.15s;
 }
-.rc-eye:hover { color: #7ab8d4; }
+.rc-eye:hover { color: var(--text-hover); }
 .str-bar { height: 3px; display: flex; gap: 3px; margin-top: 8px; }
-.str-seg { flex: 1; border-radius: 2px; background: #0e2435; transition: background 0.3s; }
-.str-seg.s1,.str-seg.s2 { background: #ff4f6e; }
-.str-seg.s3 { background: #ffb347; }
-.str-seg.s4 { background: #00ff88; }
+.str-seg { flex: 1; border-radius: 2px; background: var(--border-dim); transition: background 0.3s; }
+.str-seg.s1,.str-seg.s2 { background: var(--color-danger); }
+.str-seg.s3 { background: var(--color-warning); }
+.str-seg.s4 { background: var(--color-success); }
 .str-chks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .str-chk { font-size: 11px; display: flex; align-items: center; gap: 4px; }
-.str-chk.ok { color: #00ff88; } .str-chk.no { color: #2a5a72; }
+.str-chk.ok { color: var(--color-success); } .str-chk.no { color: var(--text-label); }
 .rc-btn {
   width: 100%; padding: 13px; background: transparent;
-  border: 1px solid #00e5ff; color: #00e5ff;
+  border: 1px solid var(--color-accent); color: var(--color-accent);
   font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 700;
   cursor: pointer; letter-spacing: 0.5px; transition: all 0.15s; margin-top: 4px;
   border-radius: 10px;
 }
-.rc-btn:hover { background: rgba(0,229,255,0.05); }
+.rc-btn:hover { background: rgba(var(--color-accent-rgb),0.05); }
 .rc-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.rc-err { background: #1a0810; border: 1px solid #5a1a28; padding: 10px 14px; font-size: 13px; color: #ff6b88; }
-.rc-ok  { background: #001a0e; border: 1px solid #003a22; padding: 20px; font-size: 14px; color: #00ff88; text-align: center; line-height: 1.7; }
+.rc-err { background: var(--bg-danger-subtle); border: 1px solid var(--border-danger-subtle); padding: 10px 14px; font-size: 13px; color: var(--text-danger-subtle); }
+.rc-ok  { background: var(--bg-success-subtle); border: 1px solid var(--border-success-subtle); padding: 20px; font-size: 14px; color: var(--color-success); text-align: center; line-height: 1.7; }

@@ -1,0 +1,103 @@
+/* ─────────────────────────────────────────────────────────
+   Tema: Light Mode
+   Limpio, corporativo y accesible. Fondo claro tradicional.
+   Se activa con: document.documentElement.setAttribute('data-theme', 'light')
+   ───────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] {
+
+  /* ── Accent / Brand ─────────────────────────────────── */
+  --color-accent:        #2563eb;
+  --color-accent-rgb:    37, 99, 235;
+  --color-success:       #16a34a;
+  --color-danger:        #dc2626;
+  --color-warning:       #d97706;
+
+  /* ── Purple (mantiene coherencia con gradientes) ────── */
+  --color-purple:        #7c3aed;
+  --color-purple-dark:   #6d28d9;
+  --color-purple-deeper: #5b21b6;
+  --color-purple-light:  #8b5cf6;
+  --color-purple-pale:   #a78bfa;
+  --color-purple-faint:  #7c3aed;
+
+  /* ── Backgrounds ─────────────────────────────────────── */
+  --bg-base:             #f8fafc;
+  --bg-overlay:          rgba(248, 250, 252, 0.95);
+  --bg-surface:          #ffffff;
+  --bg-elevated:         #f1f5f9;
+  --bg-deep:             #f8fafc;
+  --bg-card-mid:         #f1f5f9;
+  --bg-card-end:         #e2e8f0;
+  --bg-badge:            #dbeafe;
+  --bg-input:            #f1f5f9;
+  --bg-tag:              #ede9fe;
+  --bg-modal:            #ffffff;
+  --bg-empty:            #f1f5f9;
+  --bg-count:            #dbeafe;
+
+  /* ── Overlays ────────────────────────────────────────── */
+  --overlay-backdrop:    rgba(15, 23, 42, 0.45);
+  --overlay-mobile:      rgba(15, 23, 42, 0.35);
+  --overlay-lock:        rgba(248, 250, 252, 0.88);
+
+  /* ── Borders ─────────────────────────────────────────── */
+  --border-accent:       rgba(37, 99, 235, 0.20);
+  --border-dim:          #e2e8f0;
+  --border-muted:        #cbd5e1;
+  --border-inactive:     #e2e8f0;
+  --border-blue:         #93c5fd;
+  --border-blue-dim:     #bfdbfe;
+  --border-count:        #93c5fd;
+  --border-purple:       #c4b5fd;
+  --border-purple-dim:   rgba(196, 181, 253, 0.40);
+  --border-tag-purple:   #8b5cf6;
+
+  /* ── Texto ───────────────────────────────────────────── */
+  --text-primary:        #0f172a;
+  --text-secondary:      #334155;
+  --text-muted:          #475569;
+  --text-dim:            #64748b;
+  --text-faint:          #94a3b8;
+  --text-label:          #64748b;
+  --text-blue-soft:      #3b82f6;
+  --text-purple-soft:    #7c3aed;
+  --text-range-min:      #dc2626;
+  --text-inactivity:     #94a3b8;
+  --text-hover:          #1d4ed8;
+
+  /* ── Botón primario ──────────────────────────────────── */
+  --btn-primary-text:    #ffffff;
+
+  /* ── Sombras ─────────────────────────────────────────── */
+  --shadow-card:         0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-card-active:  0 4px 24px rgba(0,0,0,0.12), 0 12px 40px rgba(0,0,0,0.08);
+  --shadow-overlay:      0 8px 32px rgba(0,0,0,0.14);
+
+  /* ── RGB triplets ────────────────────────────────────── */
+  --bg-base-rgb:         248, 250, 252;
+  --bg-surface-rgb:      255, 255, 255;
+
+  /* ── Estados semánticos sutiles ─────────────────────── */
+  --bg-danger-subtle:     #fef2f2;
+  --border-danger-subtle: #fecaca;
+  --text-danger-subtle:   #dc2626;
+  --bg-warning-subtle:    #fffbeb;
+  --border-warning-subtle:#fde68a;
+  --bg-success-subtle:    #f0fdf4;
+  --border-success-subtle:#bbf7d0;
+
+  /* ── Especiales de página ────────────────────────────── */
+  --hero-overlay:         rgba(15, 23, 42, 0.35);
+  --bg-band-card:         linear-gradient(135deg, #eff6ff 0%, #dbeafe 55%, #e0f2fe 100%);
+
+  /* ── Variables locales marketing / login ─────────────── */
+  --cyan:   var(--color-accent);
+  --dark:   var(--bg-base);
+  --dark2:  var(--bg-elevated);
+  --dark3:  var(--bg-modal);
+  --border: var(--border-muted);
+  --text:   var(--text-secondary);
+  --muted:  var(--text-dim);
+  --dimmed: var(--text-faint);
+}

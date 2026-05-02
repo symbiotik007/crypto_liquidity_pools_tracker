@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import UsersAdminTab from './UsersAdminTab'
 import ApiTestTab    from './ApiTestTab'
+import StylesTab     from './StylesTab'
 
 const TABS = [
   { id: 'users',      label: '⚙  Gestión de Usuarios', component: <UsersAdminTab /> },
@@ -8,6 +9,7 @@ const TABS = [
   { id: 'analytics',  label: '📊 Analytics',            component: null },
   { id: 'bots',       label: '🤖 Automatizaciones',     component: null },
   { id: 'logs',       label: '📋 Logs del Sistema',     component: null },
+  { id: 'styles',     label: '🎨 Estilos',              component: <StylesTab /> },
 ]
 
 function ComingSoon({ name }) {

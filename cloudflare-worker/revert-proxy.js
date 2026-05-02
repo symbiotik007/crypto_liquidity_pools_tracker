@@ -11,6 +11,11 @@ const ROUTES = {
   '/gmx-api':         'https://gmx-server-mainnet.uw.r.appspot.com',
   '/dexscreener-api': 'https://api.dexscreener.com',
   '/curve-api':       'https://api.curve.fi',
+  // RPC nodes — target includes subpath so proxy URL is clean
+  '/eth-rpc':         'https://eth.llamarpc.com',
+  '/arb-rpc':         'https://arb1.arbitrum.io/rpc',
+  '/op-rpc':          'https://mainnet.optimism.io',
+  '/base-rpc':        'https://mainnet.base.org',
 }
 
 export default {
@@ -35,14 +40,16 @@ export default {
     const targetPath = url.pathname.slice(prefix.length)
     const targetUrl  = `${targetBase}${targetPath}${url.search}`
 
+    const isReadMethod = request.method === 'GET' || request.method === 'HEAD'
     const headers = { Accept: 'application/json' }
+    if (!isReadMethod) {
+      headers['Content-Type'] = request.headers.get('Content-Type') ?? 'application/json'
+    }
 
     // Inject API key secrets — never exposed to the browser
     if (prefix === '/coingecko' && env.COINGECKO_API_KEY) {
       headers['x-cg-demo-api-key'] = env.COINGECKO_API_KEY
     }
-
-    const isReadMethod = request.method === 'GET' || request.method === 'HEAD'
 
     const response = await fetch(targetUrl, {
       method:  request.method,

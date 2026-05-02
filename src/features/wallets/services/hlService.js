@@ -1,7 +1,8 @@
 import { encode as msgpackEncode } from "@msgpack/msgpack";
 
-export const HL_API  = "https://api.hyperliquid.xyz/exchange";
-export const HL_INFO = "https://api.hyperliquid.xyz/info";
+const _PROXY = import.meta.env.VITE_REVERT_PROXY_URL ?? ''
+export const HL_API  = _PROXY ? `${_PROXY}/hl-info/exchange` : 'https://api.hyperliquid.xyz/exchange'
+export const HL_INFO = _PROXY ? `${_PROXY}/hl-info/info`     : 'https://api.hyperliquid.xyz/info'
 
 export async function hlGetAccountState(address) {
   const res = await fetch(HL_INFO, {

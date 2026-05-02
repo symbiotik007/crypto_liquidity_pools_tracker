@@ -1,0 +1,9 @@
+/* ─────────────────────────────────────────────────────────
+   Tema: Glassmorphism
+   Transparencias tipo vidrio. Profundidad suave y moderno.
+   Se activa con: document.documentElement.setAttribute('data-theme', 'glassmorphism')
+
+   TODO: completar variables de color
+   ───────────────────────────────────────────────────────── */
+
+/* :root[data-theme="glassmorphism"] { } */

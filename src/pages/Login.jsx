@@ -532,7 +532,7 @@ export default function Login() {
               </div>
               <div className="lp-name">The Crypto House</div>
             </div>
-            <a className="lp-home-btn" href="/">← Página principal</a>
+            <a className="lp-home-btn" href="/">Página principal</a>
             <div className="lp-sep" />
             <button className="btn-ghost" onClick={()=>setModal('login')}>Iniciar sesión</button>
             <button className="btn-cyan" onClick={()=>setModal('signup')}>Registrarse →</button>
@@ -551,7 +551,7 @@ export default function Login() {
             <div className="lp-exchanges">{EXCHANGES.map((ex,i)=><span key={i} className="lp-ex">{ex}</span>)}</div>
             <div className="lp-cta">
               <button className="lp-cta-primary" onClick={()=>setModal('signup')}>
-                Acceder al Liquidity Engine →
+                Acceder al Liquidity Engine 🤖
               </button>
               <button className="lp-cta-secondary" onClick={()=>setModal('login')}>
                 ¿Ya tienes cuenta? <span>Iniciar sesión</span>

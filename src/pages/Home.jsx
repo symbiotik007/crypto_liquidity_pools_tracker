@@ -5,6 +5,7 @@ import oscarImg from '../assets/IMG_7704(1).jpg'
 import cryptoHouseLogo from '../assets/cryptohouselogo.png'
 import CryptoPriceBar from '../components/CryptoPriceBar'
 import Turnstile from '../components/Turnstile'
+import ThemeToggle from '../components/ThemeToggle'
 import '../styles/marketing.css'
 import './Home.css'
 
@@ -332,6 +333,7 @@ export default function Home() {
             <a className="nav-link" onClick={e => goTo(e, 'contacto')} href="#">Contacto</a>
           </div>
           <div className="nav-sep" />
+          <ThemeToggle />
           <button
             className="nav-hamburger"
             onClick={e => { e.stopPropagation(); setMobileMenuOpen(o => !o) }}
@@ -339,7 +341,7 @@ export default function Home() {
           >
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
-          <a className="nav-app" href="/app">Acceder al Ecosistema</a>
+          <a className="nav-app" href="/app">Acceso Miembros</a>
         </nav>
         {mobileMenuOpen && (
           <div className="nav-mobile-menu" onClick={e => e.stopPropagation()}>
@@ -350,7 +352,9 @@ export default function Home() {
             <a className="nav-mobile-link" href="#" onClick={e => { goTo(e, 'faq'); setMobileMenuOpen(false) }}>FAQ</a>
             <a className="nav-mobile-link" href="#" onClick={e => { goTo(e, 'contacto'); setMobileMenuOpen(false) }}>Contacto</a>
             <div className="nav-mobile-sep" />
-            <a className="nav-mobile-app" href="/app" onClick={() => setMobileMenuOpen(false)}>Acceder al Ecosistema →</a>
+            <ThemeToggle mobile />
+            <div className="nav-mobile-sep" />
+            <a className="nav-mobile-app" href="/app" onClick={() => setMobileMenuOpen(false)}>Acceso Miembros</a>
           </div>
         )}
       </div>
@@ -375,7 +379,7 @@ export default function Home() {
           </div>
           <h1 className="hero-title">
             Domina <span>Crypto</span>, Futuros<br />
-            y DeFi con una estrategia profesional.
+            y <span className="defi-tip">DeFi<span className="defi-tip-label">Finanzas Descentralizadas</span></span> con una estrategia profesional.
           </h1>
           <p className="hero-sub">
             Aprende a operar con disciplina, gestión de riesgo y una metodología diseñada para resultados consistentes.

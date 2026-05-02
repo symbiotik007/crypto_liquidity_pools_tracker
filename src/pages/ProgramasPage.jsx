@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import cryptoHouseLogo from '../assets/cryptohouselogo.png'
 import CryptoPriceBar from '../components/CryptoPriceBar'
+import ThemeToggle from '../components/ThemeToggle'
 import '../styles/marketing.css'
 import './ProgramasPage.css'
 
@@ -153,6 +154,7 @@ export default function ProgramasPage() {
             <button className="nav-link" onClick={() => goHome('contacto')}>Contacto</button>
           </div>
           <div className="nav-sep" />
+          <ThemeToggle />
           <button
             className="nav-hamburger"
             onClick={e => { e.stopPropagation(); setMobileMenuOpen(o => !o) }}
@@ -170,6 +172,8 @@ export default function ProgramasPage() {
             <button className="nav-mobile-link" onClick={() => { navigate('/liquidity-engine'); setMobileMenuOpen(false) }}>Liquidity Engine</button>
             <button className="nav-mobile-link" onClick={() => { goHome('faq'); setMobileMenuOpen(false) }}>FAQ</button>
             <button className="nav-mobile-link" onClick={() => { goHome('contacto'); setMobileMenuOpen(false) }}>Contacto</button>
+            <div className="nav-mobile-sep" />
+            <ThemeToggle mobile />
             <div className="nav-mobile-sep" />
             <a className="nav-mobile-app" href="/app" onClick={() => setMobileMenuOpen(false)}>Acceder al Ecosistema →</a>
           </div>

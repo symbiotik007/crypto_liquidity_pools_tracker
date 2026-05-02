@@ -1,0 +1,9 @@
+/* ─────────────────────────────────────────────────────────
+   Tema: Profesional
+   Ultra profesional. Paleta neutral, azul corporativo limpio.
+   Se activa con: document.documentElement.setAttribute('data-theme', 'profesional')
+
+   TODO: completar variables de color
+   ───────────────────────────────────────────────────────── */
+
+/* :root[data-theme="profesional"] { } */

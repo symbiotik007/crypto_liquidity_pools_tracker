@@ -3,8 +3,9 @@ import { usePoolsSync, useInsiderTrades } from "./lib/useSupabaseSync";
 import { useAuth } from "./lib/AuthContext";
 
 // ── HL helpers ────────────────────────────────────────────────────────────────
-const HL_INFO = "https://api.hyperliquid.xyz/info";
-const HL_API  = "https://api.hyperliquid.xyz/exchange";
+const _PROXY  = import.meta.env.VITE_REVERT_PROXY_URL ?? ''
+const HL_INFO = _PROXY ? `${_PROXY}/hl-info/info`     : 'https://api.hyperliquid.xyz/info'
+const HL_API  = _PROXY ? `${_PROXY}/hl-info/exchange` : 'https://api.hyperliquid.xyz/exchange'
 
 async function fetchHlMids() {
   try {
