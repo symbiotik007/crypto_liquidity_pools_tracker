@@ -16,6 +16,7 @@ import AdminPanel             from "./features/admin/AdminPanel";
 import PreguntasTab           from "./features/admin/PreguntasTab";
 import TradingViewTab         from "./components/TradingViewTab";
 import TradingViewOperableTab from "./components/TradingViewOperableTab";
+import VeloChartTab           from "./components/VeloChartTab";
 import ComingSoonTab          from "./components/ComingSoonTab";
 import ContactModal           from "./components/ContactModal";
 import NotificationBell       from "./components/NotificationBell";
@@ -112,6 +113,7 @@ export default function App() {
     "Crypto Bootcamp":"Crypto Bootcamp",
     TradingView:"TradingView",
     TradingViewOperable:"TradingView Operable",
+    VeloChart:"Velo Chart",
     Preguntas:"Preguntas",
     "Admin Panel":"Admin Panel",
   };
@@ -135,6 +137,7 @@ export default function App() {
       case "Crypto Bootcamp":      return <CryptoBootcampTab />;
       case "TradingView":          return <TradingViewTab />;
       case "TradingViewOperable":  return <TradingViewOperableTab />;
+      case "VeloChart":            return <VeloChartTab />;
       case "Preguntas":            return <PreguntasTab />;
       case "Admin Panel":          return <AdminPanel />;
       default:                     return <ComingSoonTab name={activeSection} />;
@@ -192,6 +195,12 @@ export default function App() {
               onClick={() => { setActiveSection("TradingViewOperable"); closeSidebar(); }}
             >
               🖥️ TV Operable
+            </button>
+            <button
+              className={`nav-item ${activeSection === "VeloChart" ? 'active' : ''}`}
+              onClick={() => { setActiveSection("VeloChart"); closeSidebar(); }}
+            >
+              ⚡ Velo Chart
             </button>
           </div>
           <div className="nav-section">
@@ -295,7 +304,7 @@ export default function App() {
               </div>
             )}
           </div>
-          <div className="content" style={activeSection === "Programa" ? { padding:0 } : {}}>{renderContent()}</div>
+          <div className="content" style={(activeSection === "Programa" || activeSection === "VeloChart") ? { padding:0 } : {}}>{renderContent()}</div>
         </div>
       </div>
 

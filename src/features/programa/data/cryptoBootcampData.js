@@ -215,10 +215,153 @@ export const CRYPTO_BOOTCAMP = [
     },
   ];
 
+  const clasesModulo2 = [
+    {
+      id: "crypto-02-1",
+      titulo: "¿Qué es Bitcoin?",
+      resumen: "Bitcoin es el dinero digital original: una moneda descentralizada que te permite guardar, enviar y recibir valor por internet sin bancos ni intermediarios. En esta lección descubres qué lo hace único y por qué marcó un antes y un después en las finanzas.",
+      estado: "Contenido completo",
+      sourceUrl: "https://www.babypips.com/crypto/learn/what-is-bitcoin",
+      contenido: [
+        {
+          titulo: "¿Qué es Bitcoin?",
+          texto: "Bitcoin es un nuevo tipo de \"dinero\" — una moneda digital diseñada para que puedas guardar, enviar y recibir valor por internet sin necesitar bancos ni ninguna otra institución financiera.\n\nBitcoin es conocido como la criptomoneda original. La primera de su tipo.",
+        },
+        {
+          titulo: "Bitcoin es como el email, pero para dinero",
+          texto: "Bitcoin funciona de forma muy parecida al correo electrónico. Así como puedes crear una dirección de email para enviar, guardar y recibir mensajes, también puedes crear una \"wallet\" (billetera) de Bitcoin para enviar, guardar y recibir dinero.\n\nCualquier persona con conexión a internet puede crear una wallet de Bitcoin y empezar a usarla — sin solicitar permiso a ningún banco.",
+        },
+        {
+          titulo: "Bitcoin está descentralizado",
+          texto: "Bitcoin es una moneda descentralizada: no está controlada por ninguna entidad única, como un gobierno o un banco central. Nadie lo controla.\n\nEsto lo hace radicalmente diferente al dólar, el euro o cualquier otra moneda tradicional, que dependen de un banco central que las emite y regula.",
+        },
+        {
+          titulo: "¿Quién creó Bitcoin?",
+          texto: "Bitcoin fue creado por una persona (o grupo) bajo el seudónimo Satoshi Nakamoto. La idea era construir un sistema de pagos digitales único que permitiera transacciones financieras sin fronteras y sin necesidad de intermediarios como los bancos.\n\nEl 31 de octubre de 2008 — día de Halloween — Satoshi Nakamoto publicó el famoso whitepaper titulado \"Bitcoin: A Peer-to-Peer Electronic Cash System\", un documento técnico de 12 páginas que describía cómo funcionaría todo el sistema.",
+        },
+        {
+          titulo: "Suministro fijo: solo 21 millones",
+          texto: "El software de Bitcoin impone un suministro total fijo de 21 millones de monedas. Jamás existirán más de 21 millones de bitcoins.\n\nEsta escasez programada es una de las razones por las que muchos comparan Bitcoin con el oro: ambos son limitados, difíciles de obtener y no pueden ser creados arbitrariamente por ningún gobierno.",
+        },
+        {
+          titulo: "¿Cómo se crean los bitcoins? La minería",
+          texto: "Los bitcoins se crean a través de un proceso llamado \"minería\". Computadoras especializadas compiten entre sí para resolver un complejo juego matemático, y la computadora ganadora (el \"minero\") es recompensada con bitcoins recién creados.\n\nEste proceso también es el mecanismo que valida y registra todas las transacciones en la red.",
+        },
+        {
+          titulo: "Puntos clave",
+          puntos: [
+            "Bitcoin es una moneda digital descentralizada — sin bancos, sin gobierno que la controle.",
+            "Funciona como el email para el dinero: solo necesitas una wallet y conexión a internet.",
+            "Fue creado en 2008 por el pseudónimo Satoshi Nakamoto.",
+            "Solo existirán 21 millones de bitcoins en total — su escasez es una característica de diseño.",
+            "Los nuevos bitcoins se crean a través de la minería, que también protege y valida la red.",
+          ],
+        },
+      ],
+      imagenes: [],
+    },
+    {
+      id: "crypto-02-2",
+      titulo: "¿Por qué fue creado Bitcoin?",
+      resumen: "Antes de Bitcoin, crear efectivo digital era un problema sin solución. Todos los intentos anteriores fracasaron por el mismo obstáculo: el doble gasto. Satoshi Nakamoto resolvió esto de forma brillante. Aquí entiendes el problema y la solución que cambió todo.",
+      estado: "Contenido completo",
+      sourceUrl: "https://www.babypips.com/crypto/learn/why-was-bitcoin-created",
+      contenido: [
+        {
+          titulo: "La visión de Satoshi Nakamoto",
+          texto: "Según el whitepaper de Bitcoin, Satoshi Nakamoto quería crear:\n\n\"…efectivo electrónico que permitiría enviar pagos en línea directamente de una parte a otra sin pasar por una institución financiera.\"\n\nSuena simple. Pero antes de que Satoshi lo lograra, todos los intentos previos de crear efectivo digital habían fallado.",
+        },
+        {
+          titulo: "El problema del intermediario de confianza",
+          texto: "Antes de Bitcoin, cualquier pago digital dependía de una autoridad central — un banco, una empresa de tarjetas de crédito — para llevar el registro de transacciones y saldos.\n\nEste intermediario era necesario porque sin él, ¿cómo podías estar seguro de que alguien no estaba gastando el mismo dinero digital dos veces? A esto se le llama el problema del \"doble gasto\".",
+        },
+        {
+          titulo: "El problema del doble gasto",
+          texto: "El doble gasto es el gran desafío del dinero digital. Los datos digitales — texto, fotos, archivos — son fáciles de copiar. Si el dinero fuera solo un archivo digital, nada te impediría enviarte una copia a ti mismo y gastar ese mismo dinero dos veces.\n\nEste problema es trivial con dinero físico (no puedes darle el mismo billete a dos personas al mismo tiempo), pero en el mundo digital era un obstáculo aparentemente insuperable.",
+        },
+        {
+          titulo: "La solución de Bitcoin: consenso distribuido",
+          texto: "Bitcoin resolvió el problema del doble gasto de una forma nunca antes lograda: eliminando al intermediario y reemplazándolo con un sistema de consenso distribuido.\n\nEn lugar de que un banco central decida qué transacciones son válidas, todos las computadoras de la red Bitcoin tienen que llegar a un acuerdo por \"consenso\" sobre cuáles transacciones son legítimas. Si la mayoría de la red acuerda que una transacción es válida, se registra permanentemente.",
+        },
+        {
+          titulo: "Peer-to-peer: de persona a persona",
+          texto: "\"Una versión puramente peer-to-peer de efectivo electrónico permitiría enviar pagos en línea directamente de una parte a otra sin pasar por una institución financiera.\"\n— Satoshi Nakamoto, Bitcoin Whitepaper\n\nEsta fue la promesa de Bitcoin: que dos personas pudieran intercambiar valor directamente, como si se pasaran efectivo en la calle, pero por internet y sin fronteras.",
+        },
+        {
+          titulo: "¿Por qué fracasaron los intentos anteriores?",
+          texto: "Antes de Bitcoin existieron otros intentos de crear moneda digital: DigiCash, e-gold, B-money, Bit Gold. Todos fracasaron por distintas razones:\n\n- Dependían de un servidor central que podía ser atacado, censurado o cerrado.\n- No resolvían el problema del doble gasto sin confiar en una entidad central.\n- Eran vulnerables a ataques del tipo \"51%\" o a la manipulación del operador.\n\nBitcoin fue el primero en resolver todos estos problemas a la vez.",
+        },
+        {
+          titulo: "Puntos clave",
+          puntos: [
+            "Bitcoin nació para crear efectivo digital sin intermediarios (bancos, gobiernos).",
+            "El principal obstáculo era el doble gasto: gastar el mismo dinero digital dos veces.",
+            "Bitcoin lo resolvió con un sistema de consenso distribuido entre miles de computadoras.",
+            "Es peer-to-peer: las transacciones van directamente de persona a persona, sin terceros.",
+            "Todos los intentos anteriores de dinero digital fracasaron — Bitcoin fue el primero en lograrlo.",
+          ],
+        },
+      ],
+      imagenes: [],
+    },
+    {
+      id: "crypto-02-3",
+      titulo: "El sistema Bitcoin y sus componentes",
+      resumen: "Bitcoin no es solo una moneda — es un sistema completo. En esta lección conoces los componentes que lo forman: el software, la red, el protocolo y cómo encajan entre sí para crear algo que nadie controla pero todos pueden usar.",
+      estado: "Contenido completo",
+      sourceUrl: "https://www.babypips.com/crypto/learn/bitcoin-system-introduction",
+      contenido: [
+        {
+          titulo: "Bitcoin es un sistema, no solo una moneda",
+          texto: "Cuando la gente dice \"Bitcoin\", generalmente se refiere a la criptomoneda. Pero en realidad, Bitcoin es mucho más que eso — es un sistema completo.\n\nComo cualquier sistema, el sistema Bitcoin es una colección de elementos o componentes que trabajan juntos como un todo. Entender cada pieza es clave para entender cómo funciona realmente.",
+        },
+        {
+          titulo: "Componente 1: El software de Bitcoin",
+          texto: "En el corazón del sistema está el software de Bitcoin. Básicamente, el sistema Bitcoin es un conjunto de computadoras que \"hablan\" entre sí por internet. Para poder comunicarse, cada computadora tiene instalado el software de Bitcoin.\n\nEste software es de código abierto (open source), lo que significa que cualquier persona puede ver el código fuente. No pertenece a ninguna persona ni empresa — es libre de usar y modificar.",
+        },
+        {
+          titulo: "Componente 2: La red de Bitcoin",
+          texto: "Todas esas computadoras con el software instalado forman la red de Bitcoin. Es una red global, distribuida y sin un punto central de control.\n\nA diferencia de los servidores de un banco (que están en ubicaciones físicas controladas por esa empresa), los nodos de Bitcoin están repartidos por todo el mundo. Nadie puede apagar la red cerrando un solo punto.",
+        },
+        {
+          titulo: "Componente 3: El protocolo de Bitcoin",
+          texto: "Un protocolo es un conjunto de reglas o procedimientos que gobiernan un sistema. El protocolo de Bitcoin es el conjunto de reglas que definen cómo opera el sistema: cómo se validan las transacciones, cómo se crean nuevos bitcoins, cómo deben comunicarse los nodos.\n\nEstas reglas están escritas directamente en el código del software y son las mismas para todos. Nadie puede cambiarlas unilateralmente.",
+        },
+        {
+          titulo: "Componente 4: El libro mayor distribuido (blockchain)",
+          texto: "Para entender cómo funciona Bitcoin, es fundamental entender el concepto de libro mayor distribuido (distributed ledger).\n\nEn un banco, hay un libro mayor centralizado donde se registran todas las transacciones — y solo el banco tiene acceso a él. En Bitcoin, ese libro mayor es público y está distribuido en miles de computadoras simultáneamente. Cada nodo de la red tiene una copia completa de todas las transacciones que jamás han ocurrido en Bitcoin.",
+        },
+        {
+          titulo: "Componente 5: La minería",
+          texto: "La minería es lo que hace que todo el sistema funcione. Los mineros son computadoras especializadas que:\n\n1. Validan las nuevas transacciones (verificando que no haya doble gasto).\n2. Las agrupan en bloques y las añaden al libro mayor público (la blockchain).\n3. A cambio, reciben bitcoins nuevos como recompensa.\n\nSin mineros, no habría nadie procesando transacciones ni manteniendo la red segura.",
+        },
+        {
+          titulo: "Cómo encajan los componentes",
+          puntos: [
+            "El software define las reglas del juego (protocolo) y se comunica con otros nodos.",
+            "La red es el conjunto de todos los nodos ejecutando ese software en el mundo.",
+            "El libro mayor distribuido (blockchain) guarda el historial completo de transacciones.",
+            "Los mineros validan transacciones, crean nuevos bloques y mantienen la red segura.",
+            "Ningún componente funciona solo — todos dependen del resto del sistema.",
+          ],
+        },
+      ],
+      imagenes: [],
+    },
+    ...Array.from({ length: 2 }, (_, i) => ({
+      id: `crypto-02-${i + 4}`,
+      titulo: `Clase ${i + 4}`,
+      resumen: "Contenido de la lección pendiente por cargar.",
+      estado: "Contenido pendiente",
+    })),
+  ];
+
   return {
     ...mod,
     clases: mod.id === "crypto-01"
       ? clasesModulo1
+      : mod.id === "crypto-02"
+      ? clasesModulo2
       : Array.from({ length: mod.lessons }, (_, i) => ({
           id: `${mod.id}-${i + 1}`,
           titulo: `Clase ${i + 1}`,

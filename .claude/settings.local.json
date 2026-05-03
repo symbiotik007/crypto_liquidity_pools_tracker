@@ -40,7 +40,9 @@
       "Bash(git commit -m ' *)",
       "Bash(python *)",
       "Bash(wrangler deploy *)",
-      "Bash(wrangler secret *)"
+      "Bash(wrangler secret *)",
+      "WebFetch(domain:www.babypips.com)",
+      "WebSearch"
     ]
   }
 }
