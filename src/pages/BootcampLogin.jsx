@@ -1,4 +1,4 @@
-// src/pages/Login.jsx
+// src/pages/BootcampLogin.jsx
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import cryptoHouseLogo from '../assets/cryptohouselogo.png'
@@ -67,7 +67,7 @@ function EmailInput({ value, onChange, disabled, hasError }) {
   const [suggestions, setSuggestions] = useState([])
 
   const handleChange = (e) => {
-    const val = e.target.value.replace(/\s/g, '') // no espacios
+    const val = e.target.value.replace(/\s/g, '')
     onChange(val)
     const atIdx = val.indexOf('@')
     if (atIdx > -1) {
@@ -148,20 +148,20 @@ const COOLDOWN_SECS = 30
 const MAX_ATTEMPTS  = 3
 
 function LoginModal({ onClose, onSwitch }) {
-  const [tab, setTab]         = useState('password')
-  const [email, setEmail]     = useState('')
+  const [tab, setTab]           = useState('password')
+  const [email, setEmail]       = useState('')
   const [emailErr, setEmailErr] = useState(false)
-  const [pw, setPw]           = useState('')
-  const [showPw, setShowPw]   = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState('')
-  const [magicOk, setMagicOk] = useState(false)
+  const [pw, setPw]             = useState('')
+  const [showPw, setShowPw]     = useState(false)
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
+  const [magicOk, setMagicOk]   = useState(false)
   const [resetMode, setResetMode] = useState(false)
-  const [resetOk, setResetOk]    = useState(false)
-  const [attempts, setAttempts]  = useState(0)
-  const [cooldown, setCooldown]  = useState(0)
-  const [tsToken, setTsToken]    = useState(null)
-  const tsRef                    = useRef(null)
+  const [resetOk, setResetOk]     = useState(false)
+  const [attempts, setAttempts]   = useState(0)
+  const [cooldown, setCooldown]   = useState(0)
+  const [tsToken, setTsToken]     = useState(null)
+  const tsRef                     = useRef(null)
 
   useEffect(() => {
     if (cooldown <= 0) return
@@ -170,8 +170,7 @@ function LoginModal({ onClose, onSwitch }) {
   }, [cooldown])
 
   const handleEmailChange = (val) => {
-    setEmail(val)
-    setError('')
+    setEmail(val); setError('')
     setEmailErr(val.includes('@') && !isValidEmail(val))
   }
 
@@ -198,15 +197,12 @@ function LoginModal({ onClose, onSwitch }) {
       const next = attempts + 1
       setAttempts(next)
       if (next >= MAX_ATTEMPTS) {
-        setCooldown(COOLDOWN_SECS)
-        setAttempts(0)
+        setCooldown(COOLDOWN_SECS); setAttempts(0)
         setError(`Demasiados intentos fallidos. Espera ${COOLDOWN_SECS} segundos.`)
       } else {
-        setError(
-          error.message.includes('Invalid')
-            ? `Email o contraseña incorrectos (${next}/${MAX_ATTEMPTS} intentos)`
-            : error.message
-        )
+        setError(error.message.includes('Invalid')
+          ? `Email o contraseña incorrectos (${next}/${MAX_ATTEMPTS} intentos)`
+          : error.message)
       }
     } else {
       setAttempts(0)
@@ -329,25 +325,24 @@ function LoginModal({ onClose, onSwitch }) {
 
 // ── SignupModal ───────────────────────────────────────────────────────
 function SignupModal({ onClose, onSwitch }) {
-  const [name, setName]     = useState('')
-  const [nameErr, setNameErr] = useState('')
-  const [email, setEmail]   = useState('')
+  const [name, setName]         = useState('')
+  const [nameErr, setNameErr]   = useState('')
+  const [email, setEmail]       = useState('')
   const [emailErr, setEmailErr] = useState(false)
-  const [pw, setPw]         = useState('')
-  const [cf, setCf]         = useState('')
-  const [showPw, setShowPw] = useState(false)
-  const [showCf, setShowCf] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError]   = useState('')
-  const [done, setDone]     = useState(false)
-  const [tsToken, setTsToken] = useState(null)
-  const tsRef                 = useRef(null)
+  const [pw, setPw]             = useState('')
+  const [cf, setCf]             = useState('')
+  const [showPw, setShowPw]     = useState(false)
+  const [showCf, setShowCf]     = useState(false)
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
+  const [done, setDone]         = useState(false)
+  const [tsToken, setTsToken]   = useState(null)
+  const tsRef                   = useRef(null)
   const { score } = checkPassword(pw)
   const match = pw === cf && cf.length > 0
 
   const handleNameChange = (val) => {
-    setName(val)
-    setError('')
+    setName(val); setError('')
     if (val.length > 0 && val.trim().length < 2)
       setNameErr('Ingresa al menos 2 caracteres')
     else if (val.length > 0 && /[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s'-]/.test(val))
@@ -357,8 +352,7 @@ function SignupModal({ onClose, onSwitch }) {
   }
 
   const handleEmailChange = (val) => {
-    setEmail(val)
-    setError('')
+    setEmail(val); setError('')
     setEmailErr(val.includes('@') && !isValidEmail(val))
   }
 
@@ -393,8 +387,7 @@ function SignupModal({ onClose, onSwitch }) {
     setTsToken(null); tsRef.current?.reset()
     if (error) {
       setError(error.message.includes('already registered') ? 'Este email ya está registrado' : error.message)
-      setLoading(false)
-      return
+      setLoading(false); return
     }
     setDone(true); setLoading(false)
   }
@@ -433,31 +426,21 @@ function SignupModal({ onClose, onSwitch }) {
           <button className="m-google" onClick={withGoogle} disabled={loading}><GoogleIcon /> Registrarse con Google</button>
           <div className="m-div">o con email</div>
           <form onSubmit={handleSignup} style={{display:'flex',flexDirection:'column',gap:14}}>
-
-            {/* Nombre */}
             <div>
               <label className="m-lbl">Nombre completo</label>
               <input
                 className={`m-inp${nameErr?' err':''}`}
-                type="text"
-                placeholder="Tu nombre"
-                value={name}
+                type="text" placeholder="Tu nombre" value={name}
                 onChange={e=>handleNameChange(e.target.value)}
-                disabled={loading}
-                autoComplete="name"
-                maxLength={60}
+                disabled={loading} autoComplete="name" maxLength={60}
               />
               {nameErr && <div style={{fontSize:11,marginTop:4,color:'var(--color-danger)'}}>✗ {nameErr}</div>}
             </div>
-
-            {/* Email */}
             <div>
               <label className="m-lbl">Email</label>
               <EmailInput value={email} onChange={handleEmailChange} disabled={loading} hasError={emailErr} />
               {emailErr && <div style={{fontSize:11,marginTop:4,color:'var(--color-danger)'}}>✗ Email no válido</div>}
             </div>
-
-            {/* Contraseña */}
             <div>
               <label className="m-lbl">Contraseña</label>
               <div className="m-pw">
@@ -465,17 +448,13 @@ function SignupModal({ onClose, onSwitch }) {
                   className={`m-inp${pw&&score<4?' err':''}`}
                   type={showPw?'text':'password'}
                   placeholder="Mín. 8 chars, mayúscula, número, símbolo"
-                  value={pw}
-                  onChange={e=>{setPw(e.target.value);setError('')}}
-                  disabled={loading}
-                  autoComplete="new-password"
+                  value={pw} onChange={e=>{setPw(e.target.value);setError('')}}
+                  disabled={loading} autoComplete="new-password"
                 />
                 <button type="button" className="m-eye" onClick={()=>setShowPw(v=>!v)}><EyeIcon open={showPw}/></button>
               </div>
               <StrengthMeter password={pw} />
             </div>
-
-            {/* Confirmar contraseña */}
             <div>
               <label className="m-lbl">Confirmar contraseña</label>
               <div className="m-pw">
@@ -483,19 +462,15 @@ function SignupModal({ onClose, onSwitch }) {
                   className={`m-inp${cf&&!match?' err':''}`}
                   type={showCf?'text':'password'}
                   placeholder="Repite tu contraseña"
-                  value={cf}
-                  onChange={e=>{setCf(e.target.value);setError('')}}
-                  disabled={loading}
-                  autoComplete="new-password"
+                  value={cf} onChange={e=>{setCf(e.target.value);setError('')}}
+                  disabled={loading} autoComplete="new-password"
                 />
                 <button type="button" className="m-eye" onClick={()=>setShowCf(v=>!v)}><EyeIcon open={showCf}/></button>
               </div>
               {cf && <div style={{fontSize:11,marginTop:4,color:match?'var(--color-success)':'var(--color-danger)'}}>{match?'✓ Coinciden':'✗ No coinciden'}</div>}
             </div>
-
             <Turnstile ref={tsRef} onVerify={setTsToken} onExpire={()=>setTsToken(null)} />
             {error && <div className="m-err">⚠ {error}</div>}
-
             <button className="m-submit" type="submit" disabled={!canSubmit}>
               {loading ? 'Verificando...' : 'Crear cuenta gratis'}
             </button>
@@ -512,16 +487,27 @@ function SignupModal({ onClose, onSwitch }) {
 
 // ── page ──────────────────────────────────────────────────────────────
 const FEATS = [
-  'Múltiples pools de Uniswap en un solo dashboard',
-  'Seguimiento en tiempo real del precio y estado del rango',
-  'Seteo de posición en SHORT apalancada vía API en los 5 mejores exchanges del mundo',
-  'Detecta al instante cuando tu pool sale de rango y te notifica via WhatsApp o E-mail',
+  'Acceso completo a todos los módulos del Crypto Bootcamp',
+  'Aprende trading, DeFi y gestión de riesgo desde cero',
+  'Sesiones en vivo con traders profesionales cada semana',
+  'Comunidad privada y soporte directo con los instructores',
 ]
 
-const EXCHANGES = ['Binance','Bybit','OKX','Bitget','KuCoin']
+const TOPICS = ['Trading','DeFi','On-Chain','Risk Mgmt','Derivados']
 
-export default function Login() {
+export default function BootcampLogin() {
   const [modal, setModal] = useState(null)
+  const [checking, setChecking] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.replace('/app')
+      else setChecking(false)
+    })
+  }, [])
+
+  if (checking) return null
+
   return (
     <>
       <div className="lp-root">
@@ -544,16 +530,16 @@ export default function Login() {
           <div className="lp-hero-inner">
             <div className="lp-badge">
               <div className="lp-badge-dot" />
-              Liquidity Engine · Beta
+              Crypto Bootcamp · Acceso exclusivo
             </div>
-            <h1 className="lp-title">Tu liquidez DeFi,<br/>bajo control<br/><span>en todo momento.</span></h1>
-            <p className="lp-desc">Gestiona tus pools de Uniswap, monitorea precios en tiempo real y activa coberturas SHORT automáticas para proteger tu capital.</p>
+            <h1 className="lp-title">Domina las crypto,<br/>aprende con los<br/><span>mejores del mercado.</span></h1>
+            <p className="lp-desc">Accede al programa formativo más completo en español. Trading profesional, DeFi avanzado y estrategias de gestión de riesgo en un solo lugar.</p>
             <div className="lp-feats">{FEATS.map((f,i)=><div key={i} className="lp-feat"><div className="lp-dot"/>{f}</div>)}</div>
-            <div className="lp-ex-label">Compatible con</div>
-            <div className="lp-exchanges">{EXCHANGES.map((ex,i)=><span key={i} className="lp-ex">{ex}</span>)}</div>
+            <div className="lp-ex-label">Temas que dominarás</div>
+            <div className="lp-exchanges">{TOPICS.map((t,i)=><span key={i} className="lp-ex">{t}</span>)}</div>
             <div className="lp-cta">
               <button className="lp-cta-primary" onClick={()=>setModal('signup')}>
-                Acceder al Liquidity Engine 🤖
+                Acceder al Crypto Bootcamp 🎓
               </button>
               <button className="lp-cta-secondary" onClick={()=>setModal('login')}>
                 ¿Ya tienes cuenta? <span>Iniciar sesión</span>

@@ -37,7 +37,7 @@ const FEATURES = [
 const EXCHANGES = [
   { name:'Binance',  type:'CEX · Futuros',  color:'#F0B90B', bg:'rgba(240,185,11,0.08)',  border:'rgba(240,185,11,0.25)'  },
   { name:'Bybit',    type:'CEX · Perpetuos', color:'#F7A600', bg:'rgba(247,166,0,0.08)',   border:'rgba(247,166,0,0.25)'   },
-  { name:'OKX',      type:'CEX · Futuros',  color:'#e0e0e0', bg:'rgba(224,224,224,0.05)', border:'rgba(224,224,224,0.18)' },
+  { name:'OKX',      type:'CEX · Futuros',  color:'#a0a0a0', bg:'rgba(160,160,160,0.10)', border:'rgba(160,160,160,0.30)' },
   { name:'Bitget',   type:'CEX · Copy',     color:'#00F0FF', bg:'rgba(0,240,255,0.06)',   border:'rgba(0,240,255,0.22)'   },
   { name:'KuCoin',   type:'CEX · Spot',     color:'#23AF91', bg:'rgba(35,175,145,0.08)',  border:'rgba(35,175,145,0.25)'  },
 ]
@@ -115,10 +115,11 @@ export default function LiquidityEnginePage() {
                   <button className="nav-dropdown-item" onClick={() => { navigate('/programas') }}>
                     <span>₿</span> Bootcamp Crypto
                   </button>
+                  {/* PRÓXIMAMENTE — Express Trading
                   <div className="nav-dropdown-sep" />
                   <button className="nav-dropdown-item" onClick={() => { navigate('/programas') }}>
                     <span>📊</span> Express Trading
-                  </button>
+                  </button> */}
                 </div>
               )}
             </div>
@@ -135,7 +136,7 @@ export default function LiquidityEnginePage() {
           >
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
-          <a className="nav-app" href="/app">Acceder al Ecosistema</a>
+          <a className="nav-app" href="/app">Acceso Miembros</a>
         </nav>
         {mobileMenuOpen && (
           <div className="nav-mobile-menu" onClick={e => e.stopPropagation()}>
@@ -148,7 +149,7 @@ export default function LiquidityEnginePage() {
             <div className="nav-mobile-sep" />
             <ThemeToggle mobile />
             <div className="nav-mobile-sep" />
-            <a className="nav-mobile-app" href="/app" onClick={() => setMobileMenuOpen(false)}>Acceder al Ecosistema →</a>
+            <a className="nav-mobile-app" href="/app" onClick={() => setMobileMenuOpen(false)}>Acceso Miembros</a>
           </div>
         )}
       </div>
@@ -172,12 +173,12 @@ export default function LiquidityEnginePage() {
           <div className="le-btns">
             <a className="btn-glare" href="/app">
               <span className="btn-glare-shine" />
-              Acceder al Ecosistema →
+              Acceso Miembros
             </a>
-            <button className="btn-secondary" onClick={wa}>Saber más</button>
+
           </div>
           <div className="le-stats">
-            {[['5','exchanges integrados'],['Uniswap compatible'],['24/7','monitoreo activo'],['API','ejecución directa']].map(([v,l],i) => (
+            {[['5','exchanges integrados'],['DeFi'],['24/7','monitoreo activo'],['API','ejecución directa']].map(([v,l],i) => (
               <div key={i}>
                 <div className="le-stat-val"><span>{v}</span></div>
                 <div className="le-stat-lab">{l}</div>
@@ -283,7 +284,7 @@ export default function LiquidityEnginePage() {
             <div style={{ display:'flex', gap:14, justifyContent:'center', flexWrap:'wrap', position:'relative', zIndex:1 }}>
               <a className="btn-glare" href="/app">
                 <span className="btn-glare-shine" />
-                Acceder al Ecosistema →
+                Acceso Miembros
               </a>
               <button className="btn-secondary" onClick={() => { navigate('/programas') }}>
                 Ver Bootcamp Crypto
@@ -313,7 +314,7 @@ export default function LiquidityEnginePage() {
               <div className="footer-col-title">Programas</div>
               <div className="footer-links">
                 <button className="footer-link" onClick={() => { navigate('/programas') }}>Bootcamp Crypto</button>
-                <button className="footer-link" onClick={() => { navigate('/programas') }}>Express Trading</button>
+                {/* <button className="footer-link" onClick={() => { navigate('/programas') }}>Express Trading</button> */}
                 <button className="footer-link" style={{ color:'var(--cyan)' }}>Liquidity Engine</button>
               </div>
             </div>

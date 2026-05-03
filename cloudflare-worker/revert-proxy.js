@@ -33,6 +33,11 @@ export default {
       return handleTurnstileVerify(request, env)
     }
 
+    // ── Sentry Issues proxy (evita CORS desde el browser) ─────────────
+    if (url.pathname === '/sentry-issues') {
+      return handleSentryIssues(request, env)
+    }
+
     const prefix = Object.keys(ROUTES).find(p => url.pathname.startsWith(p))
     if (!prefix) {
       return new Response('Not found', { status: 404 })
@@ -69,6 +74,38 @@ export default {
       },
     })
   },
+}
+
+// ── Sentry Issues ──────────────────────────────────────────────────────
+async function handleSentryIssues(request, env) {
+  if (request.method !== 'GET') {
+    return jsonResponse({ error: 'method_not_allowed' }, 405)
+  }
+  const authHeader = request.headers.get('Authorization')
+  if (!authHeader) {
+    return jsonResponse({ error: 'missing_authorization' }, 401)
+  }
+  const org       = env.SENTRY_ORG
+  const projectId = env.SENTRY_PROJECT_ID
+  if (!org || !projectId) {
+    return jsonResponse({ error: 'sentry_not_configured' }, 500)
+  }
+  const incomingUrl = new URL(request.url)
+  const params = new URLSearchParams({
+    limit:   incomingUrl.searchParams.get('limit') ?? '50',
+    sort:    incomingUrl.searchParams.get('sort')  ?? 'date',
+    query:   incomingUrl.searchParams.get('query') ?? 'is:unresolved',
+    project: projectId,
+  })
+  const sentryUrl  = `https://sentry.io/api/0/organizations/${org}/issues/?${params}`
+  const response   = await fetch(sentryUrl, {
+    headers: { Authorization: authHeader, Accept: 'application/json' },
+  })
+  const body = await response.arrayBuffer()
+  return new Response(body, {
+    status: response.status,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+  })
 }
 
 // ── Turnstile verification ─────────────────────────────────────────────
@@ -121,6 +158,6 @@ function corsHeaders() {
   return {
     'Access-Control-Allow-Origin':  '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   }
 }

@@ -233,7 +233,30 @@ create policy "notas_update_own" on public.notas for update using (auth.uid() = 
 create policy "notas_delete_own" on public.notas for delete using (auth.uid() = user_id);
 
 
--- ── 10. insider_trades ───────────────────────────────────────────
+-- ── 10. leads ────────────────────────────────────────────────────
+-- Contactos recibidos desde el formulario del Home (público, sin auth).
+create table if not exists public.leads (
+  id          uuid primary key default gen_random_uuid(),
+  created_at  timestamptz not null default now(),
+  name        text not null,
+  email       text,
+  message     text not null,
+  source      text not null default 'home_form',
+  status      text not null default 'nuevo'
+);
+
+alter table public.leads enable row level security;
+-- Cualquier visitante puede crear un lead
+create policy "leads_insert_anon" on public.leads
+  for insert to anon with check (true);
+-- Solo usuarios autenticados (admins) pueden leer y actualizar
+create policy "leads_select_auth" on public.leads
+  for select to authenticated using (true);
+create policy "leads_update_auth" on public.leads
+  for update to authenticated using (true);
+
+
+-- ── 11. insider_trades ───────────────────────────────────────────
 create table if not exists public.insider_trades (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references auth.users(id) on delete cascade,

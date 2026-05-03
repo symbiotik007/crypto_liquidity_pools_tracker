@@ -1,14 +1,17 @@
 import { useState } from 'react'
-import UsersAdminTab from './UsersAdminTab'
-import ApiTestTab    from './ApiTestTab'
-import StylesTab     from './StylesTab'
+import UsersAdminTab  from './UsersAdminTab'
+import ApiTestTab     from './ApiTestTab'
+import StylesTab      from './StylesTab'
+import LeadsAdminTab  from './LeadsAdminTab'
+import LogsTab        from './LogsTab'
 
 const TABS = [
   { id: 'users',      label: '⚙  Gestión de Usuarios', component: <UsersAdminTab /> },
+  { id: 'leads',      label: '📩 Leads',                component: <LeadsAdminTab /> },
+  { id: 'logs',       label: '📋 Logs del Sistema',     component: <LogsTab /> },
   { id: 'api-test',   label: '🔌 Test APIs',            component: <ApiTestTab /> },
   { id: 'analytics',  label: '📊 Analytics',            component: null },
   { id: 'bots',       label: '🤖 Automatizaciones',     component: null },
-  { id: 'logs',       label: '📋 Logs del Sistema',     component: null },
   { id: 'styles',     label: '🎨 Estilos',              component: <StylesTab /> },
 ]
 

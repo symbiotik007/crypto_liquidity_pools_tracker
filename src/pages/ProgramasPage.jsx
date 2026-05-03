@@ -30,7 +30,8 @@ const BOOTCAMP_MODULES = [
   },
 ]
 
-const EXPRESS_MODULES = [
+// PRÓXIMAMENTE — Express Trading comentado. Ver EXPRESS_TRADING_BACKUP.txt
+/* const EXPRESS_MODULES = [
   {
     num:'01', name:'Arquitectura de Futuros', weeks:'Semana 1–2',
     lessons:['Contratos perpetuos vs. fechados: diferencias y usos','Apalancamiento: uso correcto, riesgos y gestión','Plataformas: Binance Futures, Bybit, Hyperliquid','Estructura del mercado de futuros cripto'],
@@ -47,7 +48,7 @@ const EXPRESS_MODULES = [
     num:'04', name:'Trading en Vivo con Oscar', weeks:'Semana 7–8',
     lessons:['Sesiones de análisis en vivo del mercado','Revisión y feedback de operaciones reales','Estrategia de escalada gradual de capital','Preparación para Prop Firms'],
   },
-]
+] */
 
 const BOOTCAMP_INCLUDES = [
   '90 días de acceso completo al Liquidity Engine',
@@ -60,7 +61,7 @@ const BOOTCAMP_INCLUDES = [
   'Certificado de finalización',
 ]
 
-const EXPRESS_INCLUDES = [
+/* const EXPRESS_INCLUDES = [
   'Acceso a sala de trading en vivo',
   '60 días de mentoría directa',
   'Plantillas de gestión de riesgo',
@@ -69,7 +70,7 @@ const EXPRESS_INCLUDES = [
   'Grabaciones de todas las sesiones',
   'Evaluación personalizada de operaciones',
   'Preparación para Prop Firms',
-]
+] */
 
 function ModuleAccordion({ mod }) {
   const [open, setOpen] = useState(false)
@@ -94,7 +95,7 @@ function ModuleAccordion({ mod }) {
   )
 }
 
-const TICKER_ITEMS = ['Bootcamp Crypto','·','Express Trading','·','DeFi & Liquidity Pools','·','Uniswap','·','Futuros Cripto','·','Formación Profesional','·']
+const TICKER_ITEMS = ['Bootcamp Crypto','·','DeFi & Liquidity Pools','·','Uniswap','·','Futuros Cripto','·','Formación Profesional','·'] // Express Trading removido (próximamente)
 
 export default function ProgramasPage() {
   const navigate = useNavigate()
@@ -142,10 +143,11 @@ export default function ProgramasPage() {
                   <button className="nav-dropdown-item" onClick={() => { setActive('bootcamp'); setDropOpen(false); window.scrollTo(0,0) }}>
                     <span>₿</span> Bootcamp Crypto
                   </button>
+                  {/* PRÓXIMAMENTE — Express Trading
                   <div className="nav-dropdown-sep" />
                   <button className="nav-dropdown-item" onClick={() => { setActive('express'); setDropOpen(false); window.scrollTo(0,0) }}>
                     <span>📊</span> Express Trading
-                  </button>
+                  </button> */}
                 </div>
               )}
             </div>
@@ -162,7 +164,7 @@ export default function ProgramasPage() {
           >
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
-          <a className="nav-app" href="/app">Acceder al Ecosistema</a>
+          <a className="nav-app" href="/app">Acceso Miembros</a>
         </nav>
         {mobileMenuOpen && (
           <div className="nav-mobile-menu" onClick={e => e.stopPropagation()}>
@@ -175,7 +177,7 @@ export default function ProgramasPage() {
             <div className="nav-mobile-sep" />
             <ThemeToggle mobile />
             <div className="nav-mobile-sep" />
-            <a className="nav-mobile-app" href="/app" onClick={() => setMobileMenuOpen(false)}>Acceder al Ecosistema →</a>
+            <a className="nav-mobile-app" href="/app" onClick={() => setMobileMenuOpen(false)}>Acceso Miembros</a>
           </div>
         )}
       </div>
@@ -190,18 +192,19 @@ export default function ProgramasPage() {
             The Crypto House · Formación
           </div>
           <h1 className="page-hero-title">
-            Elige el programa que<br />te lleve al <span>siguiente nivel</span>
+            El programa que te lleva<br />de cero al nivel <span>profesional</span>
           </h1>
           <p className="page-hero-sub">
-            Formación práctica y estructurada para dominar las criptomonedas, el trading de futuros y DeFi.
+            Formación práctica y estructurada para dominar las criptomonedas, DeFi y gestión de riesgo en 90 días.
           </p>
           <div className="prog-switcher">
             <button className={`prog-pill ${active === 'bootcamp' ? 'active' : 'inactive'}`} onClick={() => setActive('bootcamp')}>
               ₿ &nbsp;Bootcamp Crypto
             </button>
+            {/* PRÓXIMAMENTE — Express Trading
             <button className={`prog-pill ${active === 'express' ? 'active' : 'inactive'}`} onClick={() => setActive('express')}>
               📊 &nbsp;Express Trading
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -273,7 +276,7 @@ export default function ProgramasPage() {
         </section>
       )}
 
-      {/* EXPRESS TRADING SECTION */}
+      {/* PRÓXIMAMENTE — Express Trading (sección completa comentada)
       {active === 'express' && (
         <section className="prog-section alt" id="express">
           <div className="prog-inner">
@@ -331,15 +334,15 @@ export default function ProgramasPage() {
             </div>
           </div>
         </section>
-      )}
+      )} */}
 
       {/* BAND */}
       <div className="band">
         <div className="band-card">
-          <h2 className="band-title">¿No sabes cuál <span>elegir?</span></h2>
-          <p className="band-sub">Escríbenos y Oscar te ayuda a decidir cuál programa se adapta mejor a tu nivel y objetivos.</p>
-          <button className="btn-primary" onClick={() => wa('uno de los programas')}>
-            Hablar con Oscar →
+          <h2 className="band-title">Las plazas son <span>limitadas.</span></h2>
+          <p className="band-sub">El Bootcamp incluye mentoría 1 a 1 con Oscar — por eso los cupos son pocos. Si estás listo para dar el paso, escríbele hoy.</p>
+          <button className="btn-primary" onClick={() => wa('Bootcamp Crypto')}>
+            Reservar mi plaza →
           </button>
         </div>
       </div>
@@ -364,7 +367,7 @@ export default function ProgramasPage() {
               <div className="footer-col-title">Programas</div>
               <div className="footer-links">
                 <button className="footer-link" onClick={() => setActive('bootcamp')}>Bootcamp Crypto</button>
-                <button className="footer-link" onClick={() => setActive('express')}>Express Trading</button>
+                {/* <button className="footer-link" onClick={() => setActive('express')}>Express Trading</button> */}
                 <button className="footer-link" onClick={() => { navigate('/liquidity-engine') }}>Liquidity Engine</button>
               </div>
             </div>

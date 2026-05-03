@@ -1,6 +1,7 @@
 ﻿// src/pages/Home.jsx
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 import oscarImg from '../assets/IMG_7704(1).jpg'
 import cryptoHouseLogo from '../assets/cryptohouselogo.png'
 import CryptoPriceBar from '../components/CryptoPriceBar'
@@ -61,14 +62,15 @@ const SERVICES = [
     desc: 'Aprende a navegar el mercado cripto con estructura y disciplina, dominando análisis técnico, gestión de riesgo, DeFi y estrategias avanzadas para resultados consistentes. Todo depende de ti.',
     list: ['Análisis técnico cripto', 'DeFi & Liquidity Mining', 'Gestión de riesgo', 'Herramientas profesionales', 'Mentoría directa con Oscar'],
   },
-  {
+  // PRÓXIMAMENTE — Express Trading (tarjeta comentada)
+  /* {
     icon: '📊',
     badge: 'Nuevo',
     name: 'Express Trading',
     sub: 'Trading de Futuros',
     desc: 'Domina el trading de contratos de futuros en Forex. Estrategias de breakout, gestión de posiciones y psicología.',
     list: ['Futuros Forex', 'Estrategias de breakout', 'Gestión de capital', 'Mentoría directa con Oscar'],
-  },
+  }, */
   {
     icon: '🏛',
     badge: 'Beta',
@@ -79,7 +81,7 @@ const SERVICES = [
     exchanges: [
       { name: 'Binance', color: '#F0B90B', bg: 'rgba(240,185,11,0.1)', border: 'rgba(240,185,11,0.3)' },
       { name: 'Bybit', color: '#F7A600', bg: 'rgba(247,166,0,0.1)', border: 'rgba(247,166,0,0.3)' },
-      { name: 'OKX', color: '#e0e0e0', bg: 'rgba(224,224,224,0.07)', border: 'rgba(224,224,224,0.2)' },
+      { name: 'OKX', color: '#a0a0a0', bg: 'rgba(160,160,160,0.10)', border: 'rgba(160,160,160,0.30)' },
       { name: 'Bitget', color: '#00F0FF', bg: 'rgba(0,240,255,0.08)', border: 'rgba(0,240,255,0.25)' },
       { name: 'KuCoin', color: '#23AF91', bg: 'rgba(35,175,145,0.1)', border: 'rgba(35,175,145,0.3)' },
     ],
@@ -228,6 +230,35 @@ function InfoModal({ program, onClose }) {
   )
 }
 
+function AccessModal({ onClose }) {
+  return (
+    <div className="info-overlay" onClick={e => e.stopPropagation()}>
+      <div className="acc-modal">
+        <button className="info-close" onClick={onClose}>✕</button>
+        <div className="acc-modal-head">
+          <div className="info-tag">The Crypto House</div>
+          <div className="acc-modal-title">Acceso Miembros</div>
+          <div className="acc-modal-sub">Selecciona tu plataforma para continuar</div>
+        </div>
+        <div className="acc-modal-cards">
+          <a className="acc-card" href="/bootcamp">
+            <div className="acc-card-icon">🎓</div>
+            <div className="acc-card-name">Crypto Bootcamp</div>
+            <div className="acc-card-desc">Accede al programa formativo: clases, sesiones en vivo y comunidad privada.</div>
+            <div className="acc-card-cta">Entrar al Bootcamp →</div>
+          </a>
+          <a className="acc-card" href="/app">
+            <div className="acc-card-icon">🤖</div>
+            <div className="acc-card-name">Liquidity Engine</div>
+            <div className="acc-card-desc">Gestiona tus pools de Uniswap, monitorea precios y activa coberturas SHORT.</div>
+            <div className="acc-card-cta">Entrar al Engine →</div>
+          </a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function FAQItem({ q, a }) {
   const [open, setOpen] = useState(false)
   return (
@@ -253,6 +284,7 @@ export default function Home() {
   const [dropOpen, setDropOpen] = useState(false)
   const dropTimer = useRef(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [accessOpen, setAccessOpen] = useState(false)
   const openDrop  = () => { clearTimeout(dropTimer.current); setDropOpen(true) }
   const closeDrop = () => { dropTimer.current = setTimeout(() => setDropOpen(false), 220) }
 
@@ -263,11 +295,16 @@ export default function Home() {
     setCtsTsError(''); setCtsSending(true)
     const ok = await verifyTurnstile(ctsTsToken)
     setCtsTsToken(null); ctsTsRef.current?.reset()
+    if (!ok) { setCtsSending(false); setCtsTsError('Verificación fallida. Intenta de nuevo.'); return }
+    const { error } = await supabase.from('leads').insert({
+      name:    formData.name.trim(),
+      email:   formData.email.trim() || null,
+      message: formData.msg.trim(),
+      source:  'home_form',
+      status:  'nuevo',
+    })
     setCtsSending(false)
-    if (!ok) { setCtsTsError('Verificación fallida. Intenta de nuevo.'); return }
-    const subject = encodeURIComponent(`The Crypto House — Mensaje de ${formData.name}`)
-    const body = encodeURIComponent(`Nombre: ${formData.name}\nEmail: ${formData.email}\n\n${formData.msg}`)
-    window.location.href = `mailto:profeoscarbol@gmail.com?subject=${subject}&body=${body}`
+    if (error) { setCtsTsError('Error al enviar. Intenta de nuevo.'); return }
     setSent(true)
   }
 
@@ -321,10 +358,11 @@ export default function Home() {
                   <button className="nav-dropdown-item" onClick={() => { navigate('/programas') }}>
                     <span>₿</span> Bootcamp Crypto
                   </button>
+                  {/* PRÓXIMAMENTE — Express Trading
                   <div className="nav-dropdown-sep" />
                   <button className="nav-dropdown-item" onClick={() => { navigate('/programas') }}>
                     <span>📊</span> Express Trading
-                  </button>
+                  </button> */}
                 </div>
               )}
             </div>
@@ -341,7 +379,7 @@ export default function Home() {
           >
             {mobileMenuOpen ? '✕' : '☰'}
           </button>
-          <a className="nav-app" href="/app">Acceso Miembros</a>
+          <button className="nav-app" onClick={() => setAccessOpen(true)}>Acceso Miembros</button>
         </nav>
         {mobileMenuOpen && (
           <div className="nav-mobile-menu" onClick={e => e.stopPropagation()}>
@@ -354,7 +392,7 @@ export default function Home() {
             <div className="nav-mobile-sep" />
             <ThemeToggle mobile />
             <div className="nav-mobile-sep" />
-            <a className="nav-mobile-app" href="/app" onClick={() => setMobileMenuOpen(false)}>Acceso Miembros</a>
+            <button className="nav-mobile-app" onClick={() => { setMobileMenuOpen(false); setAccessOpen(true) }}>Acceso Miembros</button>
           </div>
         )}
       </div>
@@ -425,13 +463,11 @@ export default function Home() {
               Mucho gusto soy Oscar Bolaños, operador activo de criptomonedas VIP en Bybit con experiencia en Prop Firms, brokers y estructuras de inversión enfocadas en finanzas descentralizadas, futuros y gestión de liquidez. Durante más de 4 años he trabajado en la ejecución, análisis y desarrollo de estrategias aplicadas a mercados reales, con enfoque en consistencia, control de riesgo y toma de decisiones basada en datos.
             </p>
             <p className="about-text">
-              The Crypto House nace para redefinir cómo se aprende y se ejecuta en el mundo financiero. No es solo educación: es un ecosistema diseñado para transformar conocimiento en resultados reales.
+              The Crypto House nace para redefinir cómo se aprende y se ejecuta en el mundo financiero. No es solo educación: es una plataforma diseñada para transformar conocimiento en resultados reales.
 
-Aquí no te quedas en la teoría. Accedes a una metodología enfocada en acción, donde cada concepto se aplica directamente en el mercado, con acompañamiento estratégico y herramientas tecnológicas propias que marcan la diferencia. Entre ellas, el Liquidity Engine, desarrollado para optimizar y potenciar operaciones en entornos centralizados.
-
-El objetivo es claro: cerrar la brecha entre aprender y generar resultados, llevando a cualquier persona —sin importar su punto de partida— a operar con criterio, precisión y ventaja competitiva.
+Aquí no te quedas en la teoría. Accedes a una metodología enfocada en acción, donde cada concepto se aplica directamente en el mercado, con acompañamiento estratégico y herramientas tecnológicas propias que marcan la diferencia. Entre ellas, el Liquidity Engine, desarrollado para optimizar y potenciar operaciones en entornos des y centralizados.
             </p>
-            <div className="about-highlights">
+            {/* <div className="about-highlights">
               {[                
                 'Desarrollador del Liquidity Engine — herramienta de monitoreo y cobertura de capital DeFi propia. 🤖'
               ].map((h, i) => (
@@ -440,7 +476,7 @@ El objetivo es claro: cerrar la brecha entre aprender y generar resultados, llev
                   {h}
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
@@ -684,7 +720,7 @@ El objetivo es claro: cerrar la brecha entre aprender y generar resultados, llev
               <div className="footer-col-title">Programas</div>
               <div className="footer-links">
                 <a className="footer-link" href="#">Bootcamp Crypto</a>
-                <a className="footer-link" href="#">Express Trading</a>
+                {/* <a className="footer-link" href="#">Express Trading</a> */}
                 <a className="footer-link" href="#">Liquidity Engine</a>
               </div>
             </div>
@@ -718,6 +754,7 @@ El objetivo es claro: cerrar la brecha entre aprender y generar resultados, llev
       </footer>
 
       {infoProgram && <InfoModal program={infoProgram} onClose={() => setInfoProgram(null)} />}
+      {accessOpen  && <AccessModal onClose={() => setAccessOpen(false)} />}
     </>
   )
 }

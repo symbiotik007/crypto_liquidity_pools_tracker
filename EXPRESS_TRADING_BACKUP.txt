@@ -1,0 +1,80 @@
+============================================================
+  BACKUP - EXPRESS TRADING (Programa en pausa / Próximamente)
+  Fecha de backup: 2026-05-03
+  NOTA: Este archivo no es usado por el código. Solo es referencia.
+============================================================
+
+--- DATOS GENERALES ---
+Nombre: Express Trading
+Subtítulo: Trading de Futuros Profesional
+Badge: 📊 · 60 Días · Nuevo
+Icono: 📊
+Sub (tarjeta home): Trading de Futuros
+Descripción (tarjeta home): Domina el trading de contratos de futuros en Forex. Estrategias de breakout, gestión de posiciones y psicología.
+
+--- ESTADÍSTICAS ---
+- 60 días de programa
+- 4 módulos
+- 1·1 mentoría directa
+- 8 semanas
+
+--- DESCRIPCIÓN LARGA ---
+Párrafo 1:
+Programa intensivo para dominar el trading de contratos de futuros en cripto y Forex.
+Enfocado en resultados desde el primer mes con estrategias de alta probabilidad,
+gestión de capital profesional y sesiones en vivo con Oscar.
+
+Párrafo 2:
+Incluye preparación para operar con Prop Firms, análisis en tiempo real
+y un sistema de evaluación continua para asegurar consistencia en tus operaciones.
+
+--- MÓDULOS (EXPRESS_MODULES) ---
+
+01 | Arquitectura de Futuros | Semana 1–2
+  - Contratos perpetuos vs. fechados: diferencias y usos
+  - Apalancamiento: uso correcto, riesgos y gestión
+  - Plataformas: Binance Futures, Bybit, Hyperliquid
+  - Estructura del mercado de futuros cripto
+
+02 | Estrategias de Entrada de Alta Probabilidad | Semana 3–4
+  - Breakout de rangos y consolidaciones
+  - Retesteo de niveles clave con confirmación de volumen
+  - Order blocks y zonas de liquidez
+  - Construcción de setups con R/B mínimo 1:2
+
+03 | Gestión de Capital Avanzada | Semana 5–6
+  - Kelly Criterion adaptado al trading de futuros
+  - Drawdown máximo y reglas de corte automático
+  - Journal de trading: métricas que realmente importan
+  - Evaluación de rendimiento y ajuste de estrategia
+
+04 | Trading en Vivo con Oscar | Semana 7–8
+  - Sesiones de análisis en vivo del mercado
+  - Revisión y feedback de operaciones reales
+  - Estrategia de escalada gradual de capital
+  - Preparación para Prop Firms
+
+--- INCLUDES (EXPRESS_INCLUDES) ---
+  - Acceso a sala de trading en vivo
+  - 60 días de mentoría directa
+  - Plantillas de gestión de riesgo
+  - Análisis diario de mercado
+  - Grupo privado de traders activos
+  - Grabaciones de todas las sesiones
+  - Evaluación personalizada de operaciones
+  - Preparación para Prop Firms
+
+--- CTA ---
+Título: ¿Listo para dominar el trading de futuros?
+Sub: Cupos limitados para mantener el nivel de mentoría 1 a 1. Oscar responde en menos de 2 horas por WhatsApp.
+Botón primario: Quiero inscribirme → (WhatsApp: wa('Express Trading'))
+Botón secundario: Más información (goHome('contacto'))
+
+--- ARCHIVOS DONDE APARECÍA ---
+1. src/pages/ProgramasPage.jsx  — sección principal del programa, pill switcher, footer, nav dropdown
+2. src/pages/Home.jsx            — tarjeta en sección de programas (línea ~67), nav dropdown (~326), footer (~687)
+3. src/pages/LiquidityEnginePage.jsx — nav dropdown (~120), footer (~316)
+
+============================================================
+  FIN DEL BACKUP
+============================================================
