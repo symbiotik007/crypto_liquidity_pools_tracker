@@ -44,7 +44,10 @@
       "WebFetch(domain:www.babypips.com)",
       "WebSearch",
       "Bash(npm list *)",
-      "Bash(wrangler *)"
+      "Bash(wrangler *)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\CryptoLiquidityPools\\\\CryptoPoolsEngine\\\\src\" -Recurse -Force | Where-Object {$_.PSIsContainer} | Select-Object FullName | Sort-Object FullName | ForEach-Object {$_.FullName.Replace\\('C:\\\\Users\\\\ASUS\\\\Desktop\\\\CryptoLiquidityPools\\\\CryptoPoolsEngine\\\\src', ''\\).TrimStart\\('\\\\'\\)} | Select-Object -First 30)",
+      "Bash(npx tsc *)",
+      "Bash(npx vite *)"
     ]
   }
 }

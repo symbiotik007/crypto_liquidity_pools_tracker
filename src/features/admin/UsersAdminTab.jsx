@@ -35,56 +35,66 @@ export default function UsersAdminTab() {
   )
 
   const initials = (u) => (u.full_name || u.email || "?").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
-
-  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("es-CO", { day:"numeric", month:"short", year:"numeric" }) : "—"
+  const fmtDate  = (d) => d ? new Date(d).toLocaleDateString("es-CO", { day:"numeric", month:"short", year:"numeric" }) : "—"
 
   const badge = (txt, color, bg) => (
-    <span style={{ padding:"3px 10px", fontSize:10, fontWeight:700, letterSpacing:1, textTransform:"uppercase", border:`1px solid ${color}44`, color, background:bg || `${color}11` }}>{txt}</span>
+    <span style={{ padding:"3px 10px", fontSize:10, fontWeight:700, letterSpacing:1, textTransform:"uppercase", borderRadius:999, border:`1px solid ${color}44`, color, background:bg || `${color}11` }}>{txt}</span>
   )
 
   if (!isAdmin) return (
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"60%", color:"#2a5a72", fontSize:14 }}>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"60%", color:"var(--text-label)", fontSize:14, fontFamily:"Outfit,sans-serif" }}>
       🔒 Acceso restringido
     </div>
   )
 
   return (
-    <div style={{ padding:"clamp(16px, 4vw, 32px)", maxWidth:1100, margin:"0 auto", display:"flex", flexDirection:"column", gap:24, position:"relative" }}>
+    <div style={{ display:"flex", flexDirection:"column", gap:24, position:"relative" }}>
 
+      {/* Toast */}
       {toast && (
-        <div style={{ position:"fixed", top:24, right:24, zIndex:999, padding:"12px 20px", background: toast.ok ? "#001a0e" : "#1a0810", border:`1px solid ${toast.ok?"#003a22":"#5a1a28"}`, color: toast.ok?"#00ff88":"#ff6b88", fontSize:13, fontWeight:600, boxShadow:"0 4px 20px rgba(0,0,0,0.5)" }}>
+        <div style={{
+          position:"fixed", top:24, right:24, zIndex:999,
+          padding:"12px 20px",
+          background: toast.ok ? "var(--bg-success-subtle)" : "var(--bg-danger-subtle)",
+          border:`1px solid ${toast.ok ? "var(--border-success-subtle)" : "var(--border-danger-subtle)"}`,
+          color: toast.ok ? "var(--color-success)" : "var(--color-danger)",
+          fontSize:13, fontWeight:600,
+          boxShadow:"var(--shadow-overlay)", borderRadius:8,
+          fontFamily:"Outfit,sans-serif",
+        }}>
           {toast.ok ? "✓" : "⚠"} {toast.msg}
         </div>
       )}
 
+      {/* Confirm Dialog */}
       {confirm && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(5,10,15,0.85)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(6px)" }}>
-          <div style={{ background:"#070d14", border:"1px solid #1a3a5e", width:"100%", maxWidth:400, padding:"32px", display:"flex", flexDirection:"column", gap:20 }}>
-            <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", letterSpacing:3, textTransform:"uppercase" }}>Confirmar cambio</div>
+        <div style={{ position:"fixed", inset:0, background:"var(--overlay-backdrop)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center", backdropFilter:"blur(6px)" }}>
+          <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border-dim)", borderRadius:12, width:"100%", maxWidth:400, padding:"28px", display:"flex", flexDirection:"column", gap:20, boxShadow:"var(--shadow-overlay)" }}>
+            <div style={{ fontSize:11, fontWeight:700, color:"var(--color-accent)", letterSpacing:3, textTransform:"uppercase", fontFamily:"Outfit,sans-serif" }}>Confirmar cambio</div>
             <div>
-              <div style={{ fontSize:16, fontWeight:700, color:"#fff", marginBottom:8 }}>{confirm.label}</div>
-              <div style={{ display:"flex", alignItems:"center", gap:12, padding:"16px", background:"#0a1520", border:"1px solid #0e2435" }}>
-                <div style={{ width:40, height:40, background:"#0a2a3e", border:"1px solid #1a4a6e", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, color:"#00e5ff", fontWeight:700, flexShrink:0 }}>
+              <div style={{ fontSize:16, fontWeight:700, color:"var(--text-primary)", marginBottom:8, fontFamily:"Outfit,sans-serif" }}>{confirm.label}</div>
+              <div style={{ display:"flex", alignItems:"center", gap:12, padding:"16px", background:"var(--bg-elevated)", border:"1px solid var(--border-dim)", borderRadius:8 }}>
+                <div style={{ width:40, height:40, background:"rgba(var(--color-accent-rgb),0.1)", border:"1px solid rgba(var(--color-accent-rgb),0.3)", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, color:"var(--color-accent)", fontWeight:700, flexShrink:0 }}>
                   {initials(confirm.user)}
                 </div>
                 <div>
-                  <div style={{ fontSize:14, fontWeight:600, color:"#c8e6f0" }}>{confirm.user.full_name || "Sin nombre"}</div>
-                  <div style={{ fontSize:12, color:"#4a7a96" }}>{confirm.user.email}</div>
+                  <div style={{ fontSize:14, fontWeight:600, color:"var(--text-secondary)", fontFamily:"Outfit,sans-serif" }}>{confirm.user.full_name || "Sin nombre"}</div>
+                  <div style={{ fontSize:12, color:"var(--text-dim)", fontFamily:"Outfit,sans-serif" }}>{confirm.user.email}</div>
                 </div>
               </div>
-              <div style={{ marginTop:12, display:"flex", alignItems:"center", gap:10, fontSize:13, color:"#7ab8d4" }}>
+              <div style={{ marginTop:12, display:"flex", alignItems:"center", gap:10, fontSize:13, color:"var(--text-dim)", fontFamily:"Outfit,sans-serif" }}>
                 <span>{confirm.fromLabel}</span>
-                <span style={{ color:"#00e5ff" }}>→</span>
-                <span style={{ fontWeight:700, color:"#fff" }}>{confirm.toLabel}</span>
+                <span style={{ color:"var(--color-accent)" }}>→</span>
+                <span style={{ fontWeight:700, color:"var(--text-primary)" }}>{confirm.toLabel}</span>
               </div>
             </div>
             <div style={{ display:"flex", gap:10 }}>
               <button onClick={() => setConfirm(null)}
-                style={{ flex:1, padding:"11px 0", background:"transparent", border:"1px solid #1a3a5e", color:"#4a7a96", fontFamily:"Outfit,sans-serif", fontSize:13, fontWeight:600, cursor:"pointer" }}>
+                style={{ flex:1, padding:"11px 0", background:"transparent", border:"1px solid var(--border-dim)", color:"var(--text-dim)", fontFamily:"Outfit,sans-serif", fontSize:13, fontWeight:600, cursor:"pointer", borderRadius:8 }}>
                 Cancelar
               </button>
               <button onClick={handleConfirm} disabled={saving === confirm.user.id}
-                style={{ flex:1, padding:"11px 0", background:"transparent", border:`1px solid ${confirm.danger?"#ff4f6e":"#00e5ff"}`, color:confirm.danger?"#ff4f6e":"#00e5ff", fontFamily:"Outfit,sans-serif", fontSize:13, fontWeight:700, cursor:"pointer" }}>
+                style={{ flex:1, padding:"11px 0", background:"transparent", border:`1px solid ${confirm.danger?"var(--color-danger)":"var(--color-accent)"}`, color:confirm.danger?"var(--color-danger)":"var(--color-accent)", fontFamily:"Outfit,sans-serif", fontSize:13, fontWeight:700, cursor:"pointer", borderRadius:8 }}>
                 {saving === confirm.user.id ? "Guardando..." : "Confirmar"}
               </button>
             </div>
@@ -92,178 +102,183 @@ export default function UsersAdminTab() {
         </div>
       )}
 
+      {/* Header */}
       <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
         <div>
-          <div style={{ fontSize:11, fontWeight:700, color:"#00e5ff", letterSpacing:3, textTransform:"uppercase", marginBottom:8 }}>Panel Admin</div>
-          <h2 style={{ fontSize:26, fontWeight:800, color:"#fff", marginBottom:4 }}>Gestión de usuarios</h2>
-          <p style={{ fontSize:13, color:"#4a7a96" }}>{users.length} usuario{users.length !== 1 ? "s" : ""} registrado{users.length !== 1 ? "s" : ""}</p>
+          <div style={{ fontSize:11, fontWeight:700, color:"var(--color-accent)", letterSpacing:3, textTransform:"uppercase", marginBottom:8, fontFamily:"Outfit,sans-serif" }}>Panel Admin</div>
+          <h2 style={{ fontSize:24, fontWeight:800, color:"var(--text-primary)", marginBottom:4, fontFamily:"Outfit,sans-serif" }}>Gestión de usuarios</h2>
+          <p style={{ fontSize:13, color:"var(--text-dim)", fontFamily:"Outfit,sans-serif" }}>{users.length} usuario{users.length !== 1 ? "s" : ""} registrado{users.length !== 1 ? "s" : ""}</p>
         </div>
-        <div style={{ display:"flex", gap:10 }}>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
           <input
             placeholder="Buscar por nombre o email..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            style={{ padding:"9px 14px", background:"#0a1520", border:"1px solid #1a3a5e", color:"#c8e6f0", fontFamily:"Outfit,sans-serif", fontSize:13, outline:"none", width:"clamp(160px,40vw,240px)" }}
+            style={{ padding:"9px 14px", background:"var(--bg-input)", border:"1px solid var(--border-dim)", color:"var(--text-secondary)", fontFamily:"Outfit,sans-serif", fontSize:13, outline:"none", width:"clamp(160px,40vw,240px)", borderRadius:8 }}
           />
           <button onClick={reload}
-            style={{ padding:"9px 14px", background:"transparent", border:"1px solid #1a3a5e", color:"#4a7a96", fontFamily:"Outfit,sans-serif", fontSize:13, cursor:"pointer" }}>
+            style={{ padding:"9px 14px", background:"transparent", border:"1px solid var(--border-dim)", color:"var(--text-dim)", fontFamily:"Outfit,sans-serif", fontSize:13, cursor:"pointer", borderRadius:8, transition:"all 0.15s" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor="var(--color-accent)"; e.currentTarget.style.color="var(--color-accent)" }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor="var(--border-dim)"; e.currentTarget.style.color="var(--text-dim)" }}
+          >
             ↻ Actualizar
           </button>
         </div>
       </div>
 
-      <div style={{ display:"flex", gap:14, flexWrap:"wrap" }}>
+      {/* Stats */}
+      <div style={{ display:"flex", gap:12, flexWrap:"wrap" }}>
         {[
-          { label:"Total usuarios",        val:users.length,                            color:"#00e5ff" },
-          { label:"Trader en Formación",   val:users.filter(u=>u.is_paid).length,       color:"#00ff88" },
-          { label:"Potencial Trader",      val:users.filter(u=>!u.is_paid).length,      color:"#ffb347" },
-          { label:"Login con Google",      val:users.filter(u=>u.is_sso_gmail).length,  color:"#627eea" },
+          { label:"Total usuarios",      val:users.length,                           color:"var(--color-accent)" },
+          { label:"Trader en Formación", val:users.filter(u=>u.is_paid).length,      color:"var(--color-success)" },
+          { label:"Potencial Trader",    val:users.filter(u=>!u.is_paid).length,     color:"var(--color-warning)" },
+          { label:"Login con Google",    val:users.filter(u=>u.is_sso_gmail).length, color:"var(--color-purple-light)" },
         ].map((s, i) => (
-          <div key={i} style={{ background:"#070d14", border:"1px solid #1a3a5e", padding:"16px 20px", flex:1, minWidth:140 }}>
+          <div key={i} style={{ background:"var(--bg-elevated)", border:"1px solid var(--border-dim)", borderRadius:10, padding:"16px 20px", flex:1, minWidth:130 }}>
             <div style={{ fontSize:24, fontWeight:800, color:s.color, lineHeight:1 }}>{s.val}</div>
-            <div style={{ fontSize:11, color:"#4a7a96", marginTop:4, textTransform:"uppercase", letterSpacing:1 }}>{s.label}</div>
+            <div style={{ fontSize:11, color:"var(--text-dim)", marginTop:4, textTransform:"uppercase", letterSpacing:1, fontFamily:"Outfit,sans-serif" }}>{s.label}</div>
           </div>
         ))}
       </div>
 
-      {loading && <div style={{ color:"#2a5a72", fontSize:13 }}>Cargando usuarios...</div>}
-      {error   && <div style={{ color:"#ff6b88", fontSize:13 }}>⚠ {error}</div>}
+      {loading && <div style={{ color:"var(--text-label)", fontSize:13, fontFamily:"Outfit,sans-serif" }}>Cargando usuarios...</div>}
+      {error   && <div style={{ color:"var(--color-danger)", fontSize:13, fontFamily:"Outfit,sans-serif" }}>⚠ {error}</div>}
+
+      {/* Table */}
       {!loading && !error && (
-        <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
-        <div style={{ background:"#070d14", border:"1px solid #1a3a5e", minWidth:680 }}>
-          <div style={{ display:"grid", gridTemplateColumns:"2fr 2fr 1fr 1fr 1fr 160px", gap:0, padding:"10px 20px", borderBottom:"1px solid #0e2435", fontSize:10, fontWeight:700, color:"#2a5a72", letterSpacing:2, textTransform:"uppercase" }}>
-            <span>Usuario</span><span>Email</span><span>Plan</span><span>Admin</span><span>Registro</span><span style={{ textAlign:"right" }}>Acciones</span>
-          </div>
-          {filtered.length === 0 && (
-            <div style={{ padding:"32px", textAlign:"center", color:"#2a5a72", fontSize:13 }}>Sin resultados</div>
-          )}
-          {filtered.map((u, i) => {
-            const isMe = u.id === me?.id
-            return (
-              <div key={u.id} style={{ display:"grid", gridTemplateColumns:"2fr 2fr 1fr 1fr 1fr 160px", gap:0, padding:"14px 20px", borderBottom: i < filtered.length-1 ? "1px solid #0e2435" : "none", alignItems:"center", background: isMe ? "rgba(0,229,255,0.02)" : "transparent" }}>
+        <div style={{ overflowX:"auto", WebkitOverflowScrolling:"touch", borderRadius:10, border:"1px solid var(--border-dim)" }}>
+          <table style={{ width:"100%", borderCollapse:"collapse", minWidth:680 }}>
+            <thead>
+              <tr style={{ background:"var(--bg-elevated)", borderBottom:"1px solid var(--border-dim)" }}>
+                {["Usuario","Email","Plan","Admin","Registro","Acciones"].map((h, i) => (
+                  <th key={h} style={{ padding:"10px 16px", textAlign: i === 5 ? "right" : "left", fontSize:10, fontWeight:700, color:"var(--text-label)", letterSpacing:2, textTransform:"uppercase", fontFamily:"Outfit,sans-serif", whiteSpace:"nowrap" }}>
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} style={{ padding:"32px", textAlign:"center", color:"var(--text-label)", fontSize:13, fontFamily:"Outfit,sans-serif" }}>Sin resultados</td>
+                </tr>
+              )}
+              {filtered.map((u, i) => {
+                const isMe = u.id === me?.id
+                return (
+                  <tr key={u.id}
+                    style={{ borderBottom: i < filtered.length-1 ? "1px solid var(--border-dim)" : "none", background: isMe ? "rgba(var(--color-accent-rgb),0.03)" : "transparent", transition:"background 0.15s" }}
+                  >
+                    <td style={{ padding:"14px 16px" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                        <div style={{ width:32, height:32, background:"rgba(var(--color-accent-rgb),0.1)", border:"1px solid rgba(var(--color-accent-rgb),0.3)", borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"var(--color-accent)", fontWeight:700, flexShrink:0 }}>
+                          {initials(u)}
+                        </div>
+                        <div>
+                          <div style={{ fontSize:13, fontWeight:600, color:"var(--text-secondary)", fontFamily:"Outfit,sans-serif", whiteSpace:"nowrap" }}>
+                            {u.full_name || "Sin nombre"}
+                            {isMe && <span style={{ marginLeft:6, fontSize:9, color:"var(--color-accent)", fontWeight:700, letterSpacing:1 }}>TÚ</span>}
+                          </div>
+                          {u.is_sso_gmail && <div style={{ fontSize:10, color:"var(--color-purple-light)", fontFamily:"Outfit,sans-serif" }}>G Google</div>}
+                        </div>
+                      </div>
+                    </td>
 
-                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                  <div style={{ width:32, height:32, background:"#0a2a3e", border:"1px solid #1a4a6e", display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, color:"#00e5ff", fontWeight:700, flexShrink:0 }}>
-                    {initials(u)}
-                  </div>
-                  <div>
-                    <div style={{ fontSize:13, fontWeight:600, color:"#c8e6f0" }}>
-                      {u.full_name || "Sin nombre"}
-                      {isMe && <span style={{ marginLeft:6, fontSize:9, color:"#00e5ff", fontWeight:700, letterSpacing:1 }}>TÚ</span>}
-                    </div>
-                    {u.is_sso_gmail && <div style={{ fontSize:10, color:"#627eea" }}>G Google</div>}
-                  </div>
-                </div>
+                    <td style={{ padding:"14px 16px", fontSize:12, color:"var(--text-dim)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", paddingRight:8, fontFamily:"Outfit,sans-serif", maxWidth:180 }}>{u.email || "—"}</td>
 
-                <div style={{ fontSize:12, color:"#4a7a96", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", paddingRight:8 }}>{u.email || "—"}</div>
+                    <td style={{ padding:"14px 16px" }}>
+                      {u.is_paused
+                        ? badge("Pausado","#ffb347")
+                        : u.is_paid
+                          ? badge("Formación","#00ff88")
+                          : badge("Potencial","#64748b")
+                      }
+                    </td>
 
-                <div>
-                  {u.is_paused
-                    ? badge("Pausado","#ffb347","#1a0800")
-                    : u.is_paid
-                      ? badge("Formación","#00ff88")
-                      : badge("Potencial","#4a7a96")
-                  }
-                </div>
+                    <td style={{ padding:"14px 16px" }}>
+                      {u.is_admin
+                        ? badge("Admin","var(--color-accent)")
+                        : <span style={{ fontSize:11, color:"var(--text-faint)", fontFamily:"Outfit,sans-serif" }}>—</span>
+                      }
+                    </td>
 
-                <div>{u.is_admin ? badge("Admin","#00e5ff") : <span style={{ fontSize:11, color:"#1a3a5e" }}>—</span>}</div>
+                    <td style={{ padding:"14px 16px", fontSize:11, color:"var(--text-label)", fontFamily:"Outfit,sans-serif", whiteSpace:"nowrap" }}>{fmtDate(u.created_at)}</td>
 
-                <div style={{ fontSize:11, color:"#2a5a72" }}>{fmtDate(u.created_at)}</div>
-
-                <div style={{ display:"flex", gap:6, justifyContent:"flex-end", flexWrap:"wrap" }}>
-                  {!isMe && (
-                    <button
-                      disabled={saving === u.id}
-                      onClick={() => setConfirm({
-                        user: u,
-                        changes: { is_paid: !u.is_paid },
-                        label: u.is_paid ? "Bajar a Potencial Trader" : "Subir a Trader en Formación",
-                        fromLabel: u.is_paid ? "Trader en Formación" : "Potencial Trader",
-                        toLabel:   u.is_paid ? "Potencial Trader" : "Trader en Formación",
-                        successMsg: `${u.full_name || u.email} actualizado correctamente`,
-                        danger: u.is_paid,
-                      })}
-                      style={{
-                        padding:"5px 10px", fontSize:11, fontWeight:700, cursor:"pointer",
-                        fontFamily:"Outfit,sans-serif", letterSpacing:"0.5px",
-                        background:"transparent",
-                        border:`1px solid ${u.is_paid?"#ff4f6e44":"#00ff8844"}`,
-                        color: u.is_paid ? "#ff4f6e" : "#00ff88",
-                        transition:"all 0.15s", whiteSpace:"nowrap",
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor = u.is_paid?"#ff4f6e":"#00ff88"}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = u.is_paid?"#ff4f6e44":"#00ff8844"}
-                    >
-                      {saving===u.id ? "..." : u.is_paid ? "↓ Bajar plan" : "↑ Activar plan"}
-                    </button>
-                  )}
-                  {!isMe && (
-                    <button
-                      disabled={saving === u.id}
-                      onClick={() => setConfirm({
-                        user: u,
-                        changes: { is_admin: !u.is_admin },
-                        label: u.is_admin ? "Quitar rol de admin" : "Dar rol de admin",
-                        fromLabel: u.is_admin ? "Admin" : "Usuario",
-                        toLabel:   u.is_admin ? "Usuario" : "Admin",
-                        successMsg: `Rol de ${u.full_name || u.email} actualizado`,
-                        danger: false,
-                      })}
-                      style={{ padding:"5px 10px", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"Outfit,sans-serif", background:"transparent", border:"1px solid #1a3a5e", color:"#4a7a96", transition:"all 0.15s" }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor="#00e5ff"; e.currentTarget.style.color="#00e5ff" }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor="#1a3a5e"; e.currentTarget.style.color="#4a7a96" }}
-                    >
-                      {u.is_admin ? "− Admin" : "+ Admin"}
-                    </button>
-                  )}
-
-                  {!isMe && (
-                    <button
-                      disabled={saving === u.id}
-                      onClick={() => setConfirm({
-                        user: u,
-                        changes: { is_paused: !u.is_paused },
-                        label: u.is_paused ? "Reactivar membresía" : "Pausar membresía",
-                        fromLabel: u.is_paused ? "Pausada" : "Activa",
-                        toLabel:   u.is_paused ? "Activa" : "Pausada",
-                        successMsg: `Membresía de ${u.full_name || u.email} ${u.is_paused ? "reactivada" : "pausada"}`,
-                        danger: !u.is_paused,
-                      })}
-                      style={{ padding:"5px 10px", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"Outfit,sans-serif", background:"transparent", border:`1px solid ${u.is_paused?"#00ff8844":"#ffb34744"}`, color:u.is_paused?"#00ff88":"#ffb347", transition:"all 0.15s" }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor = u.is_paused?"#00ff88":"#ffb347"}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = u.is_paused?"#00ff8844":"#ffb34744"}
-                    >
-                      {u.is_paused ? "▶ Reactivar" : "⏸ Pausar"}
-                    </button>
-                  )}
-
-                  {!isMe && (
-                    <button
-                      disabled={saving === u.id}
-                      onClick={() => setConfirm({
-                        user: u,
-                        changes: null,
-                        deleteUser: true,
-                        label: "Eliminar usuario permanentemente",
-                        fromLabel: u.email,
-                        toLabel:   "Eliminado",
-                        successMsg: `${u.full_name || u.email} eliminado`,
-                        danger: true,
-                      })}
-                      style={{ padding:"5px 10px", fontSize:11, fontWeight:700, cursor:"pointer", fontFamily:"Outfit,sans-serif", background:"transparent", border:"1px solid #ff4f6e44", color:"#ff4f6e", transition:"all 0.15s" }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor="#ff4f6e"}
-                      onMouseLeave={e => e.currentTarget.style.borderColor="#ff4f6e44"}
-                    >
-                      🗑 Eliminar
-                    </button>
-                  )}
-
-                  {isMe && <span style={{ fontSize:11, color:"#1a3a5e", paddingRight:4 }}>Tu cuenta</span>}
-                </div>
-              </div>
-            )
-          })}
-        </div>
+                    <td style={{ padding:"14px 16px" }}>
+                      <div style={{ display:"flex", gap:5, justifyContent:"flex-end", flexWrap:"wrap" }}>
+                        {!isMe && (
+                          <button
+                            disabled={saving === u.id}
+                            onClick={() => setConfirm({
+                              user: u, changes: { is_paid: !u.is_paid },
+                              label: u.is_paid ? "Bajar a Potencial Trader" : "Subir a Trader en Formación",
+                              fromLabel: u.is_paid ? "Trader en Formación" : "Potencial Trader",
+                              toLabel:   u.is_paid ? "Potencial Trader" : "Trader en Formación",
+                              successMsg: `${u.full_name || u.email} actualizado correctamente`,
+                              danger: u.is_paid,
+                            })}
+                            style={{ padding:"4px 10px", fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"Outfit,sans-serif", letterSpacing:"0.5px", background:"transparent", border:`1px solid ${u.is_paid?"#ff4f6e55":"#00ff8855"}`, color: u.is_paid ? "#ff4f6e" : "#00ff88", transition:"all 0.15s", whiteSpace:"nowrap", borderRadius:6 }}
+                          >
+                            {saving===u.id ? "..." : u.is_paid ? "↓ Bajar" : "↑ Activar"}
+                          </button>
+                        )}
+                        {!isMe && (
+                          <button
+                            disabled={saving === u.id}
+                            onClick={() => setConfirm({
+                              user: u, changes: { is_admin: !u.is_admin },
+                              label: u.is_admin ? "Quitar rol de admin" : "Dar rol de admin",
+                              fromLabel: u.is_admin ? "Admin" : "Usuario",
+                              toLabel:   u.is_admin ? "Usuario" : "Admin",
+                              successMsg: `Rol de ${u.full_name || u.email} actualizado`,
+                              danger: false,
+                            })}
+                            style={{ padding:"4px 10px", fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"Outfit,sans-serif", background:"transparent", border:"1px solid var(--border-dim)", color:"var(--text-dim)", transition:"all 0.15s", borderRadius:6 }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor="var(--color-accent)"; e.currentTarget.style.color="var(--color-accent)" }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor="var(--border-dim)"; e.currentTarget.style.color="var(--text-dim)" }}
+                          >
+                            {u.is_admin ? "− Admin" : "+ Admin"}
+                          </button>
+                        )}
+                        {!isMe && (
+                          <button
+                            disabled={saving === u.id}
+                            onClick={() => setConfirm({
+                              user: u, changes: { is_paused: !u.is_paused },
+                              label: u.is_paused ? "Reactivar membresía" : "Pausar membresía",
+                              fromLabel: u.is_paused ? "Pausada" : "Activa",
+                              toLabel:   u.is_paused ? "Activa" : "Pausada",
+                              successMsg: `Membresía de ${u.full_name || u.email} ${u.is_paused ? "reactivada" : "pausada"}`,
+                              danger: !u.is_paused,
+                            })}
+                            style={{ padding:"4px 10px", fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"Outfit,sans-serif", background:"transparent", border:`1px solid ${u.is_paused?"#00ff8855":"#ffb34755"}`, color:u.is_paused?"#00ff88":"#ffb347", transition:"all 0.15s", borderRadius:6 }}
+                          >
+                            {u.is_paused ? "▶ Reactivar" : "⏸ Pausar"}
+                          </button>
+                        )}
+                        {!isMe && (
+                          <button
+                            disabled={saving === u.id}
+                            onClick={() => setConfirm({
+                              user: u, changes: null, deleteUser: true,
+                              label: "Eliminar usuario permanentemente",
+                              fromLabel: u.email, toLabel: "Eliminado",
+                              successMsg: `${u.full_name || u.email} eliminado`,
+                              danger: true,
+                            })}
+                            style={{ padding:"4px 10px", fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"Outfit,sans-serif", background:"transparent", border:"1px solid var(--border-danger-subtle)", color:"var(--color-danger)", transition:"all 0.15s", borderRadius:6 }}
+                          >
+                            🗑
+                          </button>
+                        )}
+                        {isMe && <span style={{ fontSize:11, color:"var(--text-faint)", paddingRight:4, fontFamily:"Outfit,sans-serif" }}>Tu cuenta</span>}
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

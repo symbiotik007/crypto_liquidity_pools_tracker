@@ -163,7 +163,7 @@
 }
 @media (max-width: 768px) {
   .pc-row { flex-wrap: wrap; gap: 8px; padding: 12px 14px; }
-  .pc-left { min-width: 0; flex: 1; }
+  .pc-left { min-width: 0; flex: 1; flex-wrap: wrap; gap: 5px; align-content: flex-start; }
   .pc-stats { flex-wrap: wrap; justify-content: flex-start; width: 100%; }
   .pc-stat { padding: 4px 12px 4px 0; border-left: none; text-align: left; }
   .pc-grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -172,6 +172,9 @@
   .pcn-range-grid { grid-template-columns: 1fr 1fr; }
   .pcn-total { font-size: 22px; }
   .pc-current-price { font-size: 22px; margin-bottom: 16px; }
+  .pc-pair { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pc-toggle { flex-shrink: 0; }
+  .pc-chevron { flex-shrink: 0; }
 }
 @media (max-width: 480px) {
   .pc-pair { font-size: 13px; }

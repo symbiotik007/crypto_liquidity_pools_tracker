@@ -24,9 +24,6 @@ import ThemeToggle            from "./components/ThemeToggle";
 import "./styles/app.css";
 import "./styles/themes/futurista.css";
 import "./styles/themes/light.css";
-import "./styles/themes/profesional.css";
-import "./styles/themes/glassmorphism.css";
-import "./styles/themes/neumorphism.css";
 
 // ════════════════════════════════════════════════════════════════════
 // CONSTANTS

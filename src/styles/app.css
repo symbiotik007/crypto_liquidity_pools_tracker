@@ -179,6 +179,23 @@ body { background: var(--bg-base); }
 .form-select:focus { border-color: var(--color-accent); outline: none; }
 .form-select option { background: var(--bg-modal); }
 
+/* THEME TOGGLE — visible en app en todos los tamaños */
+.nav-theme-toggle {
+  width: 36px; height: 36px; flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; line-height: 1; cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+  padding: 0; border-radius: 8px;
+}
+.nav-theme-toggle:hover {
+  border-color: var(--color-accent);
+  background: rgba(var(--color-accent-rgb), 0.08);
+}
+/* override marketing.css que lo oculta en móvil */
+.topbar-row .nav-theme-toggle { display: flex !important; }
+
 /* RESPONSIVE */
 @media (max-width: 1024px) {
   .sidebar { width: 190px; min-width: 190px; }
