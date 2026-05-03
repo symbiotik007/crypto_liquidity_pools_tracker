@@ -234,12 +234,14 @@ create policy "notas_delete_own" on public.notas for delete using (auth.uid() = 
 
 
 -- ── 10. leads ────────────────────────────────────────────────────
--- Contactos recibidos desde el formulario del Home (público, sin auth).
+-- Contactos recibidos desde el formulario del Home y modales de info (público, sin auth).
+-- source: 'home_form' = sección Contacto | 'home_modal' = modal "Déjanos tus datos"
 create table if not exists public.leads (
   id          uuid primary key default gen_random_uuid(),
   created_at  timestamptz not null default now(),
   name        text not null,
   email       text,
+  phone       text,
   message     text not null,
   source      text not null default 'home_form',
   status      text not null default 'nuevo'
@@ -275,3 +277,127 @@ create policy "insider_select_own" on public.insider_trades for select using (au
 create policy "insider_insert_own" on public.insider_trades for insert with check (auth.uid() = user_id);
 create policy "insider_update_own" on public.insider_trades for update using (auth.uid() = user_id);
 create policy "insider_delete_own" on public.insider_trades for delete using (auth.uid() = user_id);
+
+
+-- ── 12. plans ────────────────────────────────────────────────────
+-- Catálogo de planes de suscripción. Filas insertadas manualmente.
+-- Planes actuales: free, basic, pro (o los que existan en producción).
+create table if not exists public.plans (
+  id           text primary key,
+  name         text not null,
+  max_pools    int  not null default 1,
+  max_wallets  int  not null default 1,
+  can_hedge    boolean not null default true,
+  can_trading  boolean not null default false,
+  can_insider  boolean not null default false,
+  price_usd    numeric default 0,
+  created_at   timestamptz default now()
+);
+
+alter table public.plans enable row level security;
+-- Cualquier autenticado puede leer los planes disponibles
+create policy "plans_select_auth" on public.plans
+  for select to authenticated using (true);
+-- Solo admins modifican el catálogo
+create policy "plans_all_admin" on public.plans
+  for all using (
+    exists (select 1 from public.profiles where id = auth.uid() and is_admin = true)
+  );
+
+
+-- ── 13. users ────────────────────────────────────────────────────
+-- Tabla extendida de usuarios (complementa profiles).
+-- Contiene plan activo, expiración y last_seen_at.
+create table if not exists public.users (
+  id              uuid primary key references auth.users(id) on delete cascade,
+  email           text not null,
+  full_name       text,
+  avatar_url      text,
+  plan_id         text not null default 'free' references public.plans(id),
+  plan_expires_at timestamptz,
+  is_admin        boolean not null default false,
+  created_at      timestamptz default now(),
+  last_seen_at    timestamptz default now()
+);
+
+alter table public.users enable row level security;
+create policy "users_select_own"   on public.users for select using (auth.uid() = id);
+create policy "users_update_own"   on public.users for update using (auth.uid() = id);
+create policy "users_select_admin" on public.users for select
+  using (exists (select 1 from public.profiles where id = auth.uid() and is_admin = true));
+create policy "users_update_admin" on public.users for update
+  using (exists (select 1 from public.profiles where id = auth.uid() and is_admin = true));
+
+
+-- ── 14. protections ──────────────────────────────────────────────
+-- Coberturas SHORT configuradas por el usuario vía Liquidity Engine.
+-- Versión más detallada que la tabla coberturas (incluye TP1/TP2, buffer, breakeven).
+create table if not exists public.protections (
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid not null references auth.users(id) on delete cascade,
+  pool_id          uuid not null,
+  wallet_id        uuid not null references public.wallets(id),
+  coin             text not null,
+  size             numeric,
+  leverage         int     not null default 50,
+  buffer_pct       int     not null default 100,
+  stop_loss_pct    numeric,
+  breakeven_pct    numeric,
+  tp1_pct          numeric,
+  tp1_close_pct    numeric,
+  tp2_pct          numeric,
+  tp2_close_pct    numeric,
+  no_protect_reentry boolean default false,
+  open_price       numeric,
+  status           text default 'active',
+  opened_at        timestamptz default now(),
+  closed_at        timestamptz,
+  created_at       timestamptz default now()
+);
+
+create index if not exists protections_user_id_idx on public.protections(user_id);
+alter table public.protections enable row level security;
+create policy "protections_select_own" on public.protections for select using (auth.uid() = user_id);
+create policy "protections_insert_own" on public.protections for insert with check (auth.uid() = user_id);
+create policy "protections_update_own" on public.protections for update using (auth.uid() = user_id);
+create policy "protections_delete_own" on public.protections for delete using (auth.uid() = user_id);
+
+
+-- ── 15. activity_log ─────────────────────────────────────────────
+-- Auditoría de acciones relevantes por usuario (login, hedge, etc).
+create table if not exists public.activity_log (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  action      text not null,
+  resource_id text,
+  details     jsonb,
+  created_at  timestamptz default now()
+);
+
+create index if not exists activity_log_user_id_idx on public.activity_log(user_id);
+alter table public.activity_log enable row level security;
+create policy "activity_log_select_own" on public.activity_log for select using (auth.uid() = user_id);
+create policy "activity_log_insert_own" on public.activity_log for insert with check (auth.uid() = user_id);
+create policy "activity_log_select_admin" on public.activity_log for select
+  using (exists (select 1 from public.profiles where id = auth.uid() and is_admin = true));
+
+
+-- ── 16. admin_users_summary (VIEW) ───────────────────────────────
+-- Vista de resumen para el panel de administración.
+-- Agrega datos de users + pools + wallets + protections por usuario.
+create or replace view public.admin_users_summary as
+select
+  u.id,
+  u.email,
+  u.full_name,
+  u.plan_id,
+  u.created_at,
+  u.last_seen_at,
+  count(distinct p.id)  as total_pools,
+  count(distinct w.id)  as total_wallets,
+  count(distinct pr.id) as total_protections
+from public.users u
+left join public.pools        p  on p.user_id  = u.id
+left join public.wallets      w  on w.user_id  = u.id
+left join public.protections  pr on pr.user_id = u.id
+group by u.id, u.email, u.full_name, u.plan_id, u.created_at, u.last_seen_at;

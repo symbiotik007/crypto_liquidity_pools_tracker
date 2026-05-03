@@ -222,9 +222,9 @@ export default function ProgramasPage() {
           <div className="prog-inner">
             <div className="prog-header">
               <div>
-                <div className="prog-badge">₿ · 90 Días · Más popular</div>
+                <div className="prog-badge">₿ · 90 Días · Exclusivo</div>
                 <h2 className="prog-title">Bootcamp <span>Crypto</span></h2>
-                <div className="prog-subtitle">Inversión y Trading de Criptomonedas</div>
+                <div className="prog-subtitle">Trading e Inversión de Criptomonedas</div>
                 <p className="prog-desc">
                   El programa más completo para aprender a invertir en criptomonedas de manera profesional.
                   Desde los fundamentos hasta estrategias avanzadas en DeFi, Liquidity Mining y gestión de riesgo.
@@ -232,7 +232,7 @@ export default function ProgramasPage() {
                 </p>
                 <p className="prog-desc">
                   Incluye acceso exclusivo al Liquidity Engine — nuestra herramienta propia para gestionar
-                  posiciones en Uniswap con cobertura automática en los 5 principales exchanges del mundo.
+                  posiciones en Uniswap con cobertura automática en los 12 principales exchanges del mundo.
                 </p>
                 <div className="prog-stats">
                   {[['90','días de programa'],['5','módulos'],['1·1','mentoría directa'],['13','semanas']].map(([v,l],i) => (

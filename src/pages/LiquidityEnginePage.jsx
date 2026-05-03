@@ -17,7 +17,7 @@ const FEATURES = [
   {
     icon:'🛡',
     name:'Hedge Manager',
-    desc:'Gestiona coberturas SHORT programables en los 5 principales exchanges vía API. Protege tu capital de la volatilidad de mercado mientras tu pool genera fees.',
+    desc:'Gestiona coberturas SHORT programables en los 12 principales exchanges vía API. Protege tu capital de la volatilidad de mercado mientras tu pool genera fees.',
     tags:['Binance','Bybit','OKX','SHORT API'],
   },
   {
@@ -63,7 +63,7 @@ const STEPS = [
 const ACCESS_ITEMS = [
   'Acceso completo con Bootcamp Crypto (90 días)',
   'Panel multi-pool con todas las funciones',
-  'Conexión API a 5 exchanges',
+  'Conexión API a 12 exchanges',
   'Módulo de cobertura con SHORT',
   'Alertas y notificaciones en tiempo real',
   'Actualizaciones continuas de la plataforma',
@@ -178,7 +178,7 @@ export default function LiquidityEnginePage() {
 
           </div>
           <div className="le-stats">
-            {[['5','exchanges integrados'],['DeFi'],['24/7','monitoreo activo'],['API','ejecución directa']].map(([v,l],i) => (
+            {[['12','exchanges integrados'],['DeFi','finanzas descentralizadas'],['24/7','monitoreo activo'],['API','ejecución directa']].map(([v,l],i) => (
               <div key={i}>
                 <div className="le-stat-val"><span>{v}</span></div>
                 <div className="le-stat-lab">{l}</div>
@@ -223,7 +223,7 @@ export default function LiquidityEnginePage() {
         <div className="le-inner">
           <div className="center">
             <div className="section-label center">Compatibilidad</div>
-            <h2 className="section-title">5 exchanges integrados<br /><span>vía API directa</span></h2>
+            <h2 className="section-title">12 exchanges integrados<br /><span>vía API directa</span></h2>
             <p className="section-desc">El módulo de coberturas ejecuta posiciones SHORT directamente en los exchanges más líquidos del mundo.</p>
           </div>
           <div className="exchanges-grid">

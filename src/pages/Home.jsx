@@ -56,9 +56,9 @@ const FAQS = [
 const SERVICES = [
   {
     icon: '₿',
-    badge: 'Más popular',
+    badge: 'Exclusivo',
     name: 'Bootcamp Crypto',
-    sub: 'Inversión y Trading de Criptomonedas',
+    sub: 'Trading e Inversión de Criptomonedas',
     desc: 'Aprende a navegar el mercado cripto con estructura y disciplina, dominando análisis técnico, gestión de riesgo, DeFi y estrategias avanzadas para resultados consistentes. Todo depende de ti.',
     list: ['Análisis técnico cripto', 'DeFi & Liquidity Mining', 'Gestión de riesgo', 'Herramientas profesionales', 'Mentoría directa con Oscar'],
   },
@@ -143,6 +143,14 @@ function InfoModal({ program, onClose }) {
     setTsToken(null); tsRef.current?.reset()
     setSubmitting(false)
     if (!ok) { setTsError('Verificación fallida. Intenta de nuevo.'); return }
+    await supabase.from('leads').insert({
+      name:    name.trim(),
+      email:   email.trim() || null,
+      phone:   phone.trim() || null,
+      message: `Interesado en programa: ${program.name}`,
+      source:  'home_modal',
+      status:  'nuevo',
+    })
     const msg = encodeURIComponent(
       `Hola Oscar! Me interesa el programa *${program.name}*.\n\n` +
       `Nombre: ${name.trim()}\n` +
@@ -432,16 +440,17 @@ export default function Home() {
           </div>
           <div className="hero-stats">
             <div>
-              <div className="hero-stat-val"><span>3</span></div>
-              <div className="hero-stat-lab">Programas disponibles</div>
+              <div className="hero-stat-val"><span>90</span> <span style={{ fontSize: 20 }}>días</span></div>
+              <div className="hero-stat-sub">Para operar con consistencia real.</div>
             </div>
             <div>
-              <div className="hero-stat-val">90</div>
-              <div className="hero-stat-lab">Días al resultado</div>
+              <div className="hero-stat-val"><span>1</span> <span style={{ fontSize: 20 }}>sistema</span></div>
+              <div className="hero-stat-sub">Replicable — metodología, criterio y disciplina propia.</div>
             </div>
             <div>
               <div className="hero-stat-val">1<span>·</span>1</div>
-              <div className="hero-stat-lab">Mentoría personalizada</div>
+              <div className="hero-stat-lab">Mentoría</div>
+              <div className="hero-stat-sub">personalizada y directa contigo.</div>
             </div>
           </div>
         </div>
