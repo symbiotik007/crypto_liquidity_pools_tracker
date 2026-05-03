@@ -109,7 +109,7 @@ export default function App() {
     Programa:"Programa",
     "Crypto Bootcamp":"Crypto Bootcamp",
     TradingView:"TradingView",
-    TradingViewOperable:"TradingView Operable",
+    // TradingViewOperable:"TradingView Operable",
     VeloChart:"Velo Chart",
     Preguntas:"Preguntas",
     "Admin Panel":"Admin Panel",
@@ -133,7 +133,7 @@ export default function App() {
       case "Programa":             return <ProgramaTab />;
       case "Crypto Bootcamp":      return <CryptoBootcampTab />;
       case "TradingView":          return <TradingViewTab />;
-      case "TradingViewOperable":  return <TradingViewOperableTab />;
+      // case "TradingViewOperable":  return <TradingViewOperableTab />;
       case "VeloChart":            return <VeloChartTab />;
       case "Preguntas":            return <PreguntasTab />;
       case "Admin Panel":          return <AdminPanel />;
@@ -187,12 +187,12 @@ export default function App() {
             >
               📈 TradingView
             </button>
-            <button
+            {/* <button
               className={`nav-item ${activeSection === "TradingViewOperable" ? 'active' : ''}`}
               onClick={() => { setActiveSection("TradingViewOperable"); closeSidebar(); }}
             >
               🖥️ TV Operable
-            </button>
+            </button> */}
             <button
               className={`nav-item ${activeSection === "VeloChart" ? 'active' : ''}`}
               onClick={() => { setActiveSection("VeloChart"); closeSidebar(); }}
