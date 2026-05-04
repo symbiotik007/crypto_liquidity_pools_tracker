@@ -382,7 +382,6 @@ export default function ProgramasPage() {
           </div>
           <div className="footer-bottom">
             <span>© 2026 The Crypto House · Todos los derechos reservados.</span>
-            <span>profeoscarbol@gmail.com · +57 321 564 6716</span>
           </div>
         </div>
       </footer>

@@ -60,7 +60,7 @@ const SERVICES = [
     name: 'Bootcamp Crypto',
     sub: 'Trading e Inversión de Criptomonedas',
     desc: 'Aprende a navegar el mercado cripto con estructura y disciplina, dominando análisis técnico, gestión de riesgo, DeFi y estrategias avanzadas para resultados consistentes. Todo depende de ti.',
-    list: ['Análisis técnico cripto', 'DeFi & Liquidity Mining', 'Gestión de riesgo', 'Herramientas profesionales', 'Mentoría directa con Oscar'],
+    list: ['Análisis técnico cripto', 'DeFi & Liquidity Mining', 'Gestión de riesgo', 'Mentoría directa con Oscar'],
   },
   // PRÓXIMAMENTE — Express Trading (tarjeta comentada)
   /* {
@@ -472,10 +472,8 @@ export default function Home() {
               Mucho gusto soy Oscar Bolaños, operador activo de criptomonedas VIP en Bybit con experiencia en Prop Firms, brokers y estructuras de inversión enfocadas en finanzas descentralizadas, futuros y gestión de liquidez. Durante más de 4 años he trabajado en la ejecución, análisis y desarrollo de estrategias aplicadas a mercados reales, con enfoque en consistencia, control de riesgo y toma de decisiones basada en datos.
             </p>
             <p className="about-text">
-              The Crypto House nace para redefinir cómo se aprende y se ejecuta en el mundo financiero. No es solo educación: es una plataforma diseñada para transformar conocimiento en resultados reales.
-
-Aquí no te quedas en la teoría. Accedes a una metodología enfocada en acción, donde cada concepto se aplica directamente en el mercado, con acompañamiento estratégico y herramientas tecnológicas propias que marcan la diferencia. Entre ellas, el Liquidity Engine, desarrollado para optimizar y potenciar operaciones en entornos des y centralizados.
-            </p>
+              The Crypto House nace con el objetivo de formar personas que quieren ir en serio en el mundo de las criptomonedas y sus productos derivados. Es una plataforma interactiva diseñada no solo para enseñar, sino para transformar conocimiento en resultados reales.
+              </p>
             {/* <div className="about-highlights">
               {[                
                 'Desarrollador del Liquidity Engine — herramienta de monitoreo y cobertura de capital DeFi propia. 🤖'
@@ -717,7 +715,6 @@ Aquí no te quedas en la teoría. Accedes a una metodología enfocada en acción
               </div>
               <p className="footer-brand-desc">
                 Formación profesional en criptomonedas, trading y DeFi para Colombia y Latam.
-                Transformamos vidas a través de la educación financiera.
               </p>
               <div className="footer-socials">
                 <a className="footer-social" href="https://wa.me/573215646716" target="_blank" rel="noreferrer">W</a>
@@ -752,7 +749,6 @@ Aquí no te quedas en la teoría. Accedes a una metodología enfocada en acción
           </div>
           <div className="footer-bottom">
             <span>© 2026 The Crypto House · Todos los derechos reservados.</span>
-            <span>profeoscarbol@gmail.com · +57 321 564 6716</span>
           </div>
           <div className="footer-disclaimer">
             <strong>Aviso de riesgo:</strong> El trading e inversión en criptomonedas conlleva riesgo significativo de pérdida.
