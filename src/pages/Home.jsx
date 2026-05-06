@@ -267,6 +267,42 @@ function AccessModal({ onClose }) {
   )
 }
 
+const CONSTRUCTION_TEXT = {
+  es: {
+    badge: 'En construcción',
+    title: 'Estamos construyendo algo increíble',
+    msg: 'Nuestro sitio está siendo mejorado constantemente. Puedes explorarlo ahora mismo — todo lo que ves ya funciona — pero ten en cuenta que algunas secciones aún están en desarrollo.',
+    cta: 'Entrar a explorar →',
+    lang: 'EN',
+  },
+  en: {
+    badge: 'Under construction',
+    title: "We're building something amazing",
+    msg: "Our site is constantly being improved. You can explore it right now — everything you see already works — but keep in mind that some sections are still in development.",
+    cta: 'Explore the site →',
+    lang: 'ES',
+  },
+}
+
+function ConstructionModal({ onClose }) {
+  const [lang, setLang] = useState('es')
+  const t = CONSTRUCTION_TEXT[lang]
+  return (
+    <div className="info-overlay">
+      <div className="construction-box">
+        <div className="construction-lang" onClick={() => setLang(l => l === 'es' ? 'en' : 'es')}>
+          {t.lang}
+        </div>
+        <div className="construction-icon">🚧</div>
+        <div className="construction-badge">{t.badge}</div>
+        <div className="construction-title">{t.title}</div>
+        <p className="construction-msg">{t.msg}</p>
+        <button className="info-submit construction-cta" onClick={onClose}>{t.cta}</button>
+      </div>
+    </div>
+  )
+}
+
 function FAQItem({ q, a }) {
   const [open, setOpen] = useState(false)
   return (
@@ -293,6 +329,9 @@ export default function Home() {
   const dropTimer = useRef(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [accessOpen, setAccessOpen] = useState(false)
+  const [constructionOpen, setConstructionOpen] = useState(
+    () => !localStorage.getItem('construction_dismissed')
+  )
   const openDrop  = () => { clearTimeout(dropTimer.current); setDropOpen(true) }
   const closeDrop = () => { dropTimer.current = setTimeout(() => setDropOpen(false), 220) }
 
@@ -760,6 +799,12 @@ export default function Home() {
 
       {infoProgram && <InfoModal program={infoProgram} onClose={() => setInfoProgram(null)} />}
       {accessOpen  && <AccessModal onClose={() => setAccessOpen(false)} />}
+      {constructionOpen && (
+        <ConstructionModal onClose={() => {
+          localStorage.setItem('construction_dismissed', '1')
+          setConstructionOpen(false)
+        }} />
+      )}
     </>
   )
 }
