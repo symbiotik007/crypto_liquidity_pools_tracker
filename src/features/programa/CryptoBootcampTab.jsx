@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { CRYPTO_BOOTCAMP } from "./data/cryptoBootcampData";
+import { useAuth } from "../../lib/AuthContext";
+import { useProgressSync } from "../../lib/useSupabaseSync";
 
 export default function CryptoBootcampTab() {
+  const { user } = useAuth();
+  const { completadas, toggleCompletada } = useProgressSync(user?.id, 'bootcamp');
   const [abiertos, setAbiertos] = useState(() => new Set([CRYPTO_BOOTCAMP[0]?.id]));
   const [moduloActivo, setModuloActivo] = useState(0);
   const [claseActiva, setClaseActiva] = useState(0);
-  const [completadas, setCompletadas] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("crypto_bootcamp_completadas") || "[]"); }
-    catch { return []; }
-  });
   const [winW, setWinW] = useState(() => window.innerWidth);
   useEffect(() => {
     const onResize = () => setWinW(window.innerWidth);
@@ -25,8 +25,6 @@ export default function CryptoBootcampTab() {
   const progreso    = Math.round((completadas.length / totalClases) * 100);
   const modulo      = CRYPTO_BOOTCAMP[moduloActivo];
   const clase       = modulo?.clases[claseActiva];
-  const isDirectImage = (src) => /\.(png|jpe?g|webp|gif|svg)(\?|$)/i.test(src || "");
-
   const toggle = (id) => {
     setAbiertos(prev => {
       const next = new Set(prev);
@@ -42,13 +40,6 @@ export default function CryptoBootcampTab() {
     if (isMobile) setSidebarOpen(false);
   };
 
-  const toggleCompletada = (id) => {
-    const next = completadas.includes(id)
-      ? completadas.filter(x => x !== id)
-      : [...completadas, id];
-    setCompletadas(next);
-    localStorage.setItem("crypto_bootcamp_completadas", JSON.stringify(next));
-  };
 
   const irSiguiente = () => {
     if (!clase || !modulo) return;
@@ -170,10 +161,6 @@ export default function CryptoBootcampTab() {
     contentTitle:{ fontSize:13, color:"var(--color-accent)", fontWeight:800, marginBottom:8 },
     contentText:{ fontSize:14, color:"var(--text-muted)", lineHeight:1.75 },
     contentList:{ margin:0, paddingLeft:18, color:"var(--text-muted)", fontSize:14, lineHeight:1.75 },
-    mediaGrid:{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fit, minmax(220px, 1fr))", gap:12 },
-    image:{ width:"100%", border:"1px solid var(--border-muted)", background:"var(--bg-input)", display:"block" },
-    sourceCard:{ border:"1px solid var(--border-muted)", background:"var(--bg-elevated)", padding:"12px 14px", color:"var(--text-dim)", fontSize:12, lineHeight:1.5 },
-    sourceLink:{ color:"var(--color-accent)", textDecoration:"none", fontSize:12, wordBreak:"break-word" },
     actions:{ display:"flex", flexDirection: isMobile ? "column" : "row", gap:10, alignItems: isMobile ? "stretch" : "center", paddingTop:18 },
     btnComplete:(done) => ({
       padding:"11px 20px", fontSize:13, cursor:"pointer", fontFamily:"Outfit,sans-serif",
@@ -302,7 +289,7 @@ export default function CryptoBootcampTab() {
                       <img
                         src={bloque.imagen.src}
                         alt={bloque.imagen.alt}
-                        style={{ width:"100%", maxWidth:520, display:"block", margin:"12px 0 14px", border:"1px solid var(--border-muted)", borderRadius:6 }}
+                        style={{ maxWidth:"min(360px, 100%)", width:"100%", display:"block", margin:"12px 0 14px", border:"1px solid var(--border-muted)", borderRadius:6 }}
                       />
                     )}
                     {bloque.texto && (
@@ -323,33 +310,6 @@ export default function CryptoBootcampTab() {
                 <div style={S.pending}>
                   Aún no se ha cargado el contenido completo de esta clase. Cuando compartas la información, la agrego aquí manteniendo esta estructura.
                 </div>
-              )}
-
-              {(clase.imagenes?.length > 0 || clase.sourceUrl) && (
-                <>
-                  <div style={S.sectionTitle}>Imágenes y fuente</div>
-                  <div style={S.mediaGrid}>
-                    {clase.imagenes?.map((img, i) => (
-                      isDirectImage(img.src) ? (
-                        <figure key={i} style={{ margin:0 }}>
-                          <img src={img.src} alt={img.alt} style={S.image} />
-                          <figcaption style={{ color:"var(--text-label)", fontSize:11, marginTop:6 }}>{img.alt}</figcaption>
-                        </figure>
-                      ) : (
-                        <div key={i} style={S.sourceCard}>
-                          <div>{img.alt}</div>
-                          <a href={img.src} target="_blank" rel="noreferrer" style={S.sourceLink}>Abrir página fuente</a>
-                        </div>
-                      )
-                    ))}
-                    {clase.sourceUrl && (
-                      <div style={S.sourceCard}>
-                        <div>Fuente original de la lección</div>
-                        <a href={clase.sourceUrl} target="_blank" rel="noreferrer" style={S.sourceLink}>{clase.sourceUrl}</a>
-                      </div>
-                    )}
-                  </div>
-                </>
               )}
 
               <div style={S.actions}>

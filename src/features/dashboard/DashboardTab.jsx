@@ -1,6 +1,6 @@
 import { useAuth } from "../../lib/AuthContext";
-import { usePoolsSync, useWalletsSync, useNotasSync } from "../../lib/useSupabaseSync";
-import { CURSO } from "../programa/data/cursoData";
+import { usePoolsSync, useWalletsSync, useNotasSync, useProgressSync } from "../../lib/useSupabaseSync";
+import { CRYPTO_BOOTCAMP } from "../programa/data/cryptoBootcampData";
 import { buildWaUpgradeUrl } from "./utils";
 
 const nav = (section, tab) =>
@@ -12,9 +12,9 @@ export default function DashboardTab() {
   const { wallets } = useWalletsSync(user?.id)
   const { notas }   = useNotasSync(user?.id)
 
-  const completadas    = (() => { try { return JSON.parse(localStorage.getItem("crypto_edu_completadas") || "[]") } catch { return [] } })()
-  const totalLecciones = CURSO.reduce((a, m) => a + m.lecciones.length, 0)
-  const progreso       = Math.round((completadas.length / totalLecciones) * 100)
+  const { completadas }  = useProgressSync(user?.id, 'bootcamp')
+  const totalLecciones   = CRYPTO_BOOTCAMP.reduce((a, m) => a + m.clases.length, 0)
+  const progreso         = Math.round((completadas.length / totalLecciones) * 100)
   const notasCount     = Object.values(notas).filter(n => n?.trim()).length
 
   const lsEnriched  = (() => { try { return JSON.parse(localStorage.getItem("liquidity_engine_pools") || "[]") } catch { return [] } })()
@@ -70,7 +70,7 @@ export default function DashboardTab() {
       <div className="stats-grid">
 
         <div className="stat-card">
-          <div className="stat-label">Programa completado</div>
+          <div className="stat-label">Bootcamp completado</div>
           <div className="stat-value">{progreso}%</div>
           <div className="stat-bar">
             <div className="stat-bar-fill" style={{ width:`${progreso}%` }} />
@@ -111,18 +111,18 @@ export default function DashboardTab() {
       {/* ── Main grid ── */}
       <div className="dash-grid">
 
-        {/* Progreso del programa */}
+        {/* Progreso del Bootcamp */}
         <div className="dash-card">
           <div className="dash-card-header">
-            <span className="dash-card-title">Progreso del programa</span>
+            <span className="dash-card-title">Progreso del Bootcamp</span>
             <span className="dash-card-value">{progreso}%</span>
           </div>
           <div className="stat-bar" style={{ marginBottom:20 }}>
             <div className="stat-bar-fill" style={{ width:`${progreso}%` }} />
           </div>
           <div className="dash-modules">
-            {CURSO.map(m => {
-              const ids  = m.lecciones.map(l => l.id)
+            {CRYPTO_BOOTCAMP.map(m => {
+              const ids  = m.clases.map(c => c.id)
               const done = ids.filter(id => completadas.includes(id)).length
               const pct  = Math.round((done / ids.length) * 100)
               const full = done === ids.length
@@ -130,7 +130,7 @@ export default function DashboardTab() {
                 <div key={m.id} className="dash-module">
                   <div className="dash-module-header">
                     <span className={`dash-module-name ${full ? "done" : ""}`}>
-                      {full ? "✓ " : ""}{m.titulo.replace(/Módulo \d+ — /, "")}
+                      {full ? "✓ " : ""}{m.titulo}
                     </span>
                     <span className="dash-module-count">{done}/{ids.length}</span>
                   </div>
@@ -143,9 +143,9 @@ export default function DashboardTab() {
           </div>
           <button
             className="dash-prog-btn"
-            onClick={() => nav("Programa", null)}
+            onClick={() => nav("Crypto Bootcamp", null)}
           >
-            Ir al programa →
+            Ir al Bootcamp →
           </button>
         </div>
 

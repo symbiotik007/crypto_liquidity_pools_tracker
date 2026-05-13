@@ -1,17 +1,14 @@
 import { useState } from "react";
 import { useAuth } from "../../lib/AuthContext";
-import { useNotasSync, insertarNotificacion } from "../../lib/useSupabaseSync";
+import { useNotasSync, useProgressSync, insertarNotificacion } from "../../lib/useSupabaseSync";
 import { CURSO } from "./data/cursoData";
 
 export default function ProgramaTab() {
   const { user } = useAuth();
   const [moduloActivo, setModuloActivo] = useState(0);
   const [leccionActiva, setLeccionActiva] = useState(0);
+  const { completadas, toggleCompletada: _toggleCompletada } = useProgressSync(user?.id, 'programa');
   const [modulosAbiertos, setModulosAbiertos] = useState(() => new Set([CURSO[0]?.id]));
-  const [completadas, setCompletadas] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("crypto_edu_completadas") || "[]"); }
-    catch { return []; }
-  });
   const [notasAbiertas, setNotasAbiertas] = useState(false);
   const [notasVista,    setNotasVista]    = useState("actual");
   const [copied,        setCopied]        = useState(false);
@@ -24,18 +21,15 @@ export default function ProgramaTab() {
   const leccion = modulo?.lecciones[leccionActiva];
 
   const toggleCompletada = (id) => {
-    const next = completadas.includes(id)
-      ? completadas.filter(x => x !== id)
-      : [...completadas, id];
-    setCompletadas(next);
-    localStorage.setItem("crypto_edu_completadas", JSON.stringify(next));
-    if (!completadas.includes(id) && next.length === totalLecciones && user?.id) {
+    const completing = !completadas.includes(id);
+    _toggleCompletada(id);
+    if (completing && completadas.length + 1 === totalLecciones && user?.id) {
       insertarNotificacion(
         user.id,
         'curso_completado',
         '🎓 ¡Felicitaciones! Completaste el programa',
         '¡Lo lograste! Completaste el 100% del programa Trader en Formación. Oscar está orgulloso de ti.'
-      )
+      );
     }
   };
 

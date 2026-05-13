@@ -1002,3 +1002,104 @@ export function useActividadPools(userId) {
 
   return { actividad, loading, registrar, reload: load }
 }
+
+// ════════════════════════════════════════════════════════════════════
+// PROGRESS SYNC  (user_lesson_progress)
+//
+// Table — run once in Supabase SQL Editor:
+//
+//   create table user_lesson_progress (
+//     id           uuid primary key default gen_random_uuid(),
+//     user_id      uuid references auth.users on delete cascade not null,
+//     course       text not null,
+//     lesson_id    text not null,
+//     completed_at timestamptz default now(),
+//     unique (user_id, lesson_id)
+//   );
+//   alter table user_lesson_progress enable row level security;
+//   create policy "users manage own progress"
+//     on user_lesson_progress for all
+//     using  (auth.uid() = user_id)
+//     with check (auth.uid() = user_id);
+// ════════════════════════════════════════════════════════════════════
+export function useProgressSync(userId, course) {
+  const queryClient = useQueryClient()
+  const qKey = ['progress', userId, course]
+  const lsKey = course === 'bootcamp' ? 'crypto_bootcamp_completadas' : 'crypto_edu_completadas'
+
+  const { data: completadas = [], isPending: loading } = useQuery({
+    queryKey: qKey,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_lesson_progress')
+        .select('lesson_id')
+        .eq('user_id', userId)
+        .eq('course', course)
+      if (error) throw error
+
+      const dbIds = (data || []).map(r => r.lesson_id)
+
+      // One-time migration: push any localStorage IDs not yet in the DB
+      let lsIds = []
+      try { lsIds = JSON.parse(localStorage.getItem(lsKey) || '[]') } catch {}
+      const toMigrate = lsIds.filter(id => !dbIds.includes(id))
+      if (toMigrate.length > 0) {
+        await supabase
+          .from('user_lesson_progress')
+          .upsert(
+            toMigrate.map(id => ({ user_id: userId, course, lesson_id: id })),
+            { onConflict: 'user_id,lesson_id' }
+          )
+        localStorage.removeItem(lsKey)
+        return [...new Set([...dbIds, ...toMigrate])]
+      }
+
+      localStorage.removeItem(lsKey)
+      return dbIds
+    },
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+    // Show localStorage data instantly while the DB fetch is in-flight
+    initialData: () => {
+      try { return JSON.parse(localStorage.getItem(lsKey) || '[]') } catch { return [] }
+    },
+    initialDataUpdatedAt: 0,
+  })
+
+  const { mutate: toggleCompletada } = useMutation({
+    mutationFn: async (lessonId) => {
+      const current = queryClient.getQueryData(qKey) || []
+      if (current.includes(lessonId)) {
+        const { error } = await supabase
+          .from('user_lesson_progress')
+          .delete()
+          .eq('user_id', userId)
+          .eq('lesson_id', lessonId)
+        if (error) throw error
+      } else {
+        const { error } = await supabase
+          .from('user_lesson_progress')
+          .upsert(
+            { user_id: userId, course, lesson_id: lessonId },
+            { onConflict: 'user_id,lesson_id' }
+          )
+        if (error) throw error
+      }
+    },
+    // Optimistic update — UI responds instantly, DB syncs in background
+    onMutate: async (lessonId) => {
+      await queryClient.cancelQueries({ queryKey: qKey })
+      const prev = queryClient.getQueryData(qKey) || []
+      queryClient.setQueryData(qKey, prev.includes(lessonId)
+        ? prev.filter(id => id !== lessonId)
+        : [...prev, lessonId]
+      )
+      return { prev }
+    },
+    onError: (_err, _lessonId, context) => {
+      if (context?.prev) queryClient.setQueryData(qKey, context.prev)
+    },
+  })
+
+  return { completadas, loading, toggleCompletada }
+}

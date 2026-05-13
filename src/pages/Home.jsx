@@ -61,6 +61,7 @@ const SERVICES = [
     sub: 'Trading e Inversión de Criptomonedas',
     desc: 'Aprende a navegar el mercado cripto con estructura y disciplina, dominando análisis técnico, gestión de riesgo, DeFi y estrategias avanzadas para resultados consistentes. Todo depende de ti.',
     list: ['Análisis técnico cripto', 'DeFi & Liquidity Mining', 'Gestión de riesgo', 'Mentoría directa con Oscar'],
+    cta: 'Ver programa completo →',
   },
   // PRÓXIMAMENTE — Express Trading (tarjeta comentada)
   /* {
@@ -78,6 +79,7 @@ const SERVICES = [
     sub: 'Gestión de Pools DeFi',
     desc: 'Nuestra plataforma exclusiva para gestionar tus pools de liquidez en Uniswap. Monitoreo en tiempo real, Configuración de cobertura de riesgo en los 5 mejores exchanges de criptomonedas del mundo.',
     list: ['Múltiples pools en un solo lugar', 'Seguimiento en tiempo real', 'SHORT de protección apalancado vía API en futuros', 'Acceso exclusivo para estudiantes'],
+    cta: 'Explorar herramienta →',
     exchanges: [
       { name: 'Binance', color: '#F0B90B', bg: 'rgba(240,185,11,0.1)', border: 'rgba(240,185,11,0.3)' },
       { name: 'Bybit', color: '#F7A600', bg: 'rgba(247,166,0,0.1)', border: 'rgba(247,166,0,0.3)' },
@@ -90,7 +92,7 @@ const SERVICES = [
 
 const TESTIMONIALS = [
   {
-    quote: 'Llevaba meses buscando alguien que realmente enseñara cripto de manera práctica. Con Oscar aprendí en 3 meses lo que no encontré en años de cursos online. La inversión valió completamente la pena.',
+    quote: 'Llevaba meses buscando alguien que realmente enseñara cripto de manera práctica. Con Oscar aprendí en 3 meses lo que no encontré en otros de cursos online. La inversión valió completamente la pena.',
     name: 'María C.',
     role: 'Estudiante · Bogotá',
     initials: 'MC',
@@ -576,10 +578,10 @@ export default function Home() {
                   </div>
                 )}
                 <button className="service-btn" onClick={() => {
-                  if (i === 2) navigate('/liquidity-engine')
+                  if (s.name === 'Liquidity Engine') navigate('/liquidity-engine')
                   else navigate('/programas')
                 }}>
-                  {i === 2 ? 'Explorar Liquidity Engine →' : 'Ver programa completo →'}
+                  {s.cta}
                 </button>
               </div>
             ))}

@@ -56,17 +56,17 @@ const fmtAge   = (ts) => {
 const CSS = `
   .ht-wrap { display:flex; flex-direction:column; gap:12px; }
   .ht-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:4px; }
-  .ht-stat  { background:#070d14; border:1px solid #0e2435; padding:14px 16px; }
-  .ht-stat-lbl { font-size:10px; letter-spacing:2px; color:#2a5a72; text-transform:uppercase; margin-bottom:6px; }
-  .ht-stat-val { font-size:20px; font-weight:800; color:#c8e6f0; }
-  .ht-stat-val.green { color:#00ff88; }
-  .ht-stat-val.red   { color:#ff4f6e; }
-  .ht-stat-val.cyan  { color:#00e5ff; }
+  .ht-stat  { background:var(--bg-surface); border:1px solid var(--border-muted); padding:14px 16px; }
+  .ht-stat-lbl { font-size:10px; letter-spacing:2px; color:var(--text-label); text-transform:uppercase; margin-bottom:6px; }
+  .ht-stat-val { font-size:20px; font-weight:800; color:var(--text-secondary); }
+  .ht-stat-val.green { color:var(--color-success); }
+  .ht-stat-val.red   { color:var(--color-danger); }
+  .ht-stat-val.cyan  { color:var(--color-accent); }
   @media(max-width:768px){
     .ht-stats { grid-template-columns:repeat(2,1fr); }
     .ht-stat-val { font-size:18px; }
     .ht-body { grid-template-columns:1fr 1fr; }
-    .ht-metric:nth-child(3n) { border-right:1px solid #0e2435; }
+    .ht-metric:nth-child(3n) { border-right:1px solid var(--border-muted); }
     .ht-metric:nth-child(2n) { border-right:none; }
   }
   @media(max-width:480px){
@@ -82,90 +82,90 @@ const CSS = `
   }
 
   .ht-section-title {
-    font-size:10px; letter-spacing:2px; color:#2a5a72; text-transform:uppercase;
-    padding:10px 0 6px; border-top:1px solid #0e2435; margin-top:4px;
+    font-size:10px; letter-spacing:2px; color:var(--text-label); text-transform:uppercase;
+    padding:10px 0 6px; border-top:1px solid var(--border-muted); margin-top:4px;
     display:flex; align-items:center; gap:8px;
   }
   .ht-section-title .ht-count {
-    background:#0e2435; border:1px solid #1a3a5e; color:#4a7a96;
+    background:var(--bg-count); border:1px solid var(--border-count); color:var(--text-dim);
     font-size:10px; padding:1px 7px; border-radius:10px;
   }
 
-  .ht-card { background:#070d14; border:1px solid #0e2435; margin-bottom:8px; transition:border-color 0.2s; }
-  .ht-card.active-below  { border-color:#5a1a28; box-shadow:0 0 16px rgba(255,79,110,0.08); }
-  .ht-card.active-above  { border-color:#5a3a00; box-shadow:0 0 16px rgba(255,179,71,0.08); }
+  .ht-card { background:var(--bg-surface); border:1px solid var(--border-muted); margin-bottom:8px; transition:border-color 0.2s; }
+  .ht-card.active-below  { border-color:var(--border-danger-subtle); box-shadow:0 0 16px rgba(255,79,110,0.08); }
+  .ht-card.active-above  { border-color:var(--border-warning-subtle); box-shadow:0 0 16px rgba(255,179,71,0.08); }
   .ht-card.closed        { opacity:0.6; }
 
   .ht-card-header {
     display:flex; align-items:center; gap:10px; padding:12px 16px;
-    border-bottom:1px solid #0e2435; flex-wrap:wrap;
+    border-bottom:1px solid var(--border-muted); flex-wrap:wrap;
   }
-  .ht-pair  { font-size:15px; font-weight:700; color:#c8d8e8; }
+  .ht-pair  { font-size:15px; font-weight:700; color:var(--text-muted); }
   .ht-badge {
     font-size:10px; padding:2px 8px; letter-spacing:0.5px;
     text-transform:uppercase; white-space:nowrap; font-weight:700;
   }
   .ht-short-badge {
-    background:#0d0a1a; border:1px solid #7a40cc;
-    color:#c8a0ff; font-size:10px; padding:2px 8px;
+    background:var(--bg-tag); border:1px solid var(--border-tag-purple);
+    color:var(--text-purple-soft); font-size:10px; padding:2px 8px;
     letter-spacing:0.5px; font-weight:700;
   }
-  .ht-chain { font-size:11px; padding:2px 7px; background:#0a1a24; border:1px solid #1a3a4e; color:#4a7a96; }
-  .ht-age   { font-size:11px; color:#2a5a72; margin-left:auto; }
+  .ht-chain { font-size:11px; padding:2px 7px; background:var(--bg-input); border:1px solid var(--border-blue-dim); color:var(--text-dim); }
+  .ht-age   { font-size:11px; color:var(--text-label); margin-left:auto; }
 
   .ht-body { display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; }
   @media(max-width:768px) { .ht-body { grid-template-columns:1fr 1fr; } }
 
-  .ht-metric { padding:12px 16px; border-right:1px solid #0e2435; border-bottom:1px solid #0e2435; }
+  .ht-metric { padding:12px 16px; border-right:1px solid var(--border-muted); border-bottom:1px solid var(--border-muted); }
   .ht-metric:nth-child(3n) { border-right:none; }
-  .ht-metric-lbl { font-size:9px; letter-spacing:1.5px; color:#2a5a72; text-transform:uppercase; margin-bottom:5px; }
-  .ht-metric-val { font-size:14px; font-weight:700; color:#7ab8d4; }
-  .ht-metric-val.green { color:#00ff88; }
-  .ht-metric-val.red   { color:#ff4f6e; }
-  .ht-metric-val.cyan  { color:#00e5ff; }
-  .ht-metric-sub { font-size:10px; color:#2a4a5e; margin-top:2px; }
+  .ht-metric-lbl { font-size:9px; letter-spacing:1.5px; color:var(--text-label); text-transform:uppercase; margin-bottom:5px; }
+  .ht-metric-val { font-size:14px; font-weight:700; color:var(--text-hover); }
+  .ht-metric-val.green { color:var(--color-success); }
+  .ht-metric-val.red   { color:var(--color-danger); }
+  .ht-metric-val.cyan  { color:var(--color-accent); }
+  .ht-metric-sub { font-size:10px; color:var(--text-faint); margin-top:2px; }
 
   .ht-pnl-row {
-    padding:14px 16px; border-top:1px solid #0e2435;
+    padding:14px 16px; border-top:1px solid var(--border-muted);
     display:flex; align-items:center; gap:16px; flex-wrap:wrap;
   }
   .ht-pnl-big { font-size:22px; font-weight:800; }
-  .ht-pnl-big.green { color:#00ff88; }
-  .ht-pnl-big.red   { color:#ff4f6e; }
-  .ht-pnl-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:#2a5a72; margin-top:2px; }
+  .ht-pnl-big.green { color:var(--color-success); }
+  .ht-pnl-big.red   { color:var(--color-danger); }
+  .ht-pnl-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-label); margin-top:2px; }
 
   .ht-actions {
-    padding:10px 16px; border-top:1px solid #0e2435;
+    padding:10px 16px; border-top:1px solid var(--border-muted);
     display:flex; gap:8px; flex-wrap:wrap; align-items:center;
   }
-  .ht-btn-link { font-size:11px; color:#7ab8d4; text-decoration:none; padding:5px 10px; border:1px solid #1a3a4e; background:transparent; transition:all 0.15s; }
-  .ht-btn-link:hover { border-color:#00e5ff; color:#00e5ff; }
+  .ht-btn-link { font-size:11px; color:var(--text-hover); text-decoration:none; padding:5px 10px; border:1px solid var(--border-blue-dim); background:transparent; transition:all 0.15s; }
+  .ht-btn-link:hover { border-color:var(--color-accent); color:var(--color-accent); }
   .ht-btn-close-pos {
-    font-size:11px; color:#ff4f6e; background:transparent; border:1px solid #5a1a28;
+    font-size:11px; color:var(--color-danger); background:transparent; border:1px solid var(--border-danger-subtle);
     padding:5px 12px; cursor:pointer; font-family:'Outfit',sans-serif; transition:all 0.15s;
   }
-  .ht-btn-close-pos:hover { background:#1a0810; }
+  .ht-btn-close-pos:hover { background:var(--bg-danger-subtle); }
   .ht-btn-close-pos:disabled { opacity:0.4; cursor:not-allowed; }
-  .ht-last-refresh { font-size:11px; color:#2a5a72; margin-left:auto; }
+  .ht-last-refresh { font-size:11px; color:var(--text-label); margin-left:auto; }
 
   .ht-empty {
-    background:#070d14; border:1px solid #0e2435;
+    background:var(--bg-surface); border:1px solid var(--border-muted);
     padding:40px 24px; text-align:center;
   }
   .ht-empty-icon  { font-size:36px; margin-bottom:12px; }
-  .ht-empty-title { font-size:15px; font-weight:700; color:#4a7a96; margin-bottom:6px; }
-  .ht-empty-sub   { font-size:13px; color:#2a5a72; line-height:1.7; }
+  .ht-empty-title { font-size:15px; font-weight:700; color:var(--text-dim); margin-bottom:6px; }
+  .ht-empty-sub   { font-size:13px; color:var(--text-label); line-height:1.7; }
 
   .ht-hist-row {
     display:flex; align-items:center; gap:10px; padding:10px 16px;
-    border-bottom:1px solid #070d14; font-size:12px; flex-wrap:wrap;
+    border-bottom:1px solid var(--bg-surface); font-size:12px; flex-wrap:wrap;
   }
   .ht-hist-row:last-child { border-bottom:none; }
   .ht-hist-tag { font-size:9px; padding:2px 7px; font-weight:700; letter-spacing:0.5px; }
 
   .ht-no-match {
-    background:#0d0810; border:1px solid #3a1a4a;
-    padding:8px 12px; font-size:11px; color:#9a70aa; margin-top:4px;
+    background:var(--bg-tag); border:1px solid var(--color-purple-deeper);
+    padding:8px 12px; font-size:11px; color:var(--color-purple-faint); margin-top:4px;
   }
 `;
 
@@ -259,8 +259,8 @@ export default function HedgeTrackerTab() {
     // Demo pool: usa mock data directamente desde localStorage si no hay pool real
     const pool     = pools.find(p => String(p.tokenId) === String(prot.poolId));
     const demoPoolStatus = prot.openPrice > 0 && currentPrice < prot.openPrice
-      ? { label:"Fuera (Abajo)", color:"#ff4f6e", bg:"#1a0810", border:"#5a1a28" }
-      : { label:"Fuera (Arriba)", color:"#ffb347", bg:"#1a0e00", border:"#5a3a00" };
+      ? { label:"Fuera (Abajo)", color:"var(--color-danger)",  bg:"var(--bg-danger-subtle)",  border:"var(--border-danger-subtle)" }
+      : { label:"Fuera (Arriba)", color:"var(--color-warning)", bg:"var(--bg-warning-subtle)", border:"var(--border-warning-subtle)" };
     const poolInRange = pool?.status?.label === "En Rango";
     const poolStatus  = pool?.status ?? (isDemo ? demoPoolStatus : null);
     const pnl      = hlPos
@@ -362,10 +362,10 @@ export default function HedgeTrackerTab() {
 
                   {/* Match HL indicator */}
                   {e.isDemo
-                    ? <span style={{ fontSize:10, color:"#a78bfa", fontWeight:700, background:"#0d0820", border:"1px solid #3730a3", padding:"1px 7px" }}>🧪 DEMO</span>
+                    ? <span style={{ fontSize:10, color:"var(--color-purple-light)", fontWeight:700, background:"var(--bg-tag)", border:"1px solid var(--border-purple)", padding:"1px 7px" }}>🧪 DEMO</span>
                     : e.hlPos
-                      ? <span style={{ fontSize:10, color:"#00ff88", fontWeight:700 }}>✓ Posición HL activa</span>
-                      : <span style={{ fontSize:10, color:"#ff4f6e", fontWeight:700 }}>⚠ Sin match en HL</span>
+                      ? <span style={{ fontSize:10, color:"var(--color-success)", fontWeight:700 }}>✓ Posición HL activa</span>
+                      : <span style={{ fontSize:10, color:"var(--color-danger)", fontWeight:700 }}>⚠ Sin match en HL</span>
                   }
 
                   {e.pool && <span className="ht-chain">{e.pool.chainName}</span>}
@@ -436,7 +436,7 @@ export default function HedgeTrackerTab() {
 
                   {/* Pool status inline */}
                   {e.pool && e.poolInRange && (
-                    <div style={{ background:"#001a0e", border:"1px solid #003a22", padding:"8px 14px", fontSize:12, color:"#00ff88" }}>
+                    <div style={{ background:"var(--bg-success-subtle)", border:"1px solid var(--border-success-subtle)", padding:"8px 14px", fontSize:12, color:"var(--color-success)" }}>
                       ✓ Pool volvió al rango — considera cerrar el SHORT
                     </div>
                   )}
@@ -447,8 +447,8 @@ export default function HedgeTrackerTab() {
                     </div>
                   )}
                   {e.isDemo && (
-                    <div style={{ background:"#0d0820", border:"1px solid #3730a344", padding:"8px 14px", fontSize:11, color:"#6b5fa0" }}>
-                      🧪 <strong style={{color:"#a78bfa"}}>Cobertura demo</strong> — PNL calculado simulando un SHORT real.
+                    <div style={{ background:"var(--bg-tag)", border:"1px solid var(--border-purple-dim)", padding:"8px 14px", fontSize:11, color:"var(--text-inactivity)" }}>
+                      🧪 <strong style={{color:"var(--color-purple-light)"}}>Cobertura demo</strong> — PNL calculado simulando un SHORT real.
                       En producción se sincroniza con tu posición en Hyperliquid.
                     </div>
                   )}
@@ -492,11 +492,11 @@ export default function HedgeTrackerTab() {
         </div>
 
         {history.length === 0 ? (
-          <div style={{ fontSize:12, color:"#2a5a72", padding:"16px 0" }}>
+          <div style={{ fontSize:12, color:"var(--text-label)", padding:"16px 0" }}>
             Las coberturas cerradas aparecerán aquí.
           </div>
         ) : (
-          <div style={{ background:"#070d14", border:"1px solid #0e2435" }}>
+          <div style={{ background:"var(--bg-surface)", border:"1px solid var(--border-muted)" }}>
             {history.map((h, i) => {
               const pnlPos = (h.finalPnl ?? 0) >= 0;
               const reason = {
@@ -509,18 +509,18 @@ export default function HedgeTrackerTab() {
               return (
                 <div key={i} className="ht-hist-row">
                   <span className="ht-hist-tag" style={{
-                    background:"#1a1020", border:"1px solid #3a1a5a", color:"#9a70cc",
+                    background:"var(--bg-tag)", border:"1px solid var(--color-purple-deeper)", color:"var(--color-purple-faint)",
                   }}>
                     CERRADO
                   </span>
-                  <span style={{ fontWeight:700, color:"#c8d8e8" }}>{h.coin}</span>
-                  <span style={{ color:"#4a7a96" }}>Pool #{h.poolId}</span>
-                  <span className={pnlPos ? "green" : "red"} style={{ fontWeight:700, fontSize:13 }}>
+                  <span style={{ fontWeight:700, color:"var(--text-muted)" }}>{h.coin}</span>
+                  <span style={{ color:"var(--text-dim)" }}>Pool #{h.poolId}</span>
+                  <span style={{ fontWeight:700, fontSize:13, color: pnlPos ? "var(--color-success)" : "var(--color-danger)" }}>
                     {fmtUsd(h.finalPnl ?? 0)}
                   </span>
-                  <span style={{ color:"#2a5a72" }}>{fmtAge(h.openedAt)} activo</span>
-                  <span style={{ color:"#4a7a96" }}>{reason}</span>
-                  <span style={{ color:"#1a3a5e", marginLeft:"auto", fontSize:10 }}>
+                  <span style={{ color:"var(--text-label)" }}>{fmtAge(h.openedAt)} activo</span>
+                  <span style={{ color:"var(--text-dim)" }}>{reason}</span>
+                  <span style={{ color:"var(--border-inactive)", marginLeft:"auto", fontSize:10 }}>
                     {new Date(h.closedAt).toLocaleDateString("es-CO")} {new Date(h.closedAt).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"})}
                   </span>
                 </div>
@@ -531,7 +531,7 @@ export default function HedgeTrackerTab() {
 
         {/* ── Info wallets ── */}
         {hlWallets.length === 0 && (
-          <div style={{ background:"#0d0a1a", border:"1px solid #3a1a5a", padding:"16px", fontSize:13, color:"#9a70cc", marginTop:8 }}>
+          <div style={{ background:"var(--bg-tag)", border:"1px solid var(--color-purple-deeper)", padding:"16px", fontSize:13, color:"var(--color-purple-faint)", marginTop:8 }}>
             ⚠ No hay wallets configuradas. Ve a la pestaña <strong>Wallets</strong> para agregar tu wallet de Hyperliquid.
           </div>
         )}

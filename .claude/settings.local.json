@@ -47,7 +47,23 @@
       "Bash(wrangler *)",
       "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\CryptoLiquidityPools\\\\CryptoPoolsEngine\\\\src\" -Recurse -Force | Where-Object {$_.PSIsContainer} | Select-Object FullName | Sort-Object FullName | ForEach-Object {$_.FullName.Replace\\('C:\\\\Users\\\\ASUS\\\\Desktop\\\\CryptoLiquidityPools\\\\CryptoPoolsEngine\\\\src', ''\\).TrimStart\\('\\\\'\\)} | Select-Object -First 30)",
       "Bash(npx tsc *)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "PowerShell(netstat *)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\CryptoLiquidityPools\\\\CryptoPoolsEngine\" -Recurse -Directory | Select-Object -First 40 | ForEach-Object { $_.FullName })",
+      "Skill(update-config)",
+      "Read(C:\\Users\\ASUS\\Desktop\\scrape_output\\**)",
+      "Glob(C:\\Users\\ASUS\\Desktop\\scrape_output\\**)",
+      "Grep(C:\\Users\\ASUS\\Desktop\\scrape_output\\**)",
+      "PowerShell(Copy-Item *)",
+      "PowerShell(New-Item *)",
+      "Bash(Select-Object Name, FullName)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\scrape_output\\\\scrape_output\\\\www.babypips.com\\\\crypto\\\\learn\\\\Beginner's Guide to Bitcoin\\\\bitcoin-system-introduction\\\\images\\\\bpcdn.co\\\\images\" -Recurse -File | ForEach-Object { $_.FullName })",
+      "Bash(dir *)",
+      "Bash(grep -oP '\\(?<=<code>|<kbd>|<strong>\\)[a-f0-9]{40,64}\\(?=</code>|</kbd>|</strong>\\)')",
+      "Bash(grep -oP '[a-f0-9]{60,64}')",
+      "Bash(cp \"C:/Users/ASUS/Desktop/scrape_output/scrape_output/www.babypips.com/crypto/learn/Beginner's Guide to Hashing/examples-of-hashing/images/bpcdn.co/images/2022/04/05164602/see-hashing-in-action.png\" \"C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod4-lec3/hashing-in-action.png\")",
+      "Bash(cp \"C:/Users/ASUS/Desktop/scrape_output/scrape_output/www.babypips.com/crypto/learn/Beginner's Guide to Hashing/examples-of-hashing/images/bpcdn.co/images/2022/03/24170642/lice-is-cool.png\" \"C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod4-lec3/lice-is-cool.png\")"
     ]
   }
 }

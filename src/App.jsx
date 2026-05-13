@@ -95,7 +95,8 @@ export default function App() {
     return () => window.removeEventListener("dash-navigate", handler);
   }, []);
 
-  const isLiquiditySection = activeSection === "liquidity";
+  const isLiquiditySection  = activeSection === "liquidity";
+  const isBootcampSection   = activeSection === "Crypto Bootcamp";
 
   const userName  = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Usuario";
   const userEmail = user?.email || "";
@@ -249,7 +250,7 @@ export default function App() {
         </div>
 
         <div className="main">
-          <div className="topbar">
+          {!isBootcampSection && <div className="topbar">
             <div className="topbar-row">
               <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
               <span className="page-title">{SECTION_TITLES[activeSection] || "Liquidity Engine"}</span>
@@ -300,8 +301,8 @@ export default function App() {
                 ))}
               </div>
             )}
-          </div>
-          <div className="content" style={(activeSection === "Programa" || activeSection === "VeloChart") ? { padding:0 } : {}}>{renderContent()}</div>
+          </div>}
+          <div className="content" style={(activeSection === "Programa" || activeSection === "VeloChart" || isBootcampSection) ? { padding:0 } : {}}>{renderContent()}</div>
         </div>
       </div>
 

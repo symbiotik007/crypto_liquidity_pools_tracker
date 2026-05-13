@@ -105,7 +105,7 @@ export default function WalletsTab() {
     setPositions(prev => { const n = { ...prev }; delete n[id]; return n; });
   };
 
-  const purposeColor = { proteccion: "#00e5ff", trading: "#00ff88", insider: "#ffb347", copy: "#888" };
+  const purposeColor = { proteccion: "var(--color-accent)", trading: "var(--color-success)", insider: "var(--color-warning)", copy: "var(--text-dim)" };
   const purposeLabel = { proteccion: "Protección", trading: "Trading", insider: "Insider", copy: "Copy" };
   const exchColor = (id) => EXCHANGES.find(e => e.id === id)?.color || "#4a7a96";
   const exchName  = (id) => EXCHANGES.find(e => e.id === id)?.name  || id;
@@ -136,7 +136,7 @@ export default function WalletsTab() {
               const spotBals = posData.spotBalances || [];
               return (
                 <div key={w.id} style={{
-                  background: "#070d14", border: "1px solid #0e2435",
+                  background: "var(--bg-surface)", border: "1px solid var(--border-muted)",
                   borderRadius: 4, padding: "14px 18px",
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: pos.length ? 12 : 0 }}>
@@ -148,7 +148,7 @@ export default function WalletsTab() {
 
                     <div style={{ flex: 1 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
-                        <div style={{ fontWeight: 700, color: "#c8e6f0", fontSize: 14 }}>{w.label}</div>
+                        <div style={{ fontWeight: 700, color: "var(--text-secondary)", fontSize: 14 }}>{w.label}</div>
                         <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:4,
                           color: exchColor(w.exchange), border:`1px solid ${exchColor(w.exchange)}44`,
                           background:`${exchColor(w.exchange)}11`, letterSpacing:0.5 }}>
@@ -159,38 +159,38 @@ export default function WalletsTab() {
                           {purposeLabel[w.purpose] || w.purpose}
                         </span>
                       </div>
-                      <div style={{ fontSize: 11, color: "#2a5a72", fontFamily: "monospace" }}>
+                      <div style={{ fontSize: 11, color: "var(--text-label)", fontFamily: "monospace" }}>
                         {w.address?.slice(0,10)}...{w.address?.slice(-6)}
                       </div>
                     </div>
 
                     <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 11, color: "#2a5a72", textTransform: "uppercase", letterSpacing: 1 }}>Balance</div>
-                      <div style={{ fontSize: 18, fontWeight: 700, color: "#00ff88" }}>
+                      <div style={{ fontSize: 11, color: "var(--text-label)", textTransform: "uppercase", letterSpacing: 1 }}>Balance</div>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: "var(--color-success)" }}>
                         {bal !== undefined ? `$${bal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
                       </div>
                       {positions[w.id]?.spotTotal > 0 && positions[w.id]?.perpEquity > 0 && (
-                        <div style={{ fontSize: 10, color: "#2a5a72" }}>
+                        <div style={{ fontSize: 10, color: "var(--text-label)" }}>
                           Spot: ${positions[w.id].spotTotal.toFixed(2)} · Perp: ${positions[w.id].perpEquity.toFixed(2)}
                         </div>
                       )}
                     </div>
 
                     <button onClick={() => handleRemove(w.id)} style={{
-                      background: "transparent", border: "1px solid #5a1a28",
-                      color: "#ff4f6e", padding: "4px 10px", fontSize: 12,
+                      background: "transparent", border: "1px solid var(--border-danger-subtle)",
+                      color: "var(--color-danger)", padding: "4px 10px", fontSize: 12,
                       cursor: "pointer", fontFamily: "Outfit, sans-serif",
                     }}>🗑</button>
                   </div>
 
                   {spotBals.length > 0 && (
-                    <div style={{ borderTop: "1px solid #0e2435", paddingTop: 8, marginTop: pos.length ? 8 : 0 }}>
-                      <div style={{ fontSize: 10, color: "#2a5a72", letterSpacing: 1, marginBottom: 6 }}>SPOT BALANCES</div>
+                    <div style={{ borderTop: "1px solid var(--border-muted)", paddingTop: 8, marginTop: pos.length ? 8 : 0 }}>
+                      <div style={{ fontSize: 10, color: "var(--text-label)", letterSpacing: 1, marginBottom: 6 }}>SPOT BALANCES</div>
                       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
                         {spotBals.filter(b => b.total > 0).map((b, i) => (
                           <span key={i} style={{ fontSize: 12 }}>
-                            <span style={{ color: "#4a7a96" }}>{b.coin}</span>{" "}
-                            <span style={{ color: "#00ff88", fontWeight: 600 }}>{b.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</span>
+                            <span style={{ color: "var(--text-dim)" }}>{b.coin}</span>{" "}
+                            <span style={{ color: "var(--color-success)", fontWeight: 600 }}>{b.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</span>
                           </span>
                         ))}
                       </div>
@@ -198,23 +198,24 @@ export default function WalletsTab() {
                   )}
 
                   {pos.length > 0 && (
-                    <div style={{ borderTop: "1px solid #0e2435", paddingTop: 10 }}>
-                      <div style={{ fontSize: 10, color: "#2a5a72", letterSpacing: 1, marginBottom: 6 }}>POSICIONES ABIERTAS</div>
+                    <div style={{ borderTop: "1px solid var(--border-muted)", paddingTop: 10 }}>
+                      <div style={{ fontSize: 10, color: "var(--text-label)", letterSpacing: 1, marginBottom: 6 }}>POSICIONES ABIERTAS</div>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px,1fr))", gap: 8 }}>
                         {pos.map((p, i) => (
                           <div key={i} style={{
-                            background: "#050c14", border: "1px solid #0e2435",
+                            background: "var(--bg-elevated)", border: "1px solid var(--border-muted)",
                             padding: "8px 12px", borderRadius: 2,
                           }}>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                              <span style={{ fontWeight: 700, color: "#c8e6f0" }}>{p.coin}</span>
-                              <span style={{ fontSize: 11, color: p.side === "Long" ? "#00ff88" : "#ff4f6e",
-                                border: `1px solid ${p.side === "Long" ? "#003a22" : "#5a1a28"}`,
+                              <span style={{ fontWeight: 700, color: "var(--text-secondary)" }}>{p.coin}</span>
+                              <span style={{ fontSize: 11,
+                                color:   p.side === "Long" ? "var(--color-success)" : "var(--color-danger)",
+                                border: `1px solid ${p.side === "Long" ? "var(--border-success-subtle)" : "var(--border-danger-subtle)"}`,
                                 padding: "1px 6px" }}>{p.side}</span>
                             </div>
-                            <div style={{ fontSize: 11, color: "#4a7a96" }}>Size: {p.size}</div>
-                            <div style={{ fontSize: 11, color: "#4a7a96" }}>Entry: ${p.entryPrice.toLocaleString()}</div>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: p.pnl >= 0 ? "#00ff88" : "#ff4f6e", marginTop: 4 }}>
+                            <div style={{ fontSize: 11, color: "var(--text-dim)" }}>Size: {p.size}</div>
+                            <div style={{ fontSize: 11, color: "var(--text-dim)" }}>Entry: ${p.entryPrice.toLocaleString()}</div>
+                            <div style={{ fontSize: 12, fontWeight: 600, color: p.pnl >= 0 ? "var(--color-success)" : "var(--color-danger)", marginTop: 4 }}>
                               PNL: {p.pnl >= 0 ? "+" : ""}${p.pnl.toFixed(2)}
                             </div>
                           </div>
@@ -226,9 +227,9 @@ export default function WalletsTab() {
                   {Object.keys(prices).length > 0 && (
                     <div style={{ marginTop: 8, display: "flex", gap: 16, flexWrap: "wrap" }}>
                       {["ETH", "BTC", "SOL"].map(sym => prices[sym] && (
-                        <span key={sym} style={{ fontSize: 11, color: "#2a5a72" }}>
-                          <span style={{ color: "#4a7a96" }}>{sym}</span>{" "}
-                          <span style={{ color: "#00e5ff" }}>${parseFloat(prices[sym]).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span key={sym} style={{ fontSize: 11, color: "var(--text-label)" }}>
+                          <span style={{ color: "var(--text-dim)" }}>{sym}</span>{" "}
+                          <span style={{ color: "var(--color-accent)" }}>${parseFloat(prices[sym]).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                         </span>
                       ))}
                     </div>
@@ -247,7 +248,7 @@ export default function WalletsTab() {
           <div className="modal-header">
             <div>
               <div className="modal-title">Conectar Exchange</div>
-              <div style={{ fontSize:12, color:"#4a7a96", marginTop:2 }}>Añade tus credenciales API para operar</div>
+              <div style={{ fontSize:12, color:"var(--text-dim)", marginTop:2 }}>Añade tus credenciales API para operar</div>
             </div>
             <button className="modal-close" onClick={() => { setModalOpen(false); resetForm(); }}>✕</button>
           </div>
@@ -259,9 +260,9 @@ export default function WalletsTab() {
                 {EXCHANGES.map(ex => (
                   <button key={ex.id} onClick={() => { setSelectedExchange(ex.id); setSaveError(""); }}
                     style={{
-                      padding:"8px 16px", border:`1px solid ${selectedExchange === ex.id ? ex.border : "#1a3a5e"}`,
+                      padding:"8px 16px", border:`1px solid ${selectedExchange === ex.id ? ex.border : "var(--border-blue)"}`,
                       background: selectedExchange === ex.id ? ex.bg : "transparent",
-                      color: selectedExchange === ex.id ? ex.color : "#4a7a96",
+                      color: selectedExchange === ex.id ? ex.color : "var(--text-dim)",
                       fontFamily:"Outfit,sans-serif", fontSize:13, fontWeight:700,
                       cursor:"pointer", borderRadius:6, transition:"all 0.15s",
                     }}>
@@ -294,23 +295,23 @@ export default function WalletsTab() {
 
             {!exchDef?.isCex && (
               <>
-                <div style={{ background:"#0a1520", border:"1px solid #1a3a5e", padding:"12px 14px", fontSize:12, lineHeight:1.8, color:"#4a7a96" }}>
-                  <div style={{ color:"#7b61ff", fontWeight:700, marginBottom:6, fontSize:11, letterSpacing:1, textTransform:"uppercase" }}>⚡ Hyperliquid — 2 direcciones</div>
-                  <div><span style={{ color:"#ffb347" }}>① Cuenta Principal</span> — donde están tus fondos USDC (MetaMask/Rabby)</div>
-                  <div><span style={{ color:"#7ab8d4" }}>② Private Key</span> — del API Wallet que firma las órdenes (no puede retirar fondos)</div>
-                  <div style={{ marginTop:6, fontSize:11, color:"#2a5a72" }}>En HL: Portfolio → tu address arriba derecha = Cuenta Principal ✓</div>
+                <div style={{ background:"var(--bg-modal)", border:"1px solid var(--border-blue)", padding:"12px 14px", fontSize:12, lineHeight:1.8, color:"var(--text-dim)" }}>
+                  <div style={{ color:"var(--color-purple)", fontWeight:700, marginBottom:6, fontSize:11, letterSpacing:1, textTransform:"uppercase" }}>⚡ Hyperliquid — 2 direcciones</div>
+                  <div><span style={{ color:"var(--color-warning)" }}>① Cuenta Principal</span> — donde están tus fondos USDC (MetaMask/Rabby)</div>
+                  <div><span style={{ color:"var(--text-hover)" }}>② Private Key</span> — del API Wallet que firma las órdenes (no puede retirar fondos)</div>
+                  <div style={{ marginTop:6, fontSize:11, color:"var(--text-label)" }}>En HL: Portfolio → tu address arriba derecha = Cuenta Principal ✓</div>
                 </div>
                 <div className="form-group">
-                  <label className="form-label" style={{ color:"#ffb347" }}>① Dirección Cuenta Principal <span style={{ color:"#ff4f6e" }}>*</span></label>
+                  <label className="form-label" style={{ color:"var(--color-warning)" }}>① Dirección Cuenta Principal <span style={{ color:"var(--color-danger)" }}>*</span></label>
                   <input className="form-input" placeholder="0x476e... (cuenta con fondos USDC)"
                     value={address} onChange={e => setAddress(e.target.value)} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label" style={{ color:"#7ab8d4" }}>② Private Key del API Wallet <span style={{ color:"#ff4f6e" }}>*</span></label>
+                  <label className="form-label" style={{ color:"var(--text-hover)" }}>② Private Key del API Wallet <span style={{ color:"var(--color-danger)" }}>*</span></label>
                   <input className="form-input" type="password" placeholder="0x6e6b... (Trade → API → Show Secret)"
                     value={apiKey} onChange={e => handleApiKeyChange(e.target.value)} />
                   {agentWallet && (
-                    <div style={{ fontSize:11, color:"#00ff88", marginTop:4 }}>✓ Agent: {agentWallet.slice(0,10)}...{agentWallet.slice(-6)}</div>
+                    <div style={{ fontSize:11, color:"var(--color-success)", marginTop:4 }}>✓ Agent: {agentWallet.slice(0,10)}...{agentWallet.slice(-6)}</div>
                   )}
                 </div>
               </>
@@ -318,23 +319,23 @@ export default function WalletsTab() {
 
             {exchDef?.isCex && (
               <>
-                <div style={{ background:"#0a1520", border:`1px solid ${exchDef.border}`, padding:"12px 14px", fontSize:12, lineHeight:1.8, color:"#4a7a96" }}>
+                <div style={{ background:"var(--bg-modal)", border:`1px solid ${exchDef.border}`, padding:"12px 14px", fontSize:12, lineHeight:1.8, color:"var(--text-dim)" }}>
                   <div style={{ color: exchDef.color, fontWeight:700, marginBottom:4, fontSize:11, letterSpacing:1, textTransform:"uppercase" }}>🔑 {exchDef.name} — API Keys</div>
                   <div>Crea una API Key en {exchDef.name} con permisos de <strong style={{ color: exchDef.color }}>Futures/Perp Trading</strong>. No actives permisos de retiro.</div>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">API Key <span style={{ color:"#ff4f6e" }}>*</span></label>
+                  <label className="form-label">API Key <span style={{ color:"var(--color-danger)" }}>*</span></label>
                   <input className="form-input" placeholder={`Tu API Key de ${exchDef.name}`}
                     value={cexApiKey} onChange={e => setCexApiKey(e.target.value)} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Secret Key <span style={{ color:"#ff4f6e" }}>*</span></label>
+                  <label className="form-label">Secret Key <span style={{ color:"var(--color-danger)" }}>*</span></label>
                   <input className="form-input" type="password" placeholder="Secret Key"
                     value={cexSecret} onChange={e => setCexSecret(e.target.value)} />
                 </div>
                 {exchDef.hasPassphrase && (
                   <div className="form-group">
-                    <label className="form-label">Passphrase <span style={{ color:"#ff4f6e" }}>*</span></label>
+                    <label className="form-label">Passphrase <span style={{ color:"var(--color-danger)" }}>*</span></label>
                     <input className="form-input" type="password" placeholder={`Passphrase de ${exchDef.name}`}
                       value={cexPassphrase} onChange={e => setCexPassphrase(e.target.value)} />
                   </div>
@@ -343,7 +344,7 @@ export default function WalletsTab() {
             )}
 
             {saveError && (
-              <div style={{ color:"#ff4f6e", fontSize:12, padding:"8px 0", borderTop:"1px solid #5a1a28" }}>⚠ {saveError}</div>
+              <div style={{ color:"var(--color-danger)", fontSize:12, padding:"8px 0", borderTop:"1px solid var(--border-danger-subtle)" }}>⚠ {saveError}</div>
             )}
           </div>
           <div className="modal-footer">
