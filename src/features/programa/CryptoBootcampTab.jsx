@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { CRYPTO_BOOTCAMP } from "./data/cryptoBootcampData";
 import { useAuth } from "../../lib/AuthContext";
 import { useProgressSync } from "../../lib/useSupabaseSync";
+import SHA256Widget from "./components/SHA256Widget";
 
 export default function CryptoBootcampTab() {
   const { user } = useAuth();
@@ -304,6 +305,7 @@ export default function CryptoBootcampTab() {
                         {bloque.puntos.map((p, idx) => <li key={idx} style={{ marginBottom:6 }}>{p}</li>)}
                       </ul>
                     )}
+                    {bloque.componente === "SHA256Widget" && <SHA256Widget />}
                   </div>
                 ))
               ) : (

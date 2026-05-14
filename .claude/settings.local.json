@@ -63,7 +63,15 @@
       "Bash(grep -oP '\\(?<=<code>|<kbd>|<strong>\\)[a-f0-9]{40,64}\\(?=</code>|</kbd>|</strong>\\)')",
       "Bash(grep -oP '[a-f0-9]{60,64}')",
       "Bash(cp \"C:/Users/ASUS/Desktop/scrape_output/scrape_output/www.babypips.com/crypto/learn/Beginner's Guide to Hashing/examples-of-hashing/images/bpcdn.co/images/2022/04/05164602/see-hashing-in-action.png\" \"C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod4-lec3/hashing-in-action.png\")",
-      "Bash(cp \"C:/Users/ASUS/Desktop/scrape_output/scrape_output/www.babypips.com/crypto/learn/Beginner's Guide to Hashing/examples-of-hashing/images/bpcdn.co/images/2022/03/24170642/lice-is-cool.png\" \"C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod4-lec3/lice-is-cool.png\")"
+      "Bash(cp \"C:/Users/ASUS/Desktop/scrape_output/scrape_output/www.babypips.com/crypto/learn/Beginner's Guide to Hashing/examples-of-hashing/images/bpcdn.co/images/2022/03/24170642/lice-is-cool.png\" \"C:/Users/ASUS/Desktop/CryptoLiquidityPools/CryptoPoolsEngine/public/bootcamp/mod4-lec3/lice-is-cool.png\")",
+      "PowerShell(Get-ChildItem -Path \"c:\\\\Users\\\\ASUS\\\\Desktop\\\\scrape_output\\\\scrape_output\\\\www.babypips.com\\\\crypto\\\\learn\\\\Beginner's Guide to Bitcoin Mining\\\\\" -Recurse -Directory | Select-Object FullName | ForEach-Object { $_.FullName } | Sort-Object)",
+      "Bash(Get-ChildItem *)",
+      "Bash(Select-Object FullName)",
+      "Bash(find c:\\\\\\\\Users\\\\\\\\ASUS\\\\\\\\Desktop\\\\\\\\scrape_output *)",
+      "PowerShell(Get-ChildItem -Recurse \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\scrape_output\\\\scrape_output\\\\www.babypips.com\\\\crypto\\\\learn\\\\Beginner's Guide to Bitcoin Mining\\\\what-is-bitcoin-mining\\\\\" | ForEach-Object { $_.FullName })",
+      "Bash(python3 *)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Sort-Object)"
     ]
   }
 }
