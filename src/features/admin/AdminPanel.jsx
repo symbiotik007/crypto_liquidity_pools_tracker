@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import UsersAdminTab  from './UsersAdminTab'
-import ApiTestTab     from './ApiTestTab'
-import StylesTab      from './StylesTab'
-import LeadsAdminTab  from './LeadsAdminTab'
-import LogsTab        from './LogsTab'
+import UsersAdminTab     from './UsersAdminTab'
+import ApiTestTab        from './ApiTestTab'
+import StylesTab         from './StylesTab'
+import LeadsAdminTab     from './LeadsAdminTab'
+import LogsTab           from './LogsTab'
+import ProgressAdminTab  from './ProgressAdminTab'
 
 const TABS = [
   { id: 'users',     label: 'Usuarios',        icon: '⚙️',  component: <UsersAdminTab /> },
+  { id: 'progress',  label: 'Progreso',         icon: '📈',  component: <ProgressAdminTab /> },
   { id: 'leads',     label: 'Leads',           icon: '📩',  component: <LeadsAdminTab /> },
   { id: 'logs',      label: 'Logs',            icon: '📋',  component: <LogsTab /> },
   { id: 'api-test',  label: 'Test APIs',       icon: '🔌',  component: <ApiTestTab /> },
