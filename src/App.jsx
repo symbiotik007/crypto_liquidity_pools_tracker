@@ -17,6 +17,7 @@ import PreguntasTab           from "./features/admin/PreguntasTab";
 import TradingViewTab         from "./components/TradingViewTab";
 import TradingViewOperableTab from "./components/TradingViewOperableTab";
 import VeloChartTab           from "./components/VeloChartTab";
+import Chart2Tab              from "./components/Chart2Tab";
 import ComingSoonTab          from "./components/ComingSoonTab";
 import ContactModal           from "./components/ContactModal";
 import NotificationBell       from "./components/NotificationBell";
@@ -24,6 +25,7 @@ import ThemeToggle            from "./components/ThemeToggle";
 import "./styles/app.css";
 import "./styles/themes/futurista.css";
 import "./styles/themes/light.css";
+import "./styles/themes/premium.css";
 
 // ════════════════════════════════════════════════════════════════════
 // CONSTANTS
@@ -112,6 +114,7 @@ export default function App() {
     TradingView:"TradingView",
     // TradingViewOperable:"TradingView Operable",
     VeloChart:"Velo Chart",
+    Chart2:"TradingView Chart",
     Preguntas:"Preguntas",
     "Admin Panel":"Admin Panel",
   };
@@ -136,6 +139,7 @@ export default function App() {
       case "TradingView":          return <TradingViewTab />;
       // case "TradingViewOperable":  return <TradingViewOperableTab />;
       case "VeloChart":            return <VeloChartTab />;
+      case "Chart2":               return <Chart2Tab />;
       case "Preguntas":            return <PreguntasTab />;
       case "Admin Panel":          return <AdminPanel />;
       default:                     return <ComingSoonTab name={activeSection} />;
@@ -183,22 +187,16 @@ export default function App() {
               Liquidity Engine <span className="badge">BETA</span>
             </button>
             <button
-              className={`nav-item ${activeSection === "TradingView" ? 'active' : ''}`}
-              onClick={() => { setActiveSection("TradingView"); closeSidebar(); }}
-            >
-              📈 TradingView
-            </button>
-            {/* <button
-              className={`nav-item ${activeSection === "TradingViewOperable" ? 'active' : ''}`}
-              onClick={() => { setActiveSection("TradingViewOperable"); closeSidebar(); }}
-            >
-              🖥️ TV Operable
-            </button> */}
-            <button
               className={`nav-item ${activeSection === "VeloChart" ? 'active' : ''}`}
               onClick={() => { setActiveSection("VeloChart"); closeSidebar(); }}
             >
-              ⚡ Velo Chart
+              ⚡ Velo - Chart
+            </button>
+            <button
+              className={`nav-item ${activeSection === "Chart2" ? 'active' : ''}`}
+              onClick={() => { setActiveSection("Chart2"); closeSidebar(); }}
+            >
+              📈 TradingView - Chart
             </button>
           </div>
           <div className="nav-section">
@@ -225,14 +223,14 @@ export default function App() {
             </div>
             <button onClick={signOut} style={{
               width:"100%", padding:"7px 0",
-              background:"transparent", border:"1px solid #1a3a5e",
-              color:"#4a7a96", fontSize:12, cursor:"pointer",
+              background:"transparent", border:"1px solid var(--border-blue)",
+              color:"var(--text-dim)", fontSize:12, cursor:"pointer",
               fontFamily:"Outfit, sans-serif", letterSpacing:"0.5px",
               display:"flex", alignItems:"center", justifyContent:"center", gap:6,
-              transition:"all 0.15s",
+              transition:"all 0.18s cubic-bezier(0.4,0,0.2,1)", borderRadius:8,
             }}
-            onMouseEnter={e => { e.target.style.borderColor="#ff4f6e"; e.target.style.color="#ff4f6e"; }}
-            onMouseLeave={e => { e.target.style.borderColor="#1a3a5e"; e.target.style.color="#4a7a96"; }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor="var(--color-danger)"; e.currentTarget.style.color="var(--color-danger)"; e.currentTarget.style.background="rgba(220,32,32,0.06)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor="var(--border-blue)"; e.currentTarget.style.color="var(--text-dim)"; e.currentTarget.style.background="transparent"; }}
             >
               ⎋ Cerrar sesión
             </button>
@@ -250,7 +248,7 @@ export default function App() {
         </div>
 
         <div className="main">
-          {!isBootcampSection && <div className="topbar">
+          {!isBootcampSection && activeSection !== "VeloChart" && activeSection !== "Chart2" && <div className="topbar">
             <div className="topbar-row">
               <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
               <span className="page-title">{SECTION_TITLES[activeSection] || "Liquidity Engine"}</span>
@@ -268,10 +266,11 @@ export default function App() {
                       border:"1px solid rgba(var(--color-accent-rgb),0.35)",
                       color:"var(--color-accent)", fontFamily:"Outfit,sans-serif",
                       fontSize:13, fontWeight:700, cursor:"pointer",
-                      letterSpacing:"0.5px", transition:"all 0.15s",
+                      letterSpacing:"0.5px", transition:"all 0.18s cubic-bezier(0.4,0,0.2,1)",
+                      borderRadius:8,
                     }}
-                    onMouseEnter={e => { e.currentTarget.style.background="rgba(var(--color-accent-rgb),0.15)"; e.currentTarget.style.borderColor="var(--color-accent)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background="rgba(var(--color-accent-rgb),0.08)"; e.currentTarget.style.borderColor="rgba(var(--color-accent-rgb),0.35)"; }}
+                    onMouseEnter={e => { e.currentTarget.style.background="rgba(var(--color-accent-rgb),0.14)"; e.currentTarget.style.borderColor="var(--color-accent)"; e.currentTarget.style.transform="translateY(-1px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background="rgba(var(--color-accent-rgb),0.08)"; e.currentTarget.style.borderColor="rgba(var(--color-accent-rgb),0.35)"; e.currentTarget.style.transform="translateY(0)"; }}
                   >
                     🔧 Admin
                   </button>
@@ -302,7 +301,13 @@ export default function App() {
               </div>
             )}
           </div>}
-          <div className="content" style={(activeSection === "Programa" || activeSection === "VeloChart" || isBootcampSection) ? { padding:0 } : {}}>{renderContent()}</div>
+          <div className="content" style={
+            (activeSection === "VeloChart" || activeSection === "Chart2" || isBootcampSection)
+              ? { padding:0, overflow:"hidden" }
+              : activeSection === "Programa"
+              ? { padding:0 }
+              : {}
+          }>{renderContent()}</div>
         </div>
       </div>
 

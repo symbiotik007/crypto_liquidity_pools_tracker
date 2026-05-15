@@ -4,6 +4,7 @@ import { THEMES, THEME_ORDER, applyTheme, getSavedThemeId } from '../../styles/t
 const DESCRIPTIONS = {
   futurista: 'Ciberpunk oscuro · Neón · Inmersivo',
   light:     'Azul corporativo · Fondo claro · Accesible',
+  premium:   'Editorial oscuro · Oro champagne · Tipografía serif',
 }
 
 function ColorSwatch({ color, size = 18 }) {

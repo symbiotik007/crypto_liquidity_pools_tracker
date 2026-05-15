@@ -71,7 +71,9 @@
       "PowerShell(Get-ChildItem -Recurse \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\scrape_output\\\\scrape_output\\\\www.babypips.com\\\\crypto\\\\learn\\\\Beginner's Guide to Bitcoin Mining\\\\what-is-bitcoin-mining\\\\\" | ForEach-Object { $_.FullName })",
       "Bash(python3 *)",
       "Bash(Select-Object -ExpandProperty FullName)",
-      "Bash(Sort-Object)"
+      "Bash(Sort-Object)",
+      "Bash(Select-Object Name)",
+      "PowerShell(Select-String -Path \"C:\\\\Users\\\\ASUS\\\\Desktop\\\\scrape_output\\\\scrape_output\\\\www.babypips.com\\\\crypto\\\\learn\\\\Beginner's Guide to Crypto Exchanges\\\\what-is-a-crypto-exchange\\\\page.html\" -Pattern '<h[1-4]|<p>|<img|<li>' | Select-Object -First 120 | ForEach-Object { $_.Line })"
     ]
   }
 }

@@ -31,9 +31,23 @@ export const THEMES = {
       text: '#0f172a',
     },
   },
+
+  premium: {
+    id: 'premium',
+    label: 'Premium · Midnight Atelier',
+    description: 'Editorial oscuro con oro champagne. Tipografía serif y textura de grano.',
+    preview: {
+      bg: '#0a0908',
+      surface: '#13110f',
+      accent: '#c9a961',
+      success: '#8aa67a',
+      danger: '#b85c5c',
+      text: '#ece6d8',
+    },
+  },
 }
 
-export const THEME_ORDER = ['light', 'futurista']
+export const THEME_ORDER = ['light', 'futurista', 'premium']
 
 export const DEFAULT_THEME = 'light'
 

@@ -1,8 +1,649 @@
-/* ─────────────────────────────────────────────────────────
-   Tema: Futurista (por defecto)
-   Las variables de este tema están definidas en tokens.css.
-   Este archivo existe como marcador de posición dentro de la
-   carpeta de temas para mantener coherencia entre estilos.
-   No se necesitan overrides: :root en tokens.css ya contiene
-   todos los valores de este tema.
-   ───────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Tema: Futurista — "Neon Atelier" (Premium Edition)
+
+   Design Rationale
+   ────────────────
+   Direction:   Keeps the cyberpunk soul (cyan neon on obsidian) but adds
+                editorial craftsmanship — atmospheric depth, hairline accents,
+                tuned motion, monospace numerals, refined glow physics.
+                The base palette lives in tokens.css; this file is the
+                premium polish layer scoped to data-theme="futurista".
+
+   Accent Pair: Primary cyan #00e5ff for action — paired with a whisper of
+                magenta in the ambient vignette so the screen never feels
+                monochrome. Mono numerals (JetBrains Mono) signal "data".
+
+   Differentiator: A 1px cyan thread revealed on card hover, a slow CRT
+                   scanline veil at 4% opacity, a magnetic shimmer on
+                   primary CTAs, and cascading entrance animations that
+                   stage the dashboard like a HUD booting up.
+
+   Activates with: document.documentElement.setAttribute('data-theme','futurista')
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] {
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  color-scheme: dark;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   ATMOSPHERIC BACKGROUND
+   Twin radial vignettes (cyan top-right + magenta bottom-left) so the
+   canvas breathes. Pinned to the viewport — never scrolls away.
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] body {
+  background:
+    radial-gradient(ellipse 1400px 700px at 80% -10%, rgba(0,229,255,0.10) 0%, transparent 55%),
+    radial-gradient(ellipse 900px 500px at -10% 90%, rgba(180,80,255,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 600px 400px at 50% 50%, rgba(0,229,255,0.025) 0%, transparent 60%),
+    var(--bg-base);
+  background-attachment: fixed;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   CRT SCANLINE VEIL
+   Faint horizontal scan lines — invisible at first glance but they make
+   the surface feel "alive." Pure CSS gradient, GPU-cheap.
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 2px,
+    rgba(0, 229, 255, 0.025) 3px,
+    transparent 4px
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.6;
+}
+
+/* Subtle ambient grain on top of scanlines (SVG noise) */
+:root[data-theme="futurista"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 1  0 0 0 0 1  0 0 0 0.7 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 180px 180px;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY — refined hierarchy with mono accents
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] {
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:root[data-theme="futurista"] .page-title {
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  background: linear-gradient(180deg, #ffffff 0%, #c8e6f0 70%, #80c8e0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 40px rgba(0, 229, 255, 0.18);
+}
+
+:root[data-theme="futurista"] .page-sub {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+:root[data-theme="futurista"] .nav-label,
+:root[data-theme="futurista"] .stat-label {
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 10px;
+  color: var(--text-label);
+  font-family: var(--font-mono);
+}
+
+/* Numerical values — mono, tabular, slightly weighted */
+:root[data-theme="futurista"] .stat-value,
+:root[data-theme="futurista"] .stat-card .value,
+:root[data-theme="futurista"] .price,
+:root[data-theme="futurista"] .pnl,
+:root[data-theme="futurista"] [data-numeric] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   SIDEBAR — glass dossier
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] .sidebar {
+  background:
+    linear-gradient(180deg, rgba(0,229,255,0.025) 0%, transparent 30%),
+    var(--bg-surface);
+  border-right: 1px solid var(--border-dim);
+  box-shadow:
+    inset -1px 0 0 rgba(0,229,255,0.04),
+    2px 0 30px rgba(0,0,0,0.45);
+}
+
+:root[data-theme="futurista"] .logo {
+  background: transparent;
+  border-bottom: 1px solid var(--border-dim);
+  position: relative;
+}
+:root[data-theme="futurista"] .logo::after {
+  content: "";
+  position: absolute;
+  bottom: -1px; left: 18px; right: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, var(--color-accent) 50%, transparent 100%);
+  opacity: 0.55;
+  filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.55));
+}
+
+:root[data-theme="futurista"] .nav-item {
+  letter-spacing: 0.02em;
+  transition: color 0.3s ease, background 0.3s ease, border-color 0.3s ease;
+}
+:root[data-theme="futurista"] .nav-item:hover {
+  color: var(--text-primary);
+  background: rgba(0,229,255,0.05);
+  border-color: rgba(0,229,255,0.20);
+}
+:root[data-theme="futurista"] .nav-item.active {
+  background: linear-gradient(90deg, rgba(0,229,255,0.14) 0%, rgba(0,229,255,0.02) 100%);
+  border-left: 2px solid var(--color-accent);
+  box-shadow:
+    inset 2px 0 12px rgba(0,229,255,0.18),
+    0 0 24px rgba(0,229,255,0.06);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   TOPBAR — glassmorphic masthead
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] .topbar {
+  background: rgba(7, 13, 20, 0.78);
+  backdrop-filter: saturate(150%) blur(16px);
+  -webkit-backdrop-filter: saturate(150%) blur(16px);
+  border-bottom: 1px solid var(--border-dim);
+  box-shadow:
+    0 1px 0 rgba(0,229,255,0.10),
+    0 8px 24px rgba(0,0,0,0.30);
+  position: relative;
+}
+
+/* Hairline cyan glow under the topbar */
+:root[data-theme="futurista"] .topbar::after {
+  content: "";
+  position: absolute;
+  bottom: -1px; left: 8%; right: 8%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(0,229,255,0.45) 50%, transparent 100%);
+  filter: blur(0.5px);
+  pointer-events: none;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   BUTTONS — magnetic neon
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] .btn-primary {
+  background:
+    linear-gradient(135deg, #00e5ff 0%, #00b8d4 50%, #008fa3 100%);
+  border: 1px solid rgba(0, 229, 255, 0.55);
+  color: #050a0f;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 12px;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.30),
+    inset 0 -1px 0 rgba(0,0,0,0.25),
+    0 4px 18px rgba(0,229,255,0.30),
+    0 0 0 1px rgba(0,229,255,0.08);
+  transition: transform 0.25s cubic-bezier(0.2,0.9,0.2,1.1),
+              box-shadow 0.3s ease;
+}
+
+:root[data-theme="futurista"] .btn-primary::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -120%;
+  width: 80%; height: 100%;
+  background: linear-gradient(110deg,
+    transparent 30%,
+    rgba(255,255,255,0.50) 50%,
+    transparent 70%);
+  transition: left 0.7s cubic-bezier(0.2,0.9,0.2,1);
+  pointer-events: none;
+}
+
+:root[data-theme="futurista"] .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.40),
+    inset 0 -1px 0 rgba(0,0,0,0.20),
+    0 8px 28px rgba(0,229,255,0.55),
+    0 0 0 1px rgba(0,229,255,0.20);
+}
+:root[data-theme="futurista"] .btn-primary:hover::before {
+  left: 130%;
+}
+:root[data-theme="futurista"] .btn-primary:active {
+  transform: translateY(0);
+}
+
+:root[data-theme="futurista"] .btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-muted);
+  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.25s ease;
+}
+:root[data-theme="futurista"] .btn-ghost:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: rgba(0,229,255,0.04);
+  box-shadow: 0 0 18px rgba(0,229,255,0.18);
+}
+
+:root[data-theme="futurista"] .btn-danger {
+  background: transparent;
+  border: 1px solid rgba(255, 79, 110, 0.45);
+  color: #ff8aa0;
+}
+:root[data-theme="futurista"] .btn-danger:hover {
+  background: rgba(255, 79, 110, 0.10);
+  border-color: var(--color-danger);
+  box-shadow: 0 0 18px rgba(255, 79, 110, 0.28);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   TABS
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] .tab {
+  background: transparent;
+  border: 1px solid var(--border-dim);
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+:root[data-theme="futurista"] .tab:hover {
+  color: var(--text-primary);
+  border-color: rgba(0,229,255,0.40);
+  background: rgba(0,229,255,0.04);
+}
+:root[data-theme="futurista"] .tab.active {
+  color: var(--color-accent);
+  background: rgba(0,229,255,0.06);
+  border-color: var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+  box-shadow:
+    0 0 24px rgba(0,229,255,0.18),
+    inset 0 -1px 12px rgba(0,229,255,0.10);
+  text-shadow: 0 0 10px rgba(0,229,255,0.50);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   CARDS — refined depth + hairline cyan accent
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] .stat-card,
+:root[data-theme="futurista"] .dash-card,
+:root[data-theme="futurista"] .activity-card {
+  background:
+    linear-gradient(180deg, rgba(0,229,255,0.022) 0%, transparent 35%),
+    var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.50),
+    0 8px 28px rgba(0,0,0,0.35);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.45s cubic-bezier(0.2,0.9,0.2,1.05),
+              box-shadow 0.45s ease,
+              border-color 0.45s ease;
+}
+
+/* Hairline cyan thread across the top — invisible until hover */
+:root[data-theme="futurista"] .stat-card::before,
+:root[data-theme="futurista"] .dash-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(0,229,255,0) 25%,
+    rgba(0,229,255,0) 75%,
+    transparent 100%);
+  transition: background 0.55s ease;
+  pointer-events: none;
+}
+
+:root[data-theme="futurista"] .stat-card:hover,
+:root[data-theme="futurista"] .dash-card:hover,
+:root[data-theme="futurista"] .activity-card:hover {
+  border-color: rgba(0,229,255,0.30);
+  transform: translateY(-3px);
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.45),
+    0 22px 60px rgba(0,229,255,0.10),
+    inset 0 0 0 1px rgba(0,229,255,0.05);
+}
+
+:root[data-theme="futurista"] .stat-card:hover::before,
+:root[data-theme="futurista"] .dash-card:hover::before {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(0,229,255,0.50) 20%,
+    rgba(0,229,255,0.95) 50%,
+    rgba(0,229,255,0.50) 80%,
+    transparent 100%);
+  filter: drop-shadow(0 0 6px rgba(0,229,255,0.50));
+}
+
+:root[data-theme="futurista"] .dash-action {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  transition: all 0.35s ease;
+}
+:root[data-theme="futurista"] .dash-action:hover:not(.locked) {
+  background: var(--bg-elevated);
+  border-color: rgba(0,229,255,0.30);
+  box-shadow:
+    0 8px 28px rgba(0,0,0,0.40),
+    0 0 0 1px rgba(0,229,255,0.10),
+    0 0 24px rgba(0,229,255,0.14);
+  transform: translateY(-2px);
+}
+
+:root[data-theme="futurista"] .dash-cta {
+  background:
+    radial-gradient(ellipse at top right, rgba(0,229,255,0.14) 0%, transparent 60%),
+    linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
+  border: 1px solid rgba(0,229,255,0.25);
+  box-shadow:
+    0 4px 18px rgba(0,0,0,0.40),
+    0 0 32px rgba(0,229,255,0.08);
+}
+
+:root[data-theme="futurista"] .dash-wa-btn {
+  background: rgba(0,229,255,0.04);
+  border: 1px solid rgba(0,229,255,0.25);
+  color: var(--color-accent);
+}
+:root[data-theme="futurista"] .dash-wa-btn:hover {
+  background: rgba(0,229,255,0.10);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 18px rgba(0,229,255,0.22);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   BADGES & CHIPS
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] .badge,
+:root[data-theme="futurista"] .beta-tag,
+:root[data-theme="futurista"] .count-badge {
+  background: rgba(0,229,255,0.08);
+  border: 1px solid rgba(0,229,255,0.30);
+  color: var(--color-accent);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 10px;
+  text-shadow: 0 0 8px rgba(0,229,255,0.35);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   USER INFO
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] .user-info {
+  border-top: 1px solid var(--border-dim);
+  background: linear-gradient(180deg, transparent 0%, rgba(0,229,255,0.03) 100%);
+}
+:root[data-theme="futurista"] .user-avatar {
+  background: linear-gradient(135deg, #0a1520 0%, #060c12 100%);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent);
+  box-shadow:
+    0 0 0 3px rgba(0,229,255,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    0 0 16px rgba(0,229,255,0.20);
+}
+:root[data-theme="futurista"] .user-plan.paid {
+  color: var(--color-accent);
+  text-shadow: 0 0 14px rgba(0,229,255,0.55);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 9px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+:root[data-theme="futurista"] .plan-upgrade-btn {
+  border: 1px solid rgba(0,229,255,0.30);
+  color: var(--color-accent);
+  background: rgba(0,229,255,0.04);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+:root[data-theme="futurista"] .plan-upgrade-btn:hover {
+  background: rgba(0,229,255,0.10);
+  border-color: var(--color-accent);
+  box-shadow: 0 4px 18px rgba(0,229,255,0.30);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   MODALS — frosted with cyan rim
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] .modal {
+  background: rgba(10, 21, 32, 0.92);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(0,229,255,0.22);
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.65),
+    0 0 0 1px rgba(0,229,255,0.06),
+    0 0 80px rgba(0,229,255,0.08);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   FORMS
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] .form-input,
+:root[data-theme="futurista"] .form-select {
+  background: var(--bg-input);
+  border: 1px solid var(--border-muted);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  transition: all 0.25s ease;
+}
+:root[data-theme="futurista"] .form-input::placeholder {
+  color: var(--text-faint);
+  font-family: var(--font-family);
+  font-style: italic;
+}
+:root[data-theme="futurista"] .form-input:focus,
+:root[data-theme="futurista"] .form-select:focus {
+  border-color: var(--color-accent);
+  background: var(--bg-elevated);
+  box-shadow:
+    0 0 0 3px rgba(0,229,255,0.12),
+    0 0 20px rgba(0,229,255,0.10);
+  outline: none;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   EMPTY STATE
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] .empty-state {
+  background: var(--bg-surface);
+  border: 1px dashed rgba(0,229,255,0.18);
+  color: var(--text-dim);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   THEME TOGGLE BUTTON
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] .nav-theme-toggle {
+  border: 1px solid var(--border-muted);
+  color: var(--text-secondary);
+  background: transparent;
+  transition: all 0.25s ease;
+}
+:root[data-theme="futurista"] .nav-theme-toggle:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: rgba(0,229,255,0.06);
+  box-shadow: 0 0 16px rgba(0,229,255,0.30);
+}
+
+:root[data-theme="futurista"] .dash-prog-btn {
+  border: 1px solid rgba(0,229,255,0.25);
+  color: var(--color-accent);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+:root[data-theme="futurista"] .dash-prog-btn:hover {
+  background: rgba(0,229,255,0.07);
+  border-color: var(--color-accent);
+  box-shadow: 0 4px 18px rgba(0,229,255,0.30);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   MOTION — staged HUD entrance + ambient pulse
+   Honors prefers-reduced-motion.
+   ════════════════════════════════════════════════════════════════════ */
+
+@keyframes fut-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fut-glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0.0); }
+  50%      { box-shadow: 0 0 16px 2px rgba(0,229,255,0.30); }
+}
+
+@keyframes fut-scan-sweep {
+  0%   { background-position: 0 -100%; }
+  100% { background-position: 0 200%; }
+}
+
+:root[data-theme="futurista"] .stat-card,
+:root[data-theme="futurista"] .dash-card,
+:root[data-theme="futurista"] .activity-card,
+:root[data-theme="futurista"] .dash-action {
+  animation: fut-fade-up 0.65s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+/* Cascade */
+:root[data-theme="futurista"] .stat-card:nth-child(1)   { animation-delay: 0.00s; }
+:root[data-theme="futurista"] .stat-card:nth-child(2)   { animation-delay: 0.06s; }
+:root[data-theme="futurista"] .stat-card:nth-child(3)   { animation-delay: 0.12s; }
+:root[data-theme="futurista"] .stat-card:nth-child(4)   { animation-delay: 0.18s; }
+:root[data-theme="futurista"] .stat-card:nth-child(n+5) { animation-delay: 0.24s; }
+:root[data-theme="futurista"] .dash-card:nth-child(1)   { animation-delay: 0.04s; }
+:root[data-theme="futurista"] .dash-card:nth-child(2)   { animation-delay: 0.10s; }
+:root[data-theme="futurista"] .dash-card:nth-child(3)   { animation-delay: 0.16s; }
+:root[data-theme="futurista"] .dash-card:nth-child(n+4) { animation-delay: 0.22s; }
+
+:root[data-theme="futurista"] .page-title {
+  animation: fut-fade-up 0.75s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
+/* Pulse the active beta-tag / count-badge softly */
+:root[data-theme="futurista"] .beta-tag {
+  animation: fut-glow-pulse 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme="futurista"] .stat-card,
+  :root[data-theme="futurista"] .dash-card,
+  :root[data-theme="futurista"] .activity-card,
+  :root[data-theme="futurista"] .dash-action,
+  :root[data-theme="futurista"] .page-title,
+  :root[data-theme="futurista"] .beta-tag,
+  :root[data-theme="futurista"] .btn-primary::before {
+    animation: none !important;
+    transition: none !important;
+  }
+  :root[data-theme="futurista"] body::before { display: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   SCROLLBAR — refined cyan thread
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+:root[data-theme="futurista"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+:root[data-theme="futurista"] ::-webkit-scrollbar-thumb {
+  background: rgba(0,229,255,0.18);
+  border-radius: 999px;
+  border: 1px solid rgba(0,229,255,0.10);
+}
+:root[data-theme="futurista"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,229,255,0.40);
+  box-shadow: 0 0 8px rgba(0,229,255,0.45);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   SELECTION
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] ::selection {
+  background: rgba(0,229,255,0.32);
+  color: #ffffff;
+  text-shadow: 0 0 6px rgba(0,229,255,0.55);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   FOCUS RINGS — accessible + on-brand
+   ════════════════════════════════════════════════════════════════════ */
+
+:root[data-theme="futurista"] *:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px rgba(5, 10, 15, 1),
+    0 0 0 4px rgba(0, 229, 255, 0.55),
+    0 0 16px rgba(0, 229, 255, 0.35);
+  border-radius: inherit;
+}

@@ -25,6 +25,15 @@ export default function WalletsTab() {
   const [balances, setBalances] = useState({});
   const [positions, setPositions] = useState({});
   const [prices, setPrices]   = useState({});
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [tick, setTick] = useState(0); // forces "hace Xs" re-render
+  const [copiedId, setCopiedId] = useState(null);
+
+  // Live "hace Xs" counter — re-render every 5s
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 5000);
+    return () => clearInterval(id);
+  }, []);
 
   const refreshBalances = async () => {
     const mids = await hlGetAllMids().catch(() => ({}));
@@ -41,6 +50,7 @@ export default function WalletsTab() {
         }}));
       } catch {}
     }
+    setLastUpdated(Date.now());
   };
 
   useEffect(() => {
@@ -110,128 +120,245 @@ export default function WalletsTab() {
   const exchColor = (id) => EXCHANGES.find(e => e.id === id)?.color || "#4a7a96";
   const exchName  = (id) => EXCHANGES.find(e => e.id === id)?.name  || id;
 
+  // Total portfolio
+  const totalPortfolio = wallets.reduce((acc, w) => acc + (balances[w.id] || 0), 0);
+  const fmtUsd = (n) => `$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const exchInitials = (id) => {
+    const map = { hyperliquid: "HL", binance: "BN", bybit: "BB", okx: "OK", bitget: "BG", kucoin: "KC" };
+    return map[id] || (exchName(id || "hyperliquid").slice(0, 2).toUpperCase());
+  };
+
+  // "hace Xs" relative time. Tick keeps it live.
+  void tick;
+  const lastUpdatedLabel = (() => {
+    if (!lastUpdated) return "Conectando…";
+    const s = Math.max(0, Math.floor((Date.now() - lastUpdated) / 1000));
+    if (s < 5)   return "Justo ahora";
+    if (s < 60)  return `Hace ${s}s`;
+    const m = Math.floor(s / 60);
+    return `Hace ${m}m`;
+  })();
+
+  const handleCopy = (addr, id) => {
+    if (!addr) return;
+    try {
+      navigator.clipboard.writeText(addr);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(c => (c === id ? null : c)), 1500);
+    } catch {}
+  };
+
+  const refTokens = ["ETH", "BTC", "SOL"].filter(s => prices[s]);
+
   return (
     <>
-      <div className="info-box">
-        Conecta tus wallets de diferentes exchanges para monitorear balances y posiciones en tiempo real.
+      {/* ── Hero portfolio banner ─────────────────────────────────── */}
+      <div className="wallets-hero">
+        <div>
+          <div className="wallets-hero-label">Portfolio total</div>
+          <div className="wallets-hero-value">
+            {wallets.length > 0 ? fmtUsd(totalPortfolio) : "—"}
+          </div>
+          <div className="wallets-hero-sub">
+            {wallets.length === 0
+              ? "Conecta tu primera wallet para empezar a monitorear."
+              : `${wallets.length} wallet${wallets.length === 1 ? "" : "s"} conectada${wallets.length === 1 ? "" : "s"} · datos en tiempo real`}
+          </div>
+        </div>
+        {wallets.length > 0 && (
+          <div className="wallets-hero-meta">
+            <span className="live-pill">
+              <span className="live-dot" />
+              Live
+            </span>
+            <div style={{ fontSize: 11, color: "var(--text-dim)", letterSpacing: 0.04, fontVariantNumeric: "tabular-nums" }}>
+              {lastUpdatedLabel} · auto cada 15s
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* ── Reference price ticker ─────────────────────────────────── */}
+      {refTokens.length > 0 && (
+        <div className="price-ticker">
+          <span className="price-ticker-label">Referencia</span>
+          {refTokens.map(sym => (
+            <span key={sym} className="price-ticker-item">
+              <span className="price-ticker-symbol">{sym}</span>
+              <span className="price-ticker-value">
+                {fmtUsd(parseFloat(prices[sym]))}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* ── Section header ─────────────────────────────────────────── */}
       <div className="wallets-section">
         <div className="wallets-section-header">
-          <span className="wallets-section-title">Mis Wallets ({wallets.length})</span>
-          <button className="btn btn-gold" onClick={() => setModalOpen(true)}>+ Añadir</button>
+          <span className="wallets-section-title">
+            Mis Wallets
+            <span className="wallets-count-chip">{wallets.length}</span>
+          </span>
+          <button className="btn-add-wallet" onClick={() => setModalOpen(true)}>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+            Añadir
+          </button>
         </div>
 
         {wallets.length === 0 ? (
-          <div className="empty-state">
-            <div className="empty-title">No tienes wallets configuradas.</div>
-            <div className="empty-sub">Añade una wallet de Hyperliquid para monitorear balances y operar.</div>
+          <div className="wallets-empty">
+            <div className="wallets-empty-icon">💼</div>
+            <div className="wallets-empty-title">No tienes wallets configuradas</div>
+            <div className="wallets-empty-sub">
+              Conecta una wallet de Hyperliquid o un exchange centralizado para monitorear balances, posiciones abiertas y operar de forma automatizada.
+            </div>
+            <button className="btn-add-wallet" onClick={() => setModalOpen(true)}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+              Conectar primera wallet
+            </button>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 12 }}>
+          <div className="wallets-list">
             {wallets.map(w => {
               const bal      = balances[w.id];
               const posData  = positions[w.id] || {};
               const pos      = posData.positions || [];
-              const spotBals = posData.spotBalances || [];
-              return (
-                <div key={w.id} style={{
-                  background: "var(--bg-surface)", border: "1px solid var(--border-muted)",
-                  borderRadius: 4, padding: "14px 18px",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: pos.length ? 12 : 0 }}>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, letterSpacing: 1, padding: "2px 8px",
-                      border: `1px solid ${purposeColor[w.purpose]}`,
-                      color: purposeColor[w.purpose], background: "transparent",
-                    }}>{purposeLabel[w.purpose]?.toUpperCase()}</span>
+              const spotBals = (posData.spotBalances || []).filter(b => b.total > 0);
+              const exColor  = exchColor(w.exchange);
+              const purpColor = purposeColor[w.purpose] || "#4a7a96";
+              const isCopied = copiedId === w.id;
+              const hasSplit = (positions[w.id]?.spotTotal > 0) && (positions[w.id]?.perpEquity > 0);
 
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
-                        <div style={{ fontWeight: 700, color: "var(--text-secondary)", fontSize: 14 }}>{w.label}</div>
-                        <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:4,
-                          color: exchColor(w.exchange), border:`1px solid ${exchColor(w.exchange)}44`,
-                          background:`${exchColor(w.exchange)}11`, letterSpacing:0.5 }}>
+              return (
+                <div key={w.id} className="wallet-card">
+                  {/* Top row: avatar · identity · balance · actions */}
+                  <div className="wallet-card-row">
+                    <div
+                      className="exch-avatar"
+                      style={{
+                        background: `linear-gradient(135deg, ${exColor}26 0%, ${exColor}10 100%)`,
+                        border: `1px solid ${exColor}55`,
+                        color: exColor,
+                        boxShadow: `0 4px 14px ${exColor}1a`,
+                      }}
+                    >
+                      {exchInitials(w.exchange)}
+                    </div>
+
+                    <div className="wallet-identity">
+                      <div className="wallet-name-row">
+                        <span className="wallet-name">{w.label}</span>
+                        <span className="wallet-chip" style={{
+                          color: exColor,
+                          border: `1px solid ${exColor}55`,
+                          background: `${exColor}10`,
+                        }}>
                           {exchName(w.exchange || "hyperliquid")}
                         </span>
-                        <span style={{ fontSize:10, color: purposeColor[w.purpose] || "#4a7a96",
-                          border:`1px solid ${purposeColor[w.purpose] || "#4a7a96"}44`, padding:"2px 8px", borderRadius:4 }}>
+                        <span className="wallet-chip" style={{
+                          color: purpColor,
+                          border: `1px solid ${purpColor}55`,
+                          background: `${purpColor}10`,
+                        }}>
                           {purposeLabel[w.purpose] || w.purpose}
                         </span>
                       </div>
-                      <div style={{ fontSize: 11, color: "var(--text-label)", fontFamily: "monospace" }}>
-                        {w.address?.slice(0,10)}...{w.address?.slice(-6)}
+                      <div className="wallet-address-row">
+                        <span className="wallet-address">
+                          {w.address?.slice(0, 10)}…{w.address?.slice(-6)}
+                        </span>
+                        <button
+                          className={`wallet-copy-btn ${isCopied ? "copied" : ""}`}
+                          title={isCopied ? "Copiado" : "Copiar dirección"}
+                          onClick={() => handleCopy(w.address, w.id)}
+                        >
+                          {isCopied ? (
+                            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                              <path d="M2 6.5L4.5 9L10 3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          ) : (
+                            <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                              <rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.2" stroke="currentColor" strokeWidth="1.3"/>
+                              <path d="M2 8V2.8c0-.4.4-.8.8-.8H8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+                            </svg>
+                          )}
+                        </button>
                       </div>
                     </div>
 
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontSize: 11, color: "var(--text-label)", textTransform: "uppercase", letterSpacing: 1 }}>Balance</div>
-                      <div style={{ fontSize: 18, fontWeight: 700, color: "var(--color-success)" }}>
-                        {bal !== undefined ? `$${bal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—"}
+                    <div className="wallet-balance">
+                      <div className="wallet-balance-label">Balance</div>
+                      <div className={`wallet-balance-value ${bal === undefined ? "empty" : ""}`}>
+                        {bal !== undefined ? fmtUsd(bal) : "—"}
                       </div>
-                      {positions[w.id]?.spotTotal > 0 && positions[w.id]?.perpEquity > 0 && (
-                        <div style={{ fontSize: 10, color: "var(--text-label)" }}>
-                          Spot: ${positions[w.id].spotTotal.toFixed(2)} · Perp: ${positions[w.id].perpEquity.toFixed(2)}
+                      {hasSplit && (
+                        <div className="wallet-balance-split">
+                          Spot <b>{fmtUsd(positions[w.id].spotTotal)}</b> · Perp <b>{fmtUsd(positions[w.id].perpEquity)}</b>
                         </div>
                       )}
                     </div>
 
-                    <button onClick={() => handleRemove(w.id)} style={{
-                      background: "transparent", border: "1px solid var(--border-danger-subtle)",
-                      color: "var(--color-danger)", padding: "4px 10px", fontSize: 12,
-                      cursor: "pointer", fontFamily: "Outfit, sans-serif",
-                    }}>🗑</button>
+                    <button
+                      className="wallet-remove-btn"
+                      onClick={() => handleRemove(w.id)}
+                      title="Eliminar wallet"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M2.5 3.5h9M5.5 3.5V2.5h3v1M3.5 3.5l.6 8c.04.4.4.8.8.8h4.2c.4 0 .76-.4.8-.8l.6-8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </button>
                   </div>
 
+                  {/* SPOT */}
                   {spotBals.length > 0 && (
-                    <div style={{ borderTop: "1px solid var(--border-muted)", paddingTop: 8, marginTop: pos.length ? 8 : 0 }}>
-                      <div style={{ fontSize: 10, color: "var(--text-label)", letterSpacing: 1, marginBottom: 6 }}>SPOT BALANCES</div>
-                      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-                        {spotBals.filter(b => b.total > 0).map((b, i) => (
-                          <span key={i} style={{ fontSize: 12 }}>
-                            <span style={{ color: "var(--text-dim)" }}>{b.coin}</span>{" "}
-                            <span style={{ color: "var(--color-success)", fontWeight: 600 }}>{b.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</span>
-                          </span>
-                        ))}
+                    <div className="wallet-section">
+                      <div className="wallet-section-label">Spot Holdings</div>
+                      <div className="spot-grid">
+                        {spotBals.map((b, i) => {
+                          const usd = prices[b.coin] ? parseFloat(prices[b.coin]) * b.total : null;
+                          return (
+                            <div key={i} className="spot-chip">
+                              <div className="spot-chip-head">
+                                <span className="spot-chip-symbol">{b.coin}</span>
+                                {usd !== null && <span className="spot-chip-usd">{fmtUsd(usd)}</span>}
+                              </div>
+                              <div className="spot-chip-amount">
+                                {b.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
 
+                  {/* POSITIONS */}
                   {pos.length > 0 && (
-                    <div style={{ borderTop: "1px solid var(--border-muted)", paddingTop: 10 }}>
-                      <div style={{ fontSize: 10, color: "var(--text-label)", letterSpacing: 1, marginBottom: 6 }}>POSICIONES ABIERTAS</div>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px,1fr))", gap: 8 }}>
-                        {pos.map((p, i) => (
-                          <div key={i} style={{
-                            background: "var(--bg-elevated)", border: "1px solid var(--border-muted)",
-                            padding: "8px 12px", borderRadius: 2,
-                          }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                              <span style={{ fontWeight: 700, color: "var(--text-secondary)" }}>{p.coin}</span>
-                              <span style={{ fontSize: 11,
-                                color:   p.side === "Long" ? "var(--color-success)" : "var(--color-danger)",
-                                border: `1px solid ${p.side === "Long" ? "var(--border-success-subtle)" : "var(--border-danger-subtle)"}`,
-                                padding: "1px 6px" }}>{p.side}</span>
+                    <div className="wallet-section">
+                      <div className="wallet-section-label">Posiciones abiertas</div>
+                      <div className="pos-grid">
+                        {pos.map((p, i) => {
+                          const isLong = p.side === "Long";
+                          return (
+                            <div key={i} className="pos-card">
+                              <div className="pos-card-head">
+                                <span className="pos-card-coin">{p.coin}</span>
+                                <span className={`pos-side ${isLong ? "long" : "short"}`}>{p.side}</span>
+                              </div>
+                              <div className="pos-meta"><span>Size</span><span>{p.size}</span></div>
+                              <div className="pos-meta"><span>Entry</span><span>${p.entryPrice.toLocaleString()}</span></div>
+                              <div className={`pos-pnl ${p.pnl >= 0 ? "up" : "down"}`}>
+                                {p.pnl >= 0 ? "+" : ""}${p.pnl.toFixed(2)}
+                              </div>
                             </div>
-                            <div style={{ fontSize: 11, color: "var(--text-dim)" }}>Size: {p.size}</div>
-                            <div style={{ fontSize: 11, color: "var(--text-dim)" }}>Entry: ${p.entryPrice.toLocaleString()}</div>
-                            <div style={{ fontSize: 12, fontWeight: 600, color: p.pnl >= 0 ? "var(--color-success)" : "var(--color-danger)", marginTop: 4 }}>
-                              PNL: {p.pnl >= 0 ? "+" : ""}${p.pnl.toFixed(2)}
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
-                    </div>
-                  )}
-
-                  {Object.keys(prices).length > 0 && (
-                    <div style={{ marginTop: 8, display: "flex", gap: 16, flexWrap: "wrap" }}>
-                      {["ETH", "BTC", "SOL"].map(sym => prices[sym] && (
-                        <span key={sym} style={{ fontSize: 11, color: "var(--text-label)" }}>
-                          <span style={{ color: "var(--text-dim)" }}>{sym}</span>{" "}
-                          <span style={{ color: "var(--color-accent)" }}>${parseFloat(prices[sym]).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </span>
-                      ))}
                     </div>
                   )}
                 </div>

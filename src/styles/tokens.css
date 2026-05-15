@@ -90,6 +90,8 @@
 
   /* ── Theme helpers ──────────────────────────────────── */
   --color-accent-rgb:    0, 229, 255;   /* accent como triplete RGB para rgba() */
+  --color-success-rgb:   0, 255, 136;
+  --color-danger-rgb:    255, 79, 110;
   --text-hover:          #7ab8d4;       /* texto en estado hover                */
   --bg-modal:            #0a1520;       /* modales, paneles flotantes            */
   --bg-empty:            #060c12;       /* estados vacíos, fondos de formulario  */

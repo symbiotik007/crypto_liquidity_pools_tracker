@@ -132,19 +132,8 @@ export default function CoberturaTab() {
       </div>
 
       {pools.some(p => p._noLiveData) && (
-        <div style={{
-          margin: "12px 0",
-          padding: "10px 14px",
-          background: "#0e1820",
-          border: "1px solid #1a3a5e",
-          borderRadius: "8px",
-          color: "#7a9ab0",
-          fontSize: "13px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-        }}>
-          <span style={{ color: "#4a8ab0", fontSize: "16px" }}>⚠</span>
+        <div className="cob-warning-banner">
+          <span className="cob-warning-icon">⚠</span>
           <span>
             Datos en tiempo real no disponibles. Los precios y estados mostrados
             son estimaciones basadas en los datos de importación.
@@ -158,8 +147,9 @@ export default function CoberturaTab() {
         {pools.length > 0 && <span className="count-badge">{pools.length}</span>}
         <div className="section-actions">
           {lastRefresh && (
-            <span style={{ fontSize: 11, color: "#2a5a72", alignSelf: "center" }}>
-              ↻ {lastRefresh.toLocaleTimeString("es-CO", { hour:"2-digit", minute:"2-digit", second:"2-digit" })}
+            <span className="cob-live-pill" title="Auto-refresh cada 30s">
+              <span className="cob-live-dot" />
+              {lastRefresh.toLocaleTimeString("es-CO", { hour:"2-digit", minute:"2-digit", second:"2-digit" })}
             </span>
           )}
           <button className="action-btn" onClick={refreshAll}>

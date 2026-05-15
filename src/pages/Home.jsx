@@ -7,6 +7,7 @@ import cryptoHouseLogo from '../assets/cryptohouselogo.png'
 import CryptoPriceBar from '../components/CryptoPriceBar'
 import Turnstile from '../components/Turnstile'
 import ThemeToggle from '../components/ThemeToggle'
+import MarketingVersionToggle, { useMarketingVersionInit } from '../components/MarketingVersionToggle'
 import '../styles/marketing.css'
 import './Home.css'
 
@@ -319,6 +320,7 @@ function FAQItem({ q, a }) {
 }
 
 export default function Home() {
+  useMarketingVersionInit()
   const navigate = useNavigate()
   const [formData, setFormData] = useState({ name: '', email: '', msg: '' })
   const [sent, setSent] = useState(false)
@@ -420,6 +422,7 @@ export default function Home() {
             <a className="nav-link" onClick={e => goTo(e, 'contacto')} href="#">Contacto</a>
           </div>
           <div className="nav-sep" />
+          <MarketingVersionToggle />
           <ThemeToggle />
           <button
             className="nav-hamburger"
@@ -439,6 +442,7 @@ export default function Home() {
             <a className="nav-mobile-link" href="#" onClick={e => { goTo(e, 'faq'); setMobileMenuOpen(false) }}>FAQ</a>
             <a className="nav-mobile-link" href="#" onClick={e => { goTo(e, 'contacto'); setMobileMenuOpen(false) }}>Contacto</a>
             <div className="nav-mobile-sep" />
+            <MarketingVersionToggle mobile />
             <ThemeToggle mobile />
             <div className="nav-mobile-sep" />
             <button className="nav-mobile-app" onClick={() => { setMobileMenuOpen(false); setAccessOpen(true) }}>Acceso Miembros</button>

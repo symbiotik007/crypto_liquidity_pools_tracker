@@ -1,26 +1,39 @@
 import { useState } from 'react'
-import { applyTheme, getSavedThemeId } from '../styles/themes'
+import { applyTheme, getSavedThemeId, THEME_ORDER, THEMES } from '../styles/themes'
+
+const ICONS = {
+  light:     '☀️',
+  futurista: '🌙',
+  premium:   '✦',
+}
+const NEXT_LABEL = {
+  light:     'Cambiar a modo oscuro',
+  futurista: 'Cambiar a modo Premium',
+  premium:   'Cambiar a modo claro',
+}
 
 export default function ThemeToggle({ mobile = false }) {
   const [theme, setTheme] = useState(getSavedThemeId)
 
-  function toggle() {
-    const next = theme === 'light' ? 'futurista' : 'light'
+  function cycle() {
+    const idx = THEME_ORDER.indexOf(theme)
+    const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length]
     applyTheme(next)
     setTheme(next)
   }
 
-  const isLight = theme === 'light'
+  const icon  = ICONS[theme] ?? '✦'
+  const label = NEXT_LABEL[theme] ?? `Cambiar tema (${THEMES[theme]?.label ?? theme})`
 
   if (mobile) {
     return (
       <button
         className="nav-mobile-link nav-mobile-theme"
-        onClick={toggle}
-        aria-label={isLight ? 'Modo oscuro' : 'Modo claro'}
+        onClick={cycle}
+        aria-label={label}
       >
-        <span style={{ fontSize: 18, lineHeight: 1 }}>{isLight ? '🌙' : '☀️'}</span>
-        {isLight ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
+        <span style={{ fontSize: 18, lineHeight: 1 }}>{icon}</span>
+        {label}
       </button>
     )
   }
@@ -28,11 +41,11 @@ export default function ThemeToggle({ mobile = false }) {
   return (
     <button
       className="nav-theme-toggle"
-      onClick={toggle}
-      title={isLight ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
-      aria-label={isLight ? 'Modo oscuro' : 'Modo claro'}
+      onClick={cycle}
+      title={label}
+      aria-label={label}
     >
-      {isLight ? '🌙' : '☀️'}
+      {icon}
     </button>
   )
 }

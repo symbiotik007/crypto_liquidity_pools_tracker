@@ -92,7 +92,11 @@ export default function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
           onClose={() => setShowTrading(false)}
         />
       )}
-      <div className="pc-wrap">
+      <div className={`pc-wrap ${
+        inRange ? "in-range"
+        : s.currentPrice < s.priceLower ? "oor-down"
+        : "oor-up"
+      } ${expanded ? "expanded" : ""}`}>
       <div className="pc-row" onClick={() => setExpanded(e => !e)}>
         <div className="pc-left">
           <span className="pc-pair">{sym0}/{sym1}</span>
@@ -261,90 +265,93 @@ export default function PoolCard({ pos, onRemove, mode = "Cobertura" }) {
               const isInRange = s.currentPrice >= s.priceLower && s.currentPrice <= s.priceUpper;
               const isOor = !isInRange;
 
-              return (
-                <div style={{ position: "relative", marginBottom: 8 }}>
+              // Distance from current price to nearest bound (signed pct)
+              const rangeWidth = s.priceUpper - s.priceLower;
+              const distPct = isInRange
+                ? null
+                : s.currentPrice < s.priceLower
+                  ? ((s.currentPrice - s.priceLower) / rangeWidth) * 100  // negative
+                  : ((s.currentPrice - s.priceUpper) / rangeWidth) * 100; // positive
+              const insideDepth = isInRange
+                ? Math.min(
+                    ((s.currentPrice - s.priceLower) / rangeWidth) * 100,
+                    ((s.priceUpper - s.currentPrice) / rangeWidth) * 100,
+                  )
+                : null;
 
-                  <div style={{ position: "relative", height: 32, marginBottom: 4 }}>
-                    <div style={{
-                      position: "absolute",
-                      left: `${curP}%`,
-                      transform: "translateX(-50%)",
-                      bottom: 0,
-                      background: "#070d14",
-                      border: `1px solid ${isOor ? "#ff4f6e" : "#00e5ff"}`,
-                      padding: "2px 8px",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: isOor ? "#ff4f6e" : "#00e5ff",
-                      whiteSpace: "nowrap",
-                      boxShadow: `0 0 10px ${isOor ? "rgba(255,79,110,0.4)" : "rgba(0,229,255,0.4)"}`,
-                      zIndex: 10,
-                    }}>
-                      {fmtP(s.currentPrice)}
-                      <span style={{
-                        position: "absolute", top: "100%", left: "50%",
-                        transform: "translateX(-50%)",
-                        borderLeft: "5px solid transparent",
-                        borderRight: "5px solid transparent",
-                        borderTop: `6px solid ${isOor ? "#ff4f6e" : "#00e5ff"}`,
-                        display: "block", width: 0,
-                      }} />
+              // Anchor for the floating tag — prevents overflow at edges
+              const tagAnchor = curP < 8 ? "start" : curP > 92 ? "end" : "center";
+
+              return (
+                <div className={`rb-wrap ${isOor ? "is-oor" : "is-in"}`}>
+
+                  {/* Floating tag */}
+                  <div className="rb-tag-row">
+                    <div
+                      className={`rb-tag ${isOor ? "oor" : ""}`}
+                      data-anchor={tagAnchor}
+                      style={{ left: `${curP}%` }}
+                    >
+                      <span className="rb-tag-label">Mercado</span>
+                      <span className="rb-tag-val">{fmtP(s.currentPrice)}</span>
                     </div>
                   </div>
 
-                  <div style={{ position: "relative", height: 18 }}>
-                    <div style={{
-                      position: "absolute", inset: 0,
-                      borderRadius: 9,
-                      background: "#020810",
-                      border: "1px solid rgba(0,229,255,0.12)",
-                      boxShadow: "inset 0 2px 6px rgba(0,0,0,0.9)",
-                      overflow: "hidden",
-                    }}>
-                      <div style={{ position:"absolute", top:0, bottom:0, left:0, width:`${loP}%`, background:"linear-gradient(90deg,rgba(120,10,25,0.8),rgba(255,79,110,0.5))" }} />
-                      <div style={{
-                        position:"absolute", top:0, bottom:0, left:`${loP}%`, width:`${hiP-loP}%`,
-                        background:"linear-gradient(180deg,rgba(0,255,100,0.1) 0%,rgba(0,210,85,0.95) 18%,rgba(0,255,130,1) 45%,rgba(200,255,210,1) 50%,rgba(0,255,130,1) 55%,rgba(0,180,65,0.95) 82%,rgba(0,60,25,0.3) 100%)",
-                        boxShadow:"inset 0 1px 0 rgba(255,255,255,0.25)",
-                        overflow:"hidden",
-                      }}>
-                        <div style={{
-                          position:"absolute", top:"-50%", left:"-60%", width:"35%", height:"200%",
-                          background:"linear-gradient(105deg,transparent 30%,rgba(255,255,255,0.22) 50%,transparent 70%)",
-                          animation:"rb-shine 3.5s ease-in-out infinite",
-                        }} />
-                      </div>
-                      <div style={{ position:"absolute", top:0, bottom:0, right:0, width:`${100-hiP}%`, background:"linear-gradient(90deg,rgba(255,150,30,0.3),rgba(140,60,0,0.65))" }} />
+                  {/* The bar */}
+                  <div className="rb-bar-row">
+                    <div className="rb-shell">
+                      <div className="rb-z-left"  style={{ width: `${loP}%` }} />
+                      <div className="rb-z-range" style={{ left: `${loP}%`, width: `${hiP - loP}%` }} />
+                      <div className="rb-z-right" style={{ width: `${100 - hiP}%` }} />
                     </div>
 
-                    {[loP, hiP].map((p, i) => (
-                      <div key={i} style={{
-                        position:"absolute", top:-3, bottom:-3, left:`${p}%`,
-                        width:2, transform:"translateX(-50%)",
-                        background:"rgba(255,255,255,0.2)", zIndex:2,
-                      }} />
+                    {/* Bound caps (hairlines with top/bottom marks) */}
+                    {[{ p: loP, side: "min" }, { p: hiP, side: "max" }].map(({ p, side }) => (
+                      <div key={side} className={`rb-bound rb-bound-${side}`} style={{ left: `${p}%` }}>
+                        <span className="rb-bound-cap rb-bound-cap-top" />
+                        <span className="rb-bound-line" />
+                        <span className="rb-bound-cap rb-bound-cap-bot" />
+                      </div>
                     ))}
 
-                    <div style={{
-                      position:"absolute", top:"50%", left:`${curP}%`,
-                      transform:"translate(-50%,-50%)", zIndex:5,
-                      width:22, height:22, borderRadius:"50%",
-                      background: isOor
-                        ? "radial-gradient(circle at 32% 30%,#fff 0%,#ff4f6e 35%,#7a0020 80%)"
-                        : "radial-gradient(circle at 32% 30%,#fff 0%,#00e5ff 35%,#006a99 80%)",
-                      border:"2px solid rgba(255,255,255,0.35)",
-                      animation: isOor ? "rb-glow-out 2s ease-in-out infinite" : "rb-glow-in 2s ease-in-out infinite",
-                    }} />
+                    {/* Current marker */}
+                    <div
+                      className={`rb-cursor ${isOor ? "oor" : ""}`}
+                      style={{ left: `${curP}%` }}
+                    >
+                      <span className="rb-cursor-line" />
+                      <span className="rb-cursor-dot" />
+                    </div>
                   </div>
 
-                  <div style={{ position:"relative", height:36, marginTop:6 }}>
-                    <div style={{ position:"absolute", left:0, top:0, lineHeight:1.3 }}>
-                      <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", fontWeight:700, color:"#ff4f6e" }}>▼ MIN</div>
-                      <div style={{ fontSize:13, fontWeight:700, color:"#ff6b88" }}>{fmtP(s.priceLower)}</div>
+                  {/* Min · status · Max */}
+                  <div className="rb-foot">
+                    <div className="rb-foot-side">
+                      <div className="rb-foot-lbl rb-foot-lbl-min">Min</div>
+                      <div className="rb-foot-val">{fmtP(s.priceLower)}</div>
                     </div>
-                    <div style={{ position:"absolute", right:0, top:0, textAlign:"right", lineHeight:1.3 }}>
-                      <div style={{ fontSize:9, letterSpacing:"1.5px", textTransform:"uppercase", fontWeight:700, color:"#00ff88" }}>▲ MAX</div>
-                      <div style={{ fontSize:13, fontWeight:700, color:"#00ff88" }}>{fmtP(s.priceUpper)}</div>
+
+                    <div className={`rb-foot-status ${isOor ? "oor" : "in"}`}>
+                      {isInRange ? (
+                        <>
+                          <span className="rb-foot-pill in">En rango</span>
+                          <span className="rb-foot-meta">{insideDepth.toFixed(1)}% del centro</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="rb-foot-pill oor">
+                            {s.currentPrice < s.priceLower ? "Fuera abajo" : "Fuera arriba"}
+                          </span>
+                          <span className="rb-foot-meta">
+                            {distPct >= 0 ? "+" : ""}{distPct.toFixed(1)}% del límite
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="rb-foot-side rb-foot-side-right">
+                      <div className="rb-foot-lbl rb-foot-lbl-max">Max</div>
+                      <div className="rb-foot-val">{fmtP(s.priceUpper)}</div>
                     </div>
                   </div>
 

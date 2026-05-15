@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import cryptoHouseLogo from '../assets/cryptohouselogo.png'
 import CryptoPriceBar from '../components/CryptoPriceBar'
 import ThemeToggle from '../components/ThemeToggle'
+import MarketingVersionToggle, { useMarketingVersionInit } from '../components/MarketingVersionToggle'
 import '../styles/marketing.css'
 import './ProgramasPage.css'
 
@@ -98,6 +99,7 @@ function ModuleAccordion({ mod }) {
 const TICKER_ITEMS = ['Bootcamp Crypto','·','DeFi & Liquidity Pools','·','Uniswap','·','Futuros Cripto','·','Formación Profesional','·'] // Express Trading removido (próximamente)
 
 export default function ProgramasPage() {
+  useMarketingVersionInit()
   const navigate = useNavigate()
   const [active, setActive]         = useState('bootcamp')
   const [dropOpen, setDropOpen]     = useState(false)
@@ -156,6 +158,7 @@ export default function ProgramasPage() {
             <button className="nav-link" onClick={() => goHome('contacto')}>Contacto</button>
           </div>
           <div className="nav-sep" />
+          <MarketingVersionToggle />
           <ThemeToggle />
           <button
             className="nav-hamburger"
@@ -175,6 +178,7 @@ export default function ProgramasPage() {
             <button className="nav-mobile-link" onClick={() => { goHome('faq'); setMobileMenuOpen(false) }}>FAQ</button>
             <button className="nav-mobile-link" onClick={() => { goHome('contacto'); setMobileMenuOpen(false) }}>Contacto</button>
             <div className="nav-mobile-sep" />
+            <MarketingVersionToggle mobile />
             <ThemeToggle mobile />
             <div className="nav-mobile-sep" />
             <a className="nav-mobile-app" href="/app" onClick={() => setMobileMenuOpen(false)}>Acceso Miembros</a>
